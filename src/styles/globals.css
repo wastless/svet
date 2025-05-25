@@ -1,6 +1,64 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+@layer base {
+  /*#region Colors */
+  :root {
+    --gray-950: #171717;
+    --gray-900: #3D3D3D;
+    --gray-800: #454545;
+    --gray-700: #4F4F4F;
+    --gray-600: #5D5D5D;
+    --gray-500: #6D6D6D;
+    --gray-400: #888888;
+    --gray-300: #B0B0B0;
+    --gray-200: #D1D1D1;
+    --gray-100: #E7E7E7;
+    --gray-50: #F6F6F6;
+    --gray-0: #ffffff;
+
+    --marker: #272526;
+
+    --neutral-950: var(--gray-950);
+    --neutral-900: var(--gray-900);
+    --neutral-800: var(--gray-800);
+    --neutral-700: var(--gray-700);
+    --neutral-600: var(--gray-600);
+    --neutral-500: var(--gray-500);
+    --neutral-400: var(--gray-400);
+    --neutral-300: var(--gray-300);
+    --neutral-200: var(--gray-200);
+    --neutral-100: var(--gray-100);
+    --neutral-50: var(--gray-50);
+    --neutral-0: var(--gray-0);
+
+    --overlay-gray: #3333333d;
+    --overlay: var(--overlay-gray);
+
+    --bg-strong-950: var(--neutral-950);
+    --bg-surface-800: var(--neutral-800);
+    --bg-sub-300: var(--neutral-300);
+    --bg-soft-200: var(--neutral-200);
+    --bg-weak-50: var(--neutral-50);
+    --bg-white-0: var(--neutral-0);
+
+    --text-strong-950: var(--neutral-950);
+    --text-sub-600: var(--neutral-600);
+    --text-soft-400: var(--neutral-400);
+    --text-disabled-300: var(--neutral-300);
+    --text-white-0: var(--neutral-0);
+
+    --stroke-strong-950: var(--neutral-950);
+    --stroke-sub-300: var(--neutral-300);
+    --stroke-soft-200: var(--neutral-200);
+    --stroke-white-0: var(--neutral-0);
+  }
+}
+
+  
+/* custom scale for Remix Icon */
+.remixicon path {
+  transform: scale(0.8996);
+  transform-origin: center;
 }
