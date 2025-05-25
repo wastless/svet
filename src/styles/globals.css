@@ -33,6 +33,22 @@
     --neutral-50: var(--gray-50);
     --neutral-0: var(--gray-0);
 
+    --red-950: #681219;
+    --red-900: #8b1822;
+    --red-800: #ad1f2b;
+    --red-700: #d02533;
+    --red-600: #e93544;
+    --red-500: #fb3748;
+    --red-400: #ff6875;
+    --red-300: #ff97a0;
+    --red-200: #ffc0c5;
+    --red-100: #ffd5d8;
+    --red-50: #ffebec;
+
+    --red-alpha-24: #fb37483d;
+    --red-alpha-16: #fb374829;
+    --red-alpha-10: #fb37481a;
+
     --overlay-gray: #3333333d;
     --overlay: var(--overlay-gray);
 
@@ -53,6 +69,11 @@
     --stroke-sub-300: var(--neutral-300);
     --stroke-soft-200: var(--neutral-200);
     --stroke-white-0: var(--neutral-0);
+
+    --error-dark: var(--red-950);
+    --error-base: var(--red-500);
+    --error-light: var(--red-200);
+    --error-lighter: var(--red-50);
   }
 }
 

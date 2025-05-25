@@ -11,21 +11,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum UserRole {
-  ADMIN
-  GUEST
-}
-
 model User {
   id       String   @id @default(cuid())
-  username String?  @unique
+  username String  @unique
   password String?
-  role     UserRole @default(GUEST)
 }
 
 model Gift {
-  id        String   @id @default(cuid())
-  slug      String   @unique // для маршрутизации, например, 43F5aYH
-  isOpened  Boolean  @default(false)
-  openDate  DateTime? // когда открыт
+  id       String   @id @default(cuid())
+  slug     String   @unique // для маршрутизации, например, 43F5aYH
+  openDate DateTime // когда подарок становится доступен
+  title    String?  // название подарка
 }
