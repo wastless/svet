@@ -5,10 +5,9 @@ import bcrypt from "bcryptjs";
 import { signIn, signOut } from "~/server/auth";
 import { AuthError } from "next-auth";
 import { signInSchema } from "~/schemas";
-import { redirect } from "next/navigation";
 
 export async function signout() {
-  await signOut();
+  await signOut({ redirect: false });
 }
 
 export async function authenticate(formData: FormData) {
@@ -35,14 +34,18 @@ export async function authenticate(formData: FormData) {
     }
 
     // Выполнение входа в систему
-    await signIn("credentials", { 
+    const result = await signIn("credentials", { 
       username, 
       password,
       redirect: false 
     });
 
-    // Перенаправление после успешного входа
-    redirect("/");
+    if (result?.error) {
+      return { error: "Authentication failed" };
+    }
+
+    // Возвращаем успех, чтобы клиент мог обработать перенаправление
+    return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       const errorMessage =

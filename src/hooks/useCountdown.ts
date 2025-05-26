@@ -12,7 +12,12 @@ export function useCountdown({ targetDate, currentDate, updateInterval = 1000 }:
   });
 
   const calculateTimeLeft = (): CountdownTime => {
-    const now = currentDate || new Date();
+    // Если дата еще не инициализирована, возвращаем нули
+    if (!currentDate) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
+    
+    const now = currentDate;
     const target = new Date(targetDate);
     const difference = target.getTime() - now.getTime();
 
@@ -29,6 +34,9 @@ export function useCountdown({ targetDate, currentDate, updateInterval = 1000 }:
   };
 
   useEffect(() => {
+    // Не запускаем таймер пока дата не инициализирована
+    if (!currentDate) return;
+
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, updateInterval);

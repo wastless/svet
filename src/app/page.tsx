@@ -1,72 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import * as Button from "~/components/ui/button";
 import { Countdown } from "~/components/countdown";
 import { WordOfDay } from "~/components/word-of-day";
-import { Navigation } from "~/components/navigation";
+import { IntroOverlay } from "~/components/intro-overlay";
+import { useIntro } from "~/hooks/useIntro";
 import { COUNTDOWN_CONFIG, WORD_SYSTEM } from "../../utils/constants";
+import { useDate } from "~/hooks/useDateContext";
 
 export default function HomePage() {
-  const [currentTestDate, setCurrentTestDate] = useState<Date>(new Date());
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { currentDate } = useDate();
+  const { shouldShowIntro, isLoading, completeIntro } = useIntro();
 
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedDate = new Date(event.target.value);
-    setCurrentTestDate(selectedDate);
-  };
-
-  const formatDateForInput = (date: Date) => {
-    return date.toISOString().split("T")[0];
-  };
+  // Показываем лоадер пока проверяем куки или дата не инициализирована
+  if (isLoading || !currentDate) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-adaptive">
+        <div className="text-adaptive font-styrene">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
-      <Navigation />
+      {/* Интро оверлей */}
+      {shouldShowIntro && (
+        <IntroOverlay onComplete={completeIntro} />
+      )}
       
-      {/* Datepicker для тестирования 
-      <div className="bg-gray-100 p-4 border-b">
-        <div className="container mx-auto">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Test Current Date (for debugging):
-          </label>
-          <input
-            type="date"
-            value={formatDateForInput(currentTestDate)}
-            onChange={handleDateChange}
-            className="border border-gray-300 rounded px-3 py-2"
-          />
-          <span className="ml-4 text-sm text-gray-600">
-            Selected: {currentTestDate.toLocaleDateString()}
-          </span>
-        </div>
-      </div>*/}
-
-      <main className="bg-bg-white-0 min-h-screen">
+      <main className="bg-adaptive min-h-screen">
         <div className="flex min-h-screen flex-col items-center justify-center">
 
           <div className="flex flex-col items-center justify-center gap-12">
 
             <div className="flex flex-col items-center justify-center">
-              <h2 className="text-text-strong-950 font-nyghtserif text-label-lg text-center italic">
+              <h2 className="text-adaptive font-nyghtserif text-label-lg text-center italic">
                 <WordOfDay
                   startDate={WORD_SYSTEM.START_DATE}
                   cycleLength={WORD_SYSTEM.CYCLE_LENGTH}
-                  currentDate={currentTestDate}
+                  currentDate={currentDate}
                 />
               </h2>
-              <h1 className="text-text-strong-950 text-title-h1 font-founders text-center -mt-2">
+              <h1 className="text-adaptive text-title-h1 font-founders text-center -mt-2">
                 LESYA
                 <br />
                 SVET
               </h1>
             </div>
             
-            <h2 className="text-text-strong-950 font-styrene text-paragraph-md-bold text-center uppercase">
+            <h2 className="text-adaptive font-styrene text-paragraph-md-bold text-center uppercase">
               Before the birthday:
               <br />
               <Countdown
                 targetDate={COUNTDOWN_CONFIG.TARGET_DATE}
-                // currentDate={currentTestDate}
+                currentDate={currentDate}
                 updateInterval={COUNTDOWN_CONFIG.UPDATE_INTERVAL}
               />
             </h2>
@@ -77,7 +68,20 @@ export default function HomePage() {
       {/* Кнопка фиксирована к viewport */}
       <div className="pointer-events-none fixed inset-0 z-50">
         <div className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2">
-          <Button.Root>Let's GO</Button.Root>
+          <Button.Root 
+            onClick={() => {
+              if (session) {
+                // Авторизованный пользователь - перейти к управлению контентом
+                console.log("Authorized user - manage content");
+                // Здесь будет логика перехода к управлению контентом
+              } else {
+                // Неавторизованный пользователь - перейти к авторизации
+                router.push("/login");
+              }
+            }}
+          >
+            Let's GO
+          </Button.Root>
         </div>
       </div>
     </div>

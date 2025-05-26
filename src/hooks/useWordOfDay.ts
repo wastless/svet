@@ -7,7 +7,12 @@ import { COUNTDOWN_CONFIG } from '../../utils/constants';
 
 export function useWordOfDay({ startDate, cycleLength, currentDate }: WordConfig) {
   const wordOfDay = useMemo(() => {
-    const now = currentDate || new Date();
+    // Если дата еще не инициализирована, возвращаем fallback
+    if (!currentDate) {
+      return DAILY_WORDS[0] || 'Loading...';
+    }
+    
+    const now = currentDate;
     const start = new Date(startDate);
     const targetDate = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
     

@@ -9,6 +9,6 @@ export interface CountdownTime {
 // Конфигурация для обратного отсчета
 export interface CountdownConfig {
   targetDate: string;
-  currentDate?: Date;
+  currentDate?: Date | null;
   updateInterval?: number;
 } 

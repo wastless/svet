@@ -217,6 +217,19 @@ const config = {
         'soft-200': 'var(--stroke-soft-200)',
         'white-0': 'var(--stroke-white-0)',
       },
+      adaptive: {
+        DEFAULT: 'var(--adaptive-text)',
+        'text': 'var(--adaptive-text)',
+        'text-inverted': 'var(--adaptive-text-inverted)',
+        'bg': 'var(--adaptive-bg)',
+        'bg-inverted': 'var(--adaptive-bg-inverted)',
+        'stroke': 'var(--adaptive-stroke)',
+        'stroke-inverted': 'var(--adaptive-stroke-inverted)',
+      },
+      selection: {
+        'bg': 'var(--selection-bg)',
+        'text': 'var(--selection-text)',
+      },
     },
     extend: {
       borderRadius: {
