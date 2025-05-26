@@ -18,8 +18,32 @@ model User {
 }
 
 model Gift {
-  id       String   @id @default(cuid())
-  slug     String   @unique // для маршрутизации, например, 43F5aYH
-  openDate DateTime // когда подарок становится доступен
-  title    String?  // название подарка
+  id                String   @id @default(cuid())
+  number            Int      @unique // номер подарка
+  title             String?  // название подарка
+  isSecret          Boolean  @default(false) // публичность/конфиденциальность
+  openDate          DateTime // когда подарок становится доступен
+  englishDescription String  // английское описание
+  hintImageUrl      String   // картинка-подсказка к физическому подарку
+  hintText          String   @default("look for a gift with this sticker") // текст подсказки
+  code              String?  // секретный код (если есть)
+  contentPath       String   // путь к файлу с контентом поздравления
+  
+  // Связь с полароидной фотографией
+  memoryPhoto       MemoryPhoto?
+  
+  @@map("gifts")
+}
+
+model MemoryPhoto {
+  id          String   @id @default(cuid())
+  text        String   // никнейм/подпись на полароиде
+  photoUrl    String   // URL оригинальной фотографии
+  createdAt   DateTime @default(now())
+  
+  // Связь с подарком (один к одному)
+  giftId      String   @unique
+  gift        Gift     @relation(fields: [giftId], references: [id], onDelete: Cascade)
+  
+  @@map("memory_photos")
 }

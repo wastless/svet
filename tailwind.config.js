@@ -105,6 +105,7 @@ export const texts = {
   ],
 
   // Label styles
+  "label-xl": ["3.5rem", { lineHeight: "4.5rem", fontWeight: "400" }],
   "label-lg": ["2.5rem", { lineHeight: "3.5rem", fontWeight: "400" }],
   "label-md": ["2rem", { lineHeight: "2.75rem", fontWeight: "400" }],
 
@@ -115,8 +116,9 @@ export const texts = {
       lineHeight: "4.375rem",
       fontWeight: "400",
     },
-  ],
+  ], 
   "marker-md": ["2rem", { lineHeight: "3rem", fontWeight: "400" }],
+  "marker-sm": ["1.5rem", { lineHeight: "2.5rem", fontWeight: "400" }], 
 };
 
 export const borderRadii = {
@@ -229,6 +231,9 @@ const config = {
       selection: {
         'bg': 'var(--selection-bg)',
         'text': 'var(--selection-text)',
+      },
+      marker: {
+        DEFAULT: 'var(--marker)',
       },
     },
     extend: {

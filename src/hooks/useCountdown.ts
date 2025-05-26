@@ -18,7 +18,11 @@ export function useCountdown({ targetDate, currentDate, updateInterval = 1000 }:
     }
     
     const now = currentDate;
-    const target = new Date(targetDate);
+    
+    // Создаем целевую дату как начало дня (00:00:00.000) в челябинском часовом поясе
+    // Добавляем время 00:00:00.000 к дате для точного отсчета до начала дня
+    const target = new Date(`${targetDate}T00:00:00.000+05:00`); // +05:00 это UTC+5 для Челябинска
+    
     const difference = target.getTime() - now.getTime();
 
     if (difference > 0) {

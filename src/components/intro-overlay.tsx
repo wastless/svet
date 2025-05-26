@@ -189,7 +189,7 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
 
         {/* Кнопка - фиксированная позиция */}
         <div className="absolute left-1/2 top-1/2 mt-44 -translate-x-1/2 -translate-y-1/2 transform">
-          <Button.Root onClick={handleLetSGo}>Let's GO</Button.Root>
+          <Button.Root onClick={handleSkipIntro}>Let's GO</Button.Root>
         </div>
       </div>
 

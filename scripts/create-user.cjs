@@ -1,3 +1,5 @@
+// node scripts/create-user.cjs
+
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 

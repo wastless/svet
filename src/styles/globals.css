@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  /* Ensure body doesn't create stacking context issues */
+  body {
+    isolation: auto;
+  }
+  
   /*#region Colors */
   :root {
     --gray-950: #171717;
@@ -197,6 +202,32 @@
   
   .nav-adaptive .nav-underline {
     background-color: var(--adaptive-text);
+  }
+
+  /* Mix blend mode navigation */
+  .nav-blend {
+    color: #ffffff !important;
+  }
+  
+  .nav-blend-line {
+    background-color: #ffffff !important;
+  }
+  
+  /* Ensure navigation container doesn't create isolation */
+  .nav-container {
+    isolation: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    mix-blend-mode: normal;
+    pointer-events: none;
+  }
+  
+  .nav-container > * {
+    pointer-events: auto;
+    position: relative;
+    z-index: 50;
   }
 
   /* Dropdown adaptive styles */
