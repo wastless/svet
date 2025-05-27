@@ -5,14 +5,14 @@ import { auth } from "~/server/auth";
 import * as Button from "~/components/ui/button";
 import { loadGiftContent } from "~/lib/giftContent";
 import { PolaroidPhoto } from "~/components/polaroid-photo";
-import type { TextBlock, QuoteBlock, SecretBlock } from "~/types/gift";
+import { GiftContentRenderer } from "~/components/gift-blocks";
 
 interface GiftPageProps {
   params: { id: string };
 }
 
 export default async function GiftPage({ params }: GiftPageProps) {
-  const { id } = params;
+  const { id } = await params;
 
   // Проверяем авторизацию пользователя
   const session = await auth();
@@ -77,7 +77,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
             src={gift.hintImageUrl}
             className="rounded-2xl"
           />
-          <p className="font-styrene text-paragraph-md-bold uppercase text-center">
+          <p className="font-styrene text-paragraph-md font-bold uppercase text-center">
             {gift.hintText}
           </p>
         </div>
@@ -86,9 +86,8 @@ export default async function GiftPage({ params }: GiftPageProps) {
       {/* Секретный код (если есть) */}
       {gift.code && (
         <div className="pt-24 flex flex-col items-center gap-5 text-center">
-          <p className="mx-auto max-w-[440px] font-styrene text-paragraph-md-bold uppercase">
-            This is the part of your cipher. Collect them all to reveal
-            the last secret.
+          <p className="mx-auto max-w-[440px] font-styrene text-paragraph-md font-bold uppercase">
+          {gift.codeText}
           </p>
           <div className="font-founders text-title-h4 uppercase">
             {gift.code}
@@ -101,8 +100,8 @@ export default async function GiftPage({ params }: GiftPageProps) {
       </span>
 
       {/* Контент поздравления */}
-      <div className="py-16 text-adaptive bg-bg-strong-950 dark-container">
-        <div className="mx-auto max-w-4xl px-4">
+      <div className="py-16 text-adaptive bg-bg-strong-950 dark-container ">
+        <div className="mx-auto max-w-4xl ">
           {gift.isSecret && !isAuthenticated ? (
             <div className="text-center">
               <p className="text-title-h3 font-founders uppercase max-w-[460px] mx-auto">
@@ -110,33 +109,12 @@ export default async function GiftPage({ params }: GiftPageProps) {
               </p>
             </div>
           ) : (
-            /* Здесь будет рендер блоков контента */
-            <div className="space-y-8">
-              {content.blocks.map((block, index) => (
-                <div key={index} className="text-center">
-                  {/* Временная заглушка для блоков */}
-                  <div className="rounded-lg bg-gray-100 p-6">
-                    <p className="mb-2 text-sm text-gray-500">
-                      Блок типа: {block.type}
-                    </p>
-                    {block.type === "text" && (
-                      <p className="text-lg">{(block as TextBlock).content}</p>
-                    )}
-                    {block.type === "quote" && (
-                      <blockquote className="text-xl italic">
-                        &ldquo;{(block as QuoteBlock).content}&rdquo;
-                      </blockquote>
-                    )}
-                    {block.type === "secret" && (
-                      <p className="text-gray-600">
-                        {(block as SecretBlock).accessMessage ??
-                          "Oops, only Lesya sees this content"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            /* Рендер блоков контента*/
+            <GiftContentRenderer
+              content={content}
+              memoryPhoto={gift.memoryPhoto ?? undefined}
+              className="max-w-none"
+            />
           )}
         </div>
       </div>

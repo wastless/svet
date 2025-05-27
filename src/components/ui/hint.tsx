@@ -6,7 +6,7 @@ const HINT_ROOT_NAME = "HintRoot";
 
 export const hintVariants = tv({
   slots: {
-    root: "group flex items-center gap-1 text-paragraph-xs-bold font-styrene uppercase text-text-strong-950",
+    root: "group flex items-center gap-1 text-paragraph-xs font-styrene uppercase text-text-strong-950",
   },
   variants: {
     disabled: {

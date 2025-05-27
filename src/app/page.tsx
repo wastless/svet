@@ -52,7 +52,7 @@ export default function HomePage() {
               </h1>
             </div>
             
-            <h2 className="text-adaptive font-styrene text-paragraph-md-bold text-center uppercase">
+            <h2 className="text-adaptive font-styrene text-paragraph-md font-bold text-center uppercase">
               Before the birthday:
               <br />
               <Countdown

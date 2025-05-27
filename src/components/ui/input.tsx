@@ -27,7 +27,7 @@ export const inputVariants = tv({
     ],
     input: [
       // base
-      'w-full bg-bg-weak-50 text-paragraph-md-medium uppercase font-styrene text-text-strong-950',
+      'w-full bg-bg-weak-50 text-paragraph-md uppercase font-styrene text-text-strong-950',
       'h-12 outline-none transition duration-200 ease-out',
       // placeholder
       'placeholder:select-none placeholder:text-text-disabled-300',

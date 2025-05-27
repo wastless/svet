@@ -148,7 +148,7 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         </div>
 
         {/* Основной текст - фиксированная позиция по центру */}
-        <div className="absolute left-1/2 top-1/2 mt-16 w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-8 text-center font-styrene text-paragraph-md-bold uppercase text-adaptive">
+        <div className="absolute left-1/2 top-1/2 mt-16 w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-8 text-center font-styrene text-paragraph-md font-bold uppercase text-adaptive">
           <span>
             This website is your personal assistant for your advent calendar
             gifts. Every day, you'll get a new gift to open — only you can open
@@ -174,7 +174,7 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         </div>
 
         {/* Основной текст - фиксированная позиция по центру */}
-        <div className="absolute left-1/2 top-1/2 mt-16 w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-8 text-center font-styrene text-paragraph-md-bold uppercase text-adaptive">
+        <div className="absolute left-1/2 top-1/2 mt-16 w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-8 text-center font-styrene text-paragraph-md font-bold uppercase text-adaptive">
           <span>
             The roadmap page displays all the open gifts. gallery page — open
             memories. Some gifts may be kept secret from others. It's easy to
@@ -196,7 +196,7 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
               {/* Skip кнопка */}
         <button
           onClick={handleSkipIntro}
-          className="group absolute bottom-8 right-8 z-10 flex items-center gap-2 font-styrene text-paragraph-md-bold text-adaptive"
+          className="group absolute bottom-8 right-8 z-10 flex items-center gap-2 font-styrene text-paragraph-md font-bold text-adaptive"
         >
           <span className="relative">
             SKIP INTRO

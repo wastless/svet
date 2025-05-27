@@ -13,7 +13,7 @@ const NavLink: React.FC<{
   return (
     <Link
       href={href}
-      className="group relative font-styrene text-paragraph-md-bold uppercase nav-blend transition-opacity duration-300"
+      className="group relative font-styrene text-paragraph-md font-bold uppercase nav-blend transition-opacity duration-300"
     >
       {children}
       {/* Левая линия - появляется слева и движется к центру */}
@@ -58,11 +58,11 @@ export const Navigation = () => {
         <div className="flex items-center gap-6">
           <NavLink href="/gallery">Gallery</NavLink>
           {isMounted && session?.user?.username ? (
-            <span className="font-styrene text-paragraph-md-bold uppercase nav-blend">
+            <span className="font-styrene text-paragraph-md font-bold uppercase nav-blend">
               <Dropdown.Root onOpenChange={setIsDropdownOpen}>
                 <Dropdown.Trigger asChild className="focus:outline-none">
                   <button
-                    className={`group relative cursor-pointer font-styrene text-paragraph-md-bold uppercase nav-blend ${isDropdownOpen ? "[&>span]:w-1/2" : ""}`}
+                    className={`group relative cursor-pointer font-styrene text-paragraph-md font-bold uppercase nav-blend ${isDropdownOpen ? "[&>span]:w-1/2" : ""}`}
                   >
                     {session.user.username}
                     <span 

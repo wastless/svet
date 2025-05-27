@@ -1,105 +1,113 @@
-// Типы блоков для контента поздравления
-export type GiftBlock =
-  | TextBlock
-  | ImageBlock
-  | VideoBlock
-  | AudioBlock
-  | QuoteBlock
-  | GalleryBlock
-  | SecretBlock;
+// Основные типы для системы подарков
 
-// Блок с текстом
-export type TextBlock = {
-  type: "text";
-  content: string;
-  style?: "normal" | "title" | "subtitle"; // стили для разного оформления
-};
-
-// Блок с изображением
-export type ImageBlock = {
-  type: "image";
-  url: string;
-  caption?: string;
-  alt?: string;
-};
-
-// Блок с видео
-export type VideoBlock = {
-  type: "video";
-  url: string;
-  caption?: string;
-  thumbnail?: string; // превью для видео
-};
-
-// Блок с аудио
-export type AudioBlock = {
-  type: "audio";
-  url: string;
-  caption?: string;
-  title?: string;
-};
-
-// Блок с цитатой
-export type QuoteBlock = {
-  type: "quote";
-  content: string;
-  author?: string;
-  style?: "italic" | "bold" | "handwritten"; // разные стили цитат
-};
-
-// Блок с галереей изображений
-export type GalleryBlock = {
-  type: "gallery";
-  images: Array<{
-    url: string;
-    caption?: string;
-    alt?: string;
-  }>;
-  layout?: "grid" | "carousel" | "masonry"; // разные варианты отображения
-};
-
-// Секретный блок (скрытый контент)
-export type SecretBlock = {
-  type: "secret";
-  content: GiftBlock[]; // может содержать любые другие блоки
-  accessMessage?: string; // сообщение о том, что контент скрыт
-};
-
-// Основной тип для контента поздравления
-export type GiftContent = {
-  blocks: GiftBlock[];
-  metadata?: {
-    createdAt: string;
-    updatedAt: string;
-    version: string;
-  };
-};
-
-// Тип для полароидной фотографии
-export type MemoryPhoto = {
+// Полароидная фотография
+export interface MemoryPhoto {
   id: string;
   text: string; // никнейм/подпись на полароиде
   photoUrl: string; // URL оригинальной фотографии
   createdAt: Date;
   giftId: string;
-};
+}
 
-// Тип для полного объекта подарка (соответствует Prisma модели)
-export type Gift = {
-  id: string;
-  number: number;
-  title: string | null;
-  isSecret: boolean;
-  openDate: Date;
-  englishDescription: string;
-  hintImageUrl: string;
-  hintText: string;
-  code?: string | null;
-  contentPath: string;
-  memoryPhoto?: MemoryPhoto | null; // связь с полароидной фотографией
-};
+// Текстовый блок
+export interface TextBlock {
+  type: "text";
+  content: string;
+  style?: "title" | "subtitle" | "normal";
+}
 
-// Тип для подарка с загруженным контентом
-export type GiftWithContent = Gift & {
-  content: GiftContent;
-}; 
+// Цитата
+export interface QuoteBlock {
+  type: "quote";
+  content: string;
+  style?: "small" | "big";
+}
+
+// Блок с фотографией и текстом
+export interface ImageBlock {
+  type: "image";
+  title?: string; // заголовок
+  text?: string; // текст
+  url: string; // фотография
+  caption?: string; // подпись под фото
+  layout?: "image-right" | "image-left" | "image-center"; // расположение фото
+  size?: "small" | "medium" | "large"; // размер фото
+  orientation?: "horizontal" | "vertical"; // ориентация фото
+}
+
+// Блок с двумя фотографиями
+export interface TwoImagesBlock {
+  type: "two-images";
+  images: {
+    url: string; // фотография
+    title?: string; // заголовок для каждой фотографии
+    text?: string; // описание для каждой фотографии
+    caption?: string; // подпись под фото
+    layout?: "text-top" | "text-bottom"; // расположение текста для каждой фотографии
+  }[];
+  size?: "small" | "medium" | "large"; // размер фото
+  orientation?: "horizontal" | "vertical"; // ориентация фото
+}
+
+// Блок с видеокружком
+export interface VideoCircleBlock {
+  type: "video-circle";
+  title?: string; // заголовок
+  text?: string; // текст
+  url: string; // URL видео файла
+  caption?: string; // подпись под видео
+  size?: "small" | "medium" | "large"; // размер видеокружка
+  autoplay?: boolean; // автовоспроизведение
+  muted?: boolean; // отключить звук по умолчанию
+  loop?: boolean; // зацикливание видео
+}
+
+// Блок с видео и текстом
+export interface VideoBlock {
+  type: "video";
+  title?: string; // заголовок
+  text?: string; // текст
+  url: string; // видео
+  caption?: string; // подпись под видео
+  size?: "small" | "medium" | "large"; // размер видео
+  autoplay?: boolean; // автовоспроизведение
+  muted?: boolean; // отключить звук по умолчанию
+  loop?: boolean; // зацикливание видео
+}
+
+// Блок с голосовым сообщением
+export interface AudioMessageBlock {
+  type: "audio-message";
+  title?: string; // заголовок
+  text?: string; // текст
+  url: string; // URL аудио файла
+  duration?: number; // длительность в секундах (опционально)
+}
+
+// Блок с музыкой
+export interface MusicBlock {
+  type: "music";
+  title?: string; // заголовок
+  text?: string; // текст
+  url: string; // URL аудио файла
+  coverUrl: string; // URL обложки
+  artist: string; // исполнитель
+  trackName: string; // название трека
+  duration?: number; // длительность в секундах (опционально)
+  yandexMusicUrl?: string; // ссылка на Яндекс.Музыку (опционально)
+}
+
+// Объединенный тип блоков
+export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | AudioMessageBlock | MusicBlock;
+
+// Основная структура контента подарка
+export interface GiftContent {
+  blocks: GiftBlock[];
+  metadata?: {
+    title?: string;
+    description?: string;
+    author?: string;
+    senderName?: string; // имя отправителя для базового блока
+    createdAt?: string;
+  };
+} 

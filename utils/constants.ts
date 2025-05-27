@@ -23,6 +23,6 @@ export const DATE_CONFIG = {
  * Настройки для таймера обратного отсчета
  */
 export const COUNTDOWN_CONFIG = {
-  TARGET_DATE: '2025-07-01', // Дата дня рождения или целевая дата
+  TARGET_DATE: '2025-08-01', // Дата дня рождения или целевая дата
   UPDATE_INTERVAL: 1000, // Интервал обновления в миллисекундах
 } as const; 

@@ -11,20 +11,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Проверяем тип файла
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
+    // Получаем расширение файла
+    const fileExtension = file.name.toLowerCase().split('.').pop() || '';
+    
+    // Проверяем тип файла по MIME type и расширению
+    const allowedMimeTypes = [
+      // Images
+      "image/jpeg", 
+      "image/jpg", 
+      "image/png", 
+      "image/gif", 
+      "image/webp",
+      "image/svg+xml",
+      // Videos
+      "video/mp4",
+      // Audio
+      "audio/mp3",
+      "audio/mpeg", // MP3 альтернативный MIME type
+      "audio/ogg",
+    ];
+
+    const allowedExtensions = [
+      // Images
+      "jpg", "jpeg", "png", "gif", "webp", "svg",
+      // Videos  
+      "mp4",
+      // Audio
+      "mp3", "ogg"
+    ];
+    
+    const isMimeTypeValid = allowedMimeTypes.includes(file.type);
+    const isExtensionValid = allowedExtensions.includes(fileExtension);
+    
+    // Для SVG файлов допускаем проверку по расширению, так как MIME type может варьироваться
+    if (!isMimeTypeValid && !isExtensionValid) {
       return NextResponse.json(
-        { error: "Invalid file type. Only images are allowed." },
+        { error: "Invalid file type. Supported formats: JPEG, PNG, GIF, WebP, SVG, MP4, MP3, OGG" },
         { status: 400 }
       );
     }
 
-    // Проверяем размер файла (максимум 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Проверяем размер файла (максимум 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 5MB." },
+        { error: "File too large. Maximum size is 10MB." },
         { status: 400 }
       );
     }
@@ -50,6 +81,9 @@ export async function POST(request: NextRequest) {
       message: "File uploaded successfully",
       url: fileUrl,
       fileName: fileName,
+      fileType: file.type,
+      fileSize: file.size,
+      fileExtension: fileExtension,
     });
   } catch (error) {
     console.error("Error uploading file:", error);

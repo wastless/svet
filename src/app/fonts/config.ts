@@ -41,16 +41,6 @@ export const nyghtserif = localFont({
 export const styrene = localFont({
   src: [
     {
-      path: "Styrene_A_LC_Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "Styrene_A_LC_Medium.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
       path: "Styrene_A_LC_Bold.woff2",
       weight: "700",
       style: "normal",
@@ -61,6 +51,36 @@ export const styrene = localFont({
   fallback: ["sans-serif"],
   preload: true,
 });
+
+export const euclid = localFont({
+  src: [
+    {
+      path: "EuclidCircularA_Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "EuclidCircularA_Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "EuclidCircularA_Semibold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "EuclidCircularA_Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-euclid",
+  display: "swap",
+  fallback: ["sans-serif"],
+  preload: true,
+});
+
 
 export const permanent = localFont({
   src: [
@@ -82,6 +102,7 @@ export const fontVariables = [
   nyghtserif.variable,
   styrene.variable,
   permanent.variable,
+  euclid.variable,
 ].join(" ");
 
 // Font class names for Tailwind
@@ -90,6 +111,7 @@ export const fontClasses = {
   nyghtserif: "font-nyghtserif",
   styrene: "font-styrene",
   permanent: "font-permanent",
+  euclid: "font-euclid",
 } as const;
 
 // Font weights
