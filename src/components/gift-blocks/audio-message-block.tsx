@@ -18,8 +18,12 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
   const wavesurferRef = useRef<any>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     if (typeof window !== "undefined" && waveformRef.current && !wavesurferRef.current) {
       import("wavesurfer.js").then((WaveSurferModule) => {
+        if (!isMounted || wavesurferRef.current) return;
+        
         const WaveSurfer = WaveSurferModule.default;
         
         wavesurferRef.current = WaveSurfer.create({
@@ -39,30 +43,41 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
         wavesurferRef.current.load(block.url);
 
         wavesurferRef.current.on('ready', () => {
-          setIsReady(true);
-          setDuration(wavesurferRef.current.getDuration());
+          if (isMounted) {
+            setIsReady(true);
+            setDuration(wavesurferRef.current.getDuration());
+          }
         });
 
         wavesurferRef.current.on('audioprocess', () => {
-          setCurrentTime(wavesurferRef.current.getCurrentTime());
+          if (isMounted) {
+            setCurrentTime(wavesurferRef.current.getCurrentTime());
+          }
         });
 
         wavesurferRef.current.on('play', () => {
-          setIsPlaying(true);
+          if (isMounted) {
+            setIsPlaying(true);
+          }
         });
 
         wavesurferRef.current.on('pause', () => {
-          setIsPlaying(false);
+          if (isMounted) {
+            setIsPlaying(false);
+          }
         });
 
         wavesurferRef.current.on('finish', () => {
-          setIsPlaying(false);
-          setCurrentTime(0);
+          if (isMounted) {
+            setIsPlaying(false);
+            setCurrentTime(0);
+          }
         });
       });
     }
 
     return () => {
+      isMounted = false;
       if (wavesurferRef.current) {
         wavesurferRef.current.destroy();
         wavesurferRef.current = null;

@@ -22,7 +22,12 @@ export default async function GiftPage({ params }: GiftPageProps) {
   const gift = await db.gift.findUnique({
     where: { id },
     include: {
-      memoryPhoto: true,
+      memoryPhoto: {
+        include: {
+          // Включаем данные подарка в memoryPhoto, чтобы иметь доступ к nickname
+          gift: true,
+        }
+      },
     },
   });
 
@@ -114,6 +119,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
               content={content}
               memoryPhoto={gift.memoryPhoto ?? undefined}
               className="max-w-none"
+              gift={gift}
             />
           )}
         </div>
@@ -140,7 +146,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
         )}
         
         <Link href="/gallery">
-          <Button.Root>to the gallery</Button.Root>
+          <Button.Root >to the gallery</Button.Root>
         </Link>
       </div>
     </div>

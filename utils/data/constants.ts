@@ -25,4 +25,33 @@ export const DATE_CONFIG = {
 export const COUNTDOWN_CONFIG = {
   TARGET_DATE: '2025-08-01', // Дата дня рождения или целевая дата
   UPDATE_INTERVAL: 1000, // Интервал обновления в миллисекундах
-} as const; 
+} as const;
+
+/**
+ * Приветствия на разных языках для интро
+ */
+export const GREETINGS = [
+  "Hi",
+  "Hey",
+  "Hola",
+  "Bonjour",
+  "Hallo",
+  "Ciao",
+  "Olá",
+  "Czesc",
+  "Privet",
+  "Merhaba",
+  "Salam",
+  "Shalom",
+  "Ni hao",
+  "Namaste",
+  "Sawadee",
+  "Halo",
+  "Jambo",
+  "Yia sou",
+  "Halló",
+  "Hej",
+  "Hej",
+  "Ahoj",
+  "Helló",
+] as const; 

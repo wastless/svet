@@ -44,7 +44,7 @@ const DropdownMenuItem = React.forwardRef<
     ref={forwardedRef}
     className={cn(
       // base
-      'group/item relative cursor-pointer select-none p-2 text-paragraph-md uppercase font-styrene outline-none',
+      'group/item relative cursor-pointer select-none py-2 text-paragraph-md uppercase font-styrene font-boldoutline-none',
       'flex items-center justify-end gap-2',
       'transition duration-200 ease-out',
       inset && 'pl-9',

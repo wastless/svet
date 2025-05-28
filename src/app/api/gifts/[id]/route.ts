@@ -15,7 +15,6 @@ interface UpdateGiftRequest {
   isSecret?: boolean;
   content?: any;
   memoryPhoto?: {
-    text: string;
     photoUrl: string;
   } | null;
 }
@@ -29,7 +28,11 @@ export async function GET(
     const gift = await db.gift.findUnique({
       where: { id },
       include: {
-        memoryPhoto: true,
+        memoryPhoto: {
+          include: {
+            gift: true,
+          }
+        },
       },
     });
 
@@ -84,6 +87,25 @@ export async function PUT(
       );
     }
 
+    // Проверяем уникальность номера, если он изменился
+    if (number !== undefined && number !== existingGift.number) {
+      const giftWithSameNumber = await db.gift.findFirst({
+        where: { 
+          number,
+          id: {
+            not: id
+          }
+        }
+      });
+
+      if (giftWithSameNumber) {
+        return NextResponse.json(
+          { error: "Gift with this number already exists" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Сохраняем контент, если он передан
     if (content) {
       const success = await saveGiftContent(id, content);
@@ -123,20 +145,18 @@ export async function PUT(
             where: { id: existingGift.memoryPhoto.id },
           });
         }
-      } else if (memoryPhoto.text || memoryPhoto.photoUrl) {
+      } else if (memoryPhoto.photoUrl) {
         // Создаем или обновляем фотографию
         if (existingGift.memoryPhoto) {
           await db.memoryPhoto.update({
             where: { id: existingGift.memoryPhoto.id },
             data: {
-              text: memoryPhoto.text,
               photoUrl: memoryPhoto.photoUrl,
             },
           });
         } else {
           await db.memoryPhoto.create({
             data: {
-              text: memoryPhoto.text,
               photoUrl: memoryPhoto.photoUrl,
               giftId: id,
             },
@@ -149,7 +169,11 @@ export async function PUT(
     const finalGift = await db.gift.findUnique({
       where: { id },
       include: {
-        memoryPhoto: true,
+        memoryPhoto: {
+          include: {
+            gift: true,
+          }
+        },
       },
     });
 

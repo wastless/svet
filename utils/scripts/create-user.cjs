@@ -1,4 +1,4 @@
-// node scripts/create-user.cjs
+// node utils/scripts/create-user.cjs
 
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
@@ -18,12 +18,12 @@ async function createUser() {
     }
 
     // Создаем хешированный пароль
-    const hashedPassword = await bcrypt.hash('password123', 12);
+    const hashedPassword = await bcrypt.hash('zoliso66', 12);
     
     // Создаем пользователя
     const user = await prisma.user.create({
       data: {
-        username: 'zoliso66',
+        username: 'admin',
         password: hashedPassword
       }
     });

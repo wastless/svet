@@ -13,7 +13,7 @@ export default function NotFoundPage() {
           <h1 className="-mt-2 text-center font-founders text-title-h1 text-adaptive">
             404
           </h1>
-          <div className="flex flex-col items-center justify-center text-center font-styrene text-paragraph-md-bold uppercase text-adaptive">
+          <div className="flex flex-col items-center justify-center text-center font-styrene font-bold text-paragraph-md uppercase text-adaptive">
             <span>OHH, beda beda....</span>
             <br />
             <span>***</span>

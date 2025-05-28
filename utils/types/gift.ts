@@ -3,10 +3,10 @@
 // Полароидная фотография
 export interface MemoryPhoto {
   id: string;
-  text: string; // никнейм/подпись на полароиде
   photoUrl: string; // URL оригинальной фотографии
   createdAt: Date;
   giftId: string;
+  gift?: Gift; // связь с подарком для получения nickname
 }
 
 // Основная модель подарка (из базы данных)
@@ -14,6 +14,8 @@ export interface Gift {
   id: string;
   number: number; // номер подарка
   title?: string | null; // название подарка
+  author?: string | null; // автор подарка
+  nickname?: string | null; // никнейм (отображается на полароидной фотографии)
   isSecret: boolean; // публичность/конфиденциальность
   openDate: Date; // когда подарок становится доступен
   englishDescription: string; // английское описание

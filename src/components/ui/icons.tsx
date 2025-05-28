@@ -58,7 +58,11 @@ export function PauseIcon({ className = "", size = 20 }: IconProps) {
       className={className}
       fill="currentColor"
     >
-      <path d="M11 5.5H7v13h4zm6 0h-4v13h4z" clipRule="evenodd" fillRule="evenodd" />
+      <path
+        d="M11 5.5H7v13h4zm6 0h-4v13h4z"
+        clipRule="evenodd"
+        fillRule="evenodd"
+      />
     </svg>
   );
 }
@@ -125,6 +129,66 @@ export function VolumeOffIcon({ className = "", size = 20 }: IconProps) {
           <path d="M0 0h24v24H0z" />
         </clipPath>
       </defs>
+    </svg>
+  );
+}
+
+export function EmptyBlocksIcon({ className = "", size = 48 }: IconProps) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+      />
+    </svg>
+  );
+}
+
+export function BlockIcon({ className = "", size = 20 }: IconProps) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+      />
+    </svg>
+  );
+}
+
+export function RemoveBlockIcon({ className = "", size = 20 }: IconProps) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 18L18 6M6 6l12 12"
+      />
     </svg>
   );
 }

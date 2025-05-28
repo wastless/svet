@@ -14,7 +14,7 @@ export interface YandexMusicResponse {
 /**
  * Получает метаданные трека из Яндекс.Музыки по URL
  */
-export async function fetchYandexMusicMetadata(url: string): Promise<YandexMusicMetadata | null> {
+export async function fetchYandexMusicMetadata(url: string): Promise<YandexMusicMetadata> {
   try {
     const response = await fetch('/api/yandex-music/metadata', {
       method: 'POST',
@@ -24,21 +24,16 @@ export async function fetchYandexMusicMetadata(url: string): Promise<YandexMusic
       body: JSON.stringify({ url }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const data: YandexMusicResponse = await response.json();
     
     if (data.success && data.metadata) {
       return data.metadata;
     } else {
-      console.error('Failed to fetch metadata:', data.error);
-      return null;
+      throw new Error(data.error || 'Не удалось получить метаданные трека');
     }
   } catch (error) {
     console.error('Error fetching Yandex Music metadata:', error);
-    return null;
+    throw error;
   }
 }
 

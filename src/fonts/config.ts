@@ -45,6 +45,16 @@ export const styrene = localFont({
       weight: "700",
       style: "normal",
     },
+    {
+      path: "Styrene_A_LC_Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "Styrene_A_LC_Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
   ],
   variable: "--font-styrene",
   display: "swap",

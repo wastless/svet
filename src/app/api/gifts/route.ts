@@ -5,6 +5,8 @@ import { saveGiftContent, generateContentPath } from "@/utils/lib/giftContent";
 
 interface CreateGiftRequest {
   title?: string | null;
+  author?: string | null;
+  nickname?: string | null;
   openDate: string;
   number: number;
   englishDescription: string;
@@ -15,7 +17,6 @@ interface CreateGiftRequest {
   code?: string | null;
   content?: any;
   memoryPhoto?: {
-    text: string;
     photoUrl: string;
   } | null;
 }
@@ -25,6 +26,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as CreateGiftRequest;
     const { 
       title, 
+      author,
+      nickname,
       openDate, 
       number, 
       englishDescription, 
@@ -61,6 +64,8 @@ export async function POST(request: NextRequest) {
     const gift = await db.gift.create({
       data: {
         title,
+        author,
+        nickname,
         openDate: new Date(openDate),
         number,
         englishDescription,
@@ -104,10 +109,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем полароидную фотографию, если данные переданы
-    if (memoryPhoto && (memoryPhoto.text || memoryPhoto.photoUrl)) {
+    if (memoryPhoto && memoryPhoto.photoUrl) {
       await db.memoryPhoto.create({
         data: {
-          text: memoryPhoto.text,
           photoUrl: memoryPhoto.photoUrl,
           giftId: gift.id,
         },
@@ -118,7 +122,11 @@ export async function POST(request: NextRequest) {
     const finalGift = await db.gift.findUnique({
       where: { id: gift.id },
       include: {
-        memoryPhoto: true,
+        memoryPhoto: {
+          include: {
+            gift: true,
+          }
+        },
       },
     });
 
@@ -136,7 +144,11 @@ export async function GET() {
   try {
     const gifts = await db.gift.findMany({
       include: {
-        memoryPhoto: true,
+        memoryPhoto: {
+          include: {
+            gift: true,
+          }
+        },
       },
       orderBy: { openDate: "desc" },
     });

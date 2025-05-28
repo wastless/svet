@@ -1,7 +1,7 @@
 "use client";
 
 import * as Button from "~/components/ui/button";
-import * as Input from "~/components/ui/input";
+import * as Input from "~/components/ui/input-login";
 import * as Label from "~/components/ui/label";
 import { RiEyeLine, RiEyeOffLine } from "@remixicon/react";
 import { useState } from "react";

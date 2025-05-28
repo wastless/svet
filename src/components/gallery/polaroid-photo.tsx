@@ -122,7 +122,7 @@ export function PolaroidPhoto({
             className={`text-marker absolute ${config.textPosition.title} left-[23px] right-[23px] z-[7] flex h-[60px] items-center font-permanent ${config.textSize}`}
             style={{ transform: "rotate(-2.5deg)" }}
           >
-            {memoryPhoto.text}
+            {memoryPhoto.gift?.nickname ? `@${memoryPhoto.gift.nickname}` : ''}
           </span>
 
           <span

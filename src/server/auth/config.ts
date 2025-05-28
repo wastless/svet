@@ -67,6 +67,7 @@ export const authConfig = {
   callbacks: {
     jwt: ({ token, user }) => {
       if (user) {
+        token.id = user.id;
         token.username = user.name;
       }
       return token;
@@ -75,9 +76,13 @@ export const authConfig = {
       ...session,
       user: {
         ...session.user,
-        id: token.sub!,
+        id: token.id as string,
         username: token.username as string,
       },
     }),
   },
+  pages: {
+    signIn: "/login",
+  },
+  secret: process.env.AUTH_SECRET,
 } satisfies NextAuthConfig;

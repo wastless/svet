@@ -1,6 +1,6 @@
 "use client";
 
-import type { GiftContent, GiftBlock, MemoryPhoto } from "@/utils/types/gift";
+import type { GiftContent, GiftBlock, MemoryPhoto, Gift } from "@/utils/types/gift";
 import { BaseBlock } from "./base-block";
 import { TextBlock } from "./text-block";
 import { QuoteBlock } from "./quote-block";
@@ -16,12 +16,14 @@ interface GiftContentRendererProps {
   content: GiftContent;
   memoryPhoto?: MemoryPhoto; // полароидная фотография
   className?: string;
+  gift?: Gift; // добавляем объект Gift для получения информации об авторе
 }
 
 export function GiftContentRenderer({
   content,
   memoryPhoto,
   className = "",
+  gift,
 }: GiftContentRendererProps) {
   const renderBlock = (block: GiftBlock, index: number) => {
     const blockKey = `block-${index}`;
@@ -105,7 +107,10 @@ export function GiftContentRenderer({
     }
   };
 
-  const senderName = content.metadata?.senderName;
+  // Используем author и nickname из gift, если они доступны, иначе используем senderName из метаданных
+  const senderName = gift?.author || content.metadata?.senderName;
+  // Гарантируем, что nickname будет строкой или undefined, но не null
+  const nickname = gift?.nickname ? gift.nickname : undefined;
   const baseText = content.metadata?.description || "С днем рождения!";
 
   return (
@@ -114,7 +119,7 @@ export function GiftContentRenderer({
       {senderName && (
         <BaseBlock
           name={senderName}
-          memoryPhotoText={memoryPhoto?.text}
+          nickname={nickname}
           text={baseText}
           className="mb-16"
         />

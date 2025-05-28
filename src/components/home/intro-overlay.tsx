@@ -2,33 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import * as Button from "~/components/ui/button";
+import * as IconButton from "~/components/ui/icon-button";
 import { ArrowRightIcon } from "~/components/ui/icons";
-
-const GREETINGS = [
-  "Hi",
-  "Hey",
-  "Hola",
-  "Bonjour",
-  "Hallo",
-  "Ciao",
-  "Olá",
-  "Czesc",
-  "Privet",
-  "Merhaba",
-  "Salam",
-  "Shalom",
-  "Ni hao",
-  "Namaste",
-  "Sawadee",
-  "Halo",
-  "Jambo",
-  "Yia sou",
-  "Halló",
-  "Hej",
-  "Hej",
-  "Ahoj",
-  "Helló",
-];
+import { GREETINGS } from "@/utils/data";
 
 interface IntroOverlayProps {
   onComplete: () => void;
@@ -193,21 +169,15 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         </div>
       </div>
 
-              {/* Skip кнопка */}
-        <button
-          onClick={handleSkipIntro}
-          className="group absolute bottom-8 right-8 z-10 flex items-center gap-2 font-styrene text-paragraph-md font-bold text-adaptive"
-        >
-          <span className="relative">
-            SKIP INTRO
-            </span>
-          <ArrowRightIcon size={16} className="transition-transform group-hover:translate-x-1" />
-          {/* Левая линия - появляется слева и движется к центру */}
-          <span className="ease-[cubic-bezier(0.22,0.61,0.36,1)] absolute bottom-0 left-0 h-[2px] w-0 translate-y-1 transform bg-adaptive-text transition-all duration-700 group-hover:w-1/2" />
-            {/* Правая линия - появляется справа и движется к центру */}
-            <span className="ease-[cubic-bezier(0.22,0.61,0.36,1)] absolute bottom-0 right-0 h-[2px] w-0 translate-y-1 transform bg-adaptive-text transition-all duration-700 group-hover:w-1/2" />
-          
-        </button>
+      {/* Skip кнопка */}
+      <IconButton.Root
+        onClick={handleSkipIntro}
+        position="absolute"
+        iconPosition="end"
+        icon={<ArrowRightIcon size={16} />}
+      >
+        SKIP INTRO
+      </IconButton.Root>
 
       {/* Scroll Indicator - внутри dark-container для правильной темы */}
       <div

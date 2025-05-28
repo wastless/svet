@@ -26,4 +26,24 @@ const LabelRoot = React.forwardRef<
 });
 LabelRoot.displayName = "LabelRoot";
 
-export { LabelRoot as Root };
+function LabelAsterisk({
+  className,
+  children,
+  ...rest
+}: React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span
+      className={cn(
+        'text-primary-base',
+        // disabled
+        'group-aria-disabled:text-text-disabled-300',
+        className,
+      )}
+      {...rest}
+    >
+      {children || '*'}
+    </span>
+  );
+}
+
+export { LabelRoot as Root, LabelAsterisk as Asterisk };

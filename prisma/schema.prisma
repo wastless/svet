@@ -21,16 +21,18 @@ model Gift {
   id                String   @id @default(cuid())
   number            Int      @unique // номер подарка
   title             String?  // название подарка
+  author            String  // автор подарка
+  nickname          String  // никнейм (связан с MemoryPhoto.text)
   isSecret          Boolean  @default(false) // публичность/конфиденциальность
   openDate          DateTime // когда подарок становится доступен
   englishDescription String  // английское описание
   hintImageUrl      String   // картинка-подсказка к физическому подарку
   hintText          String   @default("look for a gift with this sticker") // текст подсказки
-  codeText          String   @default("This is the part of your cipher. Collect them all to reveal the last secret") // текст подсказки
+  codeText          String?   @default("This is the part of your cipher. Collect them all to reveal the last secret") // текст подсказки
   code              String?  // секретный код (если есть)
   contentPath       String   // путь к файлу с контентом поздравления
   
-  // Связь с полароидной фотографией
+  // Связь с полароидной фотографией (один к одному)
   memoryPhoto       MemoryPhoto?
   
   @@map("gifts")
@@ -38,7 +40,6 @@ model Gift {
 
 model MemoryPhoto {
   id          String   @id @default(cuid())
-  text        String   // никнейм/подпись на полароиде
   photoUrl    String   // URL оригинальной фотографии
   createdAt   DateTime @default(now())
   

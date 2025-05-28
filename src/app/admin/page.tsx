@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth } from "~/server/auth";
-import { db } from "~/server/db";
 import { GiftEditor } from "~/components/admin/gift-editor";
 import { GiftList } from "~/components/admin/gift-list";
+import { GiftCreationWizard } from "~/components/admin/gift-creation-wizard";
 import type { Gift } from "@/utils/types/gift";
 
 export default function AdminPage() {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Загрузка списка подарков
@@ -33,8 +33,7 @@ export default function AdminPage() {
   }, []);
 
   const handleCreateGift = () => {
-    setSelectedGift(null);
-    setIsEditing(true);
+    setIsCreating(true);
   };
 
   const handleEditGift = (gift: Gift) => {
@@ -84,7 +83,8 @@ export default function AdminPage() {
         if (!isUpdate) {
           // Если создавали новый подарок, переходим к его редактированию
           setSelectedGift(savedGift);
-          // Остаемся в режиме редактирования для возможности загрузки файлов
+          setIsCreating(false);
+          setIsEditing(true);
         } else {
           // Если обновляли существующий, выходим из редактирования
           setIsEditing(false);
@@ -105,27 +105,30 @@ export default function AdminPage() {
     setSelectedGift(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Загрузка...</div>
-      </div>
-    );
-  }
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Административная панель - Подарки
-          </h1>
-          <p className="text-gray-600">
-            Создавайте, редактируйте и управляйте подарками
-          </p>
+    <div className="min-h-screen bg-bg-white-0">
+      <div className="container mx-auto">
+        {/* Заголовок в верхней части */}
+        <div className="flex justify-center pt-[100px] pb-10">
+          <h4 className="text-center font-founders text-title-h4 text-text-strong-950">
+            ADMIN <br /> PANEL
+          </h4>
         </div>
 
-        {isEditing ? (
+        {isCreating ? (
+          <GiftCreationWizard
+            onSave={handleSaveGift}
+            onCancel={handleCancelCreate}
+            onSuccess={() => {
+              setIsCreating(false);
+              loadGifts();
+            }}
+          />
+        ) : isEditing ? (
           <GiftEditor
             gift={selectedGift}
             onSave={handleSaveGift}
