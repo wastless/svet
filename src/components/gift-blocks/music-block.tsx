@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import type { MusicBlock as MusicBlockType } from "~/types/gift";
+import type { MusicBlock as MusicBlockType } from "@/utils/types/gift";
 import { 
   PlayIcon, 
   PauseIcon, 

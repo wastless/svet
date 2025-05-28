@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImageBlock as ImageBlockType } from "~/types/gift";
+import type { ImageBlock as ImageBlockType } from "@/utils/types/gift";
 
 interface ImageBlockProps {
   block: ImageBlockType;

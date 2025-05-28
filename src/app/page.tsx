@@ -3,12 +3,12 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import * as Button from "~/components/ui/button";
-import { Countdown } from "~/components/countdown";
-import { WordOfDay } from "~/components/word-of-day";
-import { IntroOverlay } from "~/components/intro-overlay";
-import { useIntro } from "~/hooks/useIntro";
-import { COUNTDOWN_CONFIG, WORD_SYSTEM } from "../../utils/constants";
-import { useDate } from "~/hooks/useDateContext";
+import { Countdown } from "~/components/home/countdown";
+import { WordOfDay } from "~/components/home/word-of-day";
+import { IntroOverlay } from "~/components/home/intro-overlay";
+import { useIntro } from "@/utils/hooks/useIntro";
+import { COUNTDOWN_CONFIG, WORD_SYSTEM } from "@/utils/data/constants";
+import { useDate } from "@/utils/hooks/useDateContext";
 
 export default function HomePage() {
   const { data: session, status } = useSession();

@@ -1,89 +1,70 @@
-import { NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { saveGiftFile } from "@/utils/lib/giftContent";
 import path from "path";
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.formData();
-    const file: File | null = data.get("file") as unknown as File;
-
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const giftId = formData.get("giftId") as string;
+    const fileType = formData.get("fileType") as string; // "hint", "memory", "block"
+    
     if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
-
-    // Получаем расширение файла
-    const fileExtension = file.name.toLowerCase().split('.').pop() || '';
-    
-    // Проверяем тип файла по MIME type и расширению
-    const allowedMimeTypes = [
-      // Images
-      "image/jpeg", 
-      "image/jpg", 
-      "image/png", 
-      "image/gif", 
-      "image/webp",
-      "image/svg+xml",
-      // Videos
-      "video/mp4",
-      // Audio
-      "audio/mp3",
-      "audio/mpeg", // MP3 альтернативный MIME type
-      "audio/ogg",
-    ];
-
-    const allowedExtensions = [
-      // Images
-      "jpg", "jpeg", "png", "gif", "webp", "svg",
-      // Videos  
-      "mp4",
-      // Audio
-      "mp3", "ogg"
-    ];
-    
-    const isMimeTypeValid = allowedMimeTypes.includes(file.type);
-    const isExtensionValid = allowedExtensions.includes(fileExtension);
-    
-    // Для SVG файлов допускаем проверку по расширению, так как MIME type может варьироваться
-    if (!isMimeTypeValid && !isExtensionValid) {
       return NextResponse.json(
-        { error: "Invalid file type. Supported formats: JPEG, PNG, GIF, WebP, SVG, MP4, MP3, OGG" },
+        { error: "No file provided" },
         { status: 400 }
       );
     }
 
-    // Проверяем размер файла (максимум 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
+    if (!giftId) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 10MB." },
+        { error: "Gift ID is required" },
         { status: 400 }
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Генерируем уникальное имя файла
+    // Получаем буфер файла
+    const buffer = Buffer.from(await file.arrayBuffer());
+    
+    // Генерируем безопасное имя файла
     const timestamp = Date.now();
-    const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const fileName = `${timestamp}_${originalName}`;
+    const ext = path.extname(file.name);
+    const baseName = path.basename(file.name, ext);
+    const safeFileName = `${baseName}_${timestamp}${ext}`;
 
-    // Путь для сохранения файла
-    const uploadPath = path.join(process.cwd(), "public", "uploads", fileName);
+    // Определяем подпапку в зависимости от типа файла
+    let subfolder: string | undefined;
+    let fileName: string;
+
+    switch (fileType) {
+      case "hint":
+        fileName = `hint-image${ext}`;
+        subfolder = undefined; // Прямо в папке подарка
+        break;
+      case "memory":
+        fileName = `memory-photo${ext}`;
+        subfolder = undefined; // Прямо в папке подарка
+        break;
+      case "block":
+        fileName = safeFileName;
+        subfolder = "blocks"; // В подпапке blocks
+        break;
+      default:
+        fileName = safeFileName;
+        subfolder = "blocks"; // По умолчанию в blocks
+        break;
+    }
 
     // Сохраняем файл
-    await writeFile(uploadPath, buffer);
+    const url = await saveGiftFile(giftId, fileName, buffer, subfolder);
 
-    // Возвращаем URL файла
-    const fileUrl = `/uploads/${fileName}`;
-
-    return NextResponse.json({
-      message: "File uploaded successfully",
-      url: fileUrl,
-      fileName: fileName,
-      fileType: file.type,
-      fileSize: file.size,
-      fileExtension: fileExtension,
+    return NextResponse.json({ 
+      url,
+      fileName,
+      originalName: file.name,
+      size: file.size,
+      type: file.type
     });
   } catch (error) {
     console.error("Error uploading file:", error);

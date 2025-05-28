@@ -1,6 +1,6 @@
 "use client";
 
-import type { QuoteBlock as QuoteBlockType } from "~/types/gift";
+import type { QuoteBlock as QuoteBlockType } from "@/utils/types/gift";
 
 interface QuoteBlockProps {
   block: QuoteBlockType;

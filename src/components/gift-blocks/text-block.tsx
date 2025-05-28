@@ -1,6 +1,6 @@
 "use client";
 
-import type { TextBlock as TextBlockType } from "~/types/gift";
+import type { TextBlock as TextBlockType } from "@/utils/types/gift";
 
 interface TextBlockProps {
   block: TextBlockType;

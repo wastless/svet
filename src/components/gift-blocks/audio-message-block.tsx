@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import type { AudioMessageBlock as AudioMessageBlockType } from "~/types/gift";
+import React, { useState, useRef, useEffect } from "react";
+import type { AudioMessageBlock as AudioMessageBlockType } from "@/utils/types/gift";
 import { PlayIcon, PauseIcon, LoadingSpinner } from "~/components/ui/icons";
 
 interface AudioMessageBlockProps {

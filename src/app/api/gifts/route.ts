@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
+import { saveGiftContent, generateContentPath } from "@/utils/lib/giftContent";
 
 interface CreateGiftRequest {
   title?: string | null;
@@ -9,21 +10,49 @@ interface CreateGiftRequest {
   englishDescription: string;
   hintImageUrl: string;
   hintText?: string;
-  contentPath: string;
+  codeText?: string;
   isSecret?: boolean;
   code?: string | null;
-  memoryPhotoUrl?: string | null;
+  content?: any;
+  memoryPhoto?: {
+    text: string;
+    photoUrl: string;
+  } | null;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as CreateGiftRequest;
-    const { title, openDate, number, englishDescription, hintImageUrl, hintText, contentPath, isSecret, code, memoryPhotoUrl } = body;
+    const { 
+      title, 
+      openDate, 
+      number, 
+      englishDescription, 
+      hintImageUrl, 
+      hintText, 
+      codeText,
+      isSecret, 
+      code, 
+      content,
+      memoryPhoto 
+    } = body;
 
-    // Валидация данных
-    if (!openDate || !number || !englishDescription || !hintImageUrl || !contentPath) {
+    // Валидация данных - hintImageUrl теперь необязательное
+    if (!openDate || !number || !englishDescription) {
       return NextResponse.json(
-        { error: "openDate, number, englishDescription, hintImageUrl, and contentPath are required" },
+        { error: "openDate, number, and englishDescription are required" },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем уникальность номера
+    const existingGift = await db.gift.findUnique({
+      where: { number },
+    });
+
+    if (existingGift) {
+      return NextResponse.json(
+        { error: "Gift with this number already exists" },
         { status: 400 }
       );
     }
@@ -35,16 +64,65 @@ export async function POST(request: NextRequest) {
         openDate: new Date(openDate),
         number,
         englishDescription,
-        hintImageUrl,
+        hintImageUrl: hintImageUrl || "", // Пустая строка по умолчанию
         hintText: hintText ?? "look for a gift with this sticker",
-        contentPath,
+        codeText: codeText ?? "This is the part of your cipher. Collect them all to reveal the last secret",
+        contentPath: generateContentPath(Math.random().toString(36).substring(7)), // Временный ID
         isSecret: isSecret ?? false,
         code,
-        memoryPhotoUrl,
       },
     });
 
-    return NextResponse.json(gift, { status: 201 });
+    // Обновляем путь к контенту с использованием реального ID
+    const contentPath = generateContentPath(gift.id);
+    await db.gift.update({
+      where: { id: gift.id },
+      data: { contentPath },
+    });
+
+    // Сохраняем контент подарка, если он есть
+    if (content) {
+      const success = await saveGiftContent(gift.id, content);
+      if (!success) {
+        // Если не удалось сохранить контент, удаляем подарок
+        await db.gift.delete({ where: { id: gift.id } });
+        return NextResponse.json(
+          { error: "Failed to save gift content" },
+          { status: 500 }
+        );
+      }
+    } else {
+      // Создаем пустой контент по умолчанию
+      const defaultContent = {
+        blocks: [],
+        metadata: {
+          senderName: "",
+          description: "С днем рождения!",
+        },
+      };
+      await saveGiftContent(gift.id, defaultContent);
+    }
+
+    // Создаем полароидную фотографию, если данные переданы
+    if (memoryPhoto && (memoryPhoto.text || memoryPhoto.photoUrl)) {
+      await db.memoryPhoto.create({
+        data: {
+          text: memoryPhoto.text,
+          photoUrl: memoryPhoto.photoUrl,
+          giftId: gift.id,
+        },
+      });
+    }
+
+    // Получаем финальный подарок со всеми связанными данными
+    const finalGift = await db.gift.findUnique({
+      where: { id: gift.id },
+      include: {
+        memoryPhoto: true,
+      },
+    });
+
+    return NextResponse.json(finalGift, { status: 201 });
   } catch (error) {
     console.error("Error creating gift:", error);
     return NextResponse.json(
@@ -57,8 +135,10 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const gifts = await db.gift.findMany({
+      include: {
+        memoryPhoto: true,
+      },
       orderBy: { openDate: "desc" },
-      take: 10, // Ограничиваем количество для безопасности
     });
 
     return NextResponse.json(gifts);

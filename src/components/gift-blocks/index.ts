@@ -9,4 +9,5 @@ export { TwoImagesBlock } from './two-images-block';
 export { VideoCircleBlock } from './video-circle-block';
 export { VideoBlock } from './video-block';
 export { AudioMessageBlock } from './audio-message-block';
-export { MusicBlock } from './music-block'; 
+export { MusicBlock } from './music-block';
+export { GalleryBlock } from './gallery-block'; 

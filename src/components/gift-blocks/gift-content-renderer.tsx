@@ -1,6 +1,6 @@
 "use client";
 
-import type { GiftContent, GiftBlock, MemoryPhoto } from "~/types/gift";
+import type { GiftContent, GiftBlock, MemoryPhoto } from "@/utils/types/gift";
 import { BaseBlock } from "./base-block";
 import { TextBlock } from "./text-block";
 import { QuoteBlock } from "./quote-block";
@@ -10,6 +10,7 @@ import { VideoCircleBlock } from "./video-circle-block";
 import { VideoBlock } from "./video-block";
 import { AudioMessageBlock } from "./audio-message-block";
 import { MusicBlock } from "./music-block";
+import { GalleryBlock } from "./gallery-block";
 
 interface GiftContentRendererProps {
   content: GiftContent;
@@ -86,6 +87,14 @@ export function GiftContentRenderer({
       case "music":
         return (
           <MusicBlock 
+            key={blockKey}
+            block={block}
+            className={blockClassName}
+          />
+        );
+      case "gallery":
+        return (
+          <GalleryBlock 
             key={blockKey}
             block={block}
             className={blockClassName}

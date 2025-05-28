@@ -3,7 +3,7 @@
  * Предоставляет функции для объединения и управления классами
  */
 
-import { texts } from "../tailwind.config.js";
+import { texts } from "tailwind.config.js";
 import clsx, { type ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 

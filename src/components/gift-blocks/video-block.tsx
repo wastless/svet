@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import type { VideoBlock as VideoBlockType } from "~/types/gift";
+import type { VideoBlock as VideoBlockType } from "@/utils/types/gift";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });

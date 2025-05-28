@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
-import type { VideoCircleBlock as VideoCircleBlockType } from "~/types/gift";
+import type { VideoCircleBlock as VideoCircleBlockType } from "@/utils/types/gift";
 import { VolumeOnIcon, VolumeOffIcon } from "~/components/ui/icons";
 
 // Динамический импорт react-player для избежания проблем с SSR

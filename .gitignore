@@ -48,3 +48,7 @@ yarn-error.log*
 # uploads - ignore uploaded files but keep the directory
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# ignore all files in static/gifts
+/static/gifts/*
+!/static/gifts/.gitkeep

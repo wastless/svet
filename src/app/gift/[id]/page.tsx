@@ -3,8 +3,8 @@ import Link from "next/link";
 import { db } from "~/server/db";
 import { auth } from "~/server/auth";
 import * as Button from "~/components/ui/button";
-import { loadGiftContent } from "~/lib/giftContent";
-import { PolaroidPhoto } from "~/components/polaroid-photo";
+import { loadGiftContent } from "@/utils/lib/giftContent";
+import { PolaroidPhoto } from "~/components/gallery/polaroid-photo";
 import { GiftContentRenderer } from "~/components/gift-blocks";
 
 interface GiftPageProps {
