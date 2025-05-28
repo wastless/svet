@@ -100,7 +100,7 @@ export function GiftContentRenderer({
   const baseText = content.metadata?.description || "С днем рождения!";
 
   return (
-    <div className={`space-y-12 ${className}`}>
+    <div className={`space-y-20 ${className}`}>
       {/* Базовый блок поздравления (если указано имя отправителя) */}
       {senderName && (
         <BaseBlock

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { AudioMessageBlock as AudioMessageBlockType } from "~/types/gift";
+import { PlayIcon, PauseIcon, LoadingSpinner } from "~/components/ui/icons";
 
 interface AudioMessageBlockProps {
   block: AudioMessageBlockType;
@@ -86,8 +87,8 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      <div className="flex flex-col gap-2">
+    <div className={`space-y-4 ${className}`}>
+      <div className="flex flex-col gap-1">
         {/* Заголовок */}
         {block.title && (
           <div className="text-center text-adaptive">
@@ -100,14 +101,20 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <p className="font-euclid text-paragraph-lg">{block.text}</p>
+            <p className={`font-euclid ${
+              block.textSize === "small" 
+                ? "text-paragraph-lg" 
+                : "text-paragraph-xl"
+            }`}>
+              {block.text}
+            </p>
           </div>
         )}
       </div>
 
       {/* Голосовое сообщение */}
       <div className="flex justify-center">
-        <div className="rounded-2xl p-4 max-w-md w-full">
+        <div className="rounded-2xl p-2 max-w-lg w-full">
           <div className="flex items-center gap-3">
             {/* Кнопка воспроизведения */}
             <button
@@ -116,23 +123,11 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
               className="w-10 h-10 bg-white bg-opacity-10 rounded-full flex items-center justify-center hover:bg-opacity-20 transition-all disabled:opacity-50"
             >
               {!isReady ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <LoadingSpinner className="h-5 w-5 text-white" />
               ) : isPlaying ? (
-                <svg 
-                  className="w-5 h-5 text-white" 
-                  fill="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-                </svg>
+                <PauseIcon className="w-5 h-5 text-white" />
               ) : (
-                <svg 
-                  className="w-5 h-5 text-white ml-0.5" 
-                  fill="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
+                <PlayIcon className="w-5 h-5 text-white ml-0.5" />
               )}
             </button>
 
@@ -142,7 +137,7 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
             </div>
 
             {/* Время */}
-            <div className="text-white text-sm font-mono min-w-[40px]">
+            <div className="text-white text-paragraph-sm font-euclid min-w-[40px]">
               {isPlaying ? formatTime(currentTime) : formatTime(duration)}
             </div>
           </div>

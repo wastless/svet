@@ -54,6 +54,7 @@ export interface VideoCircleBlock {
   type: "video-circle";
   title?: string; // заголовок
   text?: string; // текст
+  textSize?: "small" | "large"; // размер текста
   url: string; // URL видео файла
   caption?: string; // подпись под видео
   size?: "small" | "medium" | "large"; // размер видеокружка
@@ -67,6 +68,7 @@ export interface VideoBlock {
   type: "video";
   title?: string; // заголовок
   text?: string; // текст
+  textSize?: "small" | "large"; // размер текста
   url: string; // видео
   caption?: string; // подпись под видео
   size?: "small" | "medium" | "large"; // размер видео
@@ -80,6 +82,7 @@ export interface AudioMessageBlock {
   type: "audio-message";
   title?: string; // заголовок
   text?: string; // текст
+  textSize?: "small" | "large"; // размер текста
   url: string; // URL аудио файла
   duration?: number; // длительность в секундах (опционально)
 }
@@ -89,6 +92,7 @@ export interface MusicBlock {
   type: "music";
   title?: string; // заголовок
   text?: string; // текст
+  textSize?: "small" | "large"; // размер текста
   url: string; // URL аудио файла
   coverUrl: string; // URL обложки
   artist: string; // исполнитель

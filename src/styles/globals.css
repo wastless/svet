@@ -213,6 +213,14 @@
     background-color: #ffffff !important;
   }
   
+  /* Dropdown blend mode - ensures proper color adaptation */
+  .dropdown-blend {
+    color: #ffffff !important;
+    mix-blend-mode: difference;
+    position: relative;
+    z-index: 9999;
+  }
+  
   /* Ensure navigation container doesn't create isolation */
   .nav-container {
     isolation: auto;

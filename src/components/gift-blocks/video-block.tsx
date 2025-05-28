@@ -35,8 +35,8 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
   };
 
   return (
-    <div className={`space-y-10 ${className}`}>
-      <div className="flex flex-col gap-2">
+    <div className={`space-y-8 ${className}`}>
+      <div className="flex flex-col gap-1">
         {/* Заголовок */}
         {block.title && (
           <div className="text-center text-adaptive">
@@ -49,7 +49,13 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <p className="font-euclid text-paragraph-lg">{block.text}</p>
+            <p className={`font-euclid ${
+              block.textSize === "small" 
+                ? "text-paragraph-lg" 
+                : "text-paragraph-xl"
+            }`}>
+              {block.text}
+            </p>
           </div>
         )}
       </div>

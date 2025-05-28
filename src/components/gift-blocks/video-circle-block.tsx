@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import type { VideoCircleBlock as VideoCircleBlockType } from "~/types/gift";
-import { SoundOnIcon, SoundOffIcon } from "~/components/ui/icons";
+import { VolumeOnIcon, VolumeOffIcon } from "~/components/ui/icons";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -71,7 +71,7 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
   }, [isPlaying]);
 
   return (
-    <div className={`space-y-10 ${className}`}>
+    <div className={`space-y-8 ${className}`}>
       <div className="flex flex-col gap-2">
         {/* Заголовок */}
         {block.title && (
@@ -85,7 +85,13 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <p className="font-euclid text-paragraph-lg">{block.text}</p>
+            <p className={`font-euclid ${
+              block.textSize === "small" 
+                ? "text-paragraph-lg" 
+                : "text-paragraph-xl"
+            }`}>
+              {block.text}
+            </p>
           </div>
         )}
       </div>
@@ -161,9 +167,9 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
               className="absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-black bg-opacity-40 rounded-full flex items-center justify-center hover:bg-opacity-80 transition-all z-10"
             >
               {isMuted ? (
-                <SoundOffIcon className="w-4 h-4 text-white" />
+                <VolumeOffIcon className="w-4 h-4 text-white" />
               ) : (
-                <SoundOnIcon className="w-4 h-4 text-white" />
+                <VolumeOnIcon className="w-4 h-4 text-white" />
               )}
             </button>
           )}
@@ -171,7 +177,7 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
           {/* Индикатор загрузки */}
           {!isReady && (
             <div className="absolute inset-0 rounded-full bg-gray-200 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2"></div>
             </div>
           )}
         </div>
