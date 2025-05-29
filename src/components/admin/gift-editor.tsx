@@ -7,6 +7,8 @@ import { ContentBlocksEditor } from "./content-blocks-editor";
 import { GiftPhotosEditor } from "./gift-photos-editor";
 import * as IconButton from "~/components/ui/icon-button";
 
+// Импортируем интерфейс GiftPhotos из компонента GiftPhotosEditor
+import type { GiftPhotos } from "./gift-photos-editor";
 
 interface GiftEditorProps {
   gift: Gift | null;
@@ -42,10 +44,13 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
   });
 
   // Данные фотографий
-  const [giftPhotos, setGiftPhotos] = useState({
+  const [giftPhotos, setGiftPhotos] = useState<GiftPhotos>({
     hintImageUrl: gift?.hintImageUrl || "",
+    hintText: gift?.hintText || "look for a gift with this sticker",
+    imageCover: gift?.imageCover || "",
     memoryPhoto: {
       photoUrl: gift?.memoryPhoto?.photoUrl || "",
+      photoDate: (gift?.memoryPhoto?.photoDate ? new Date(gift.memoryPhoto.photoDate).toISOString().split('T')[0] : null) as string | null
     }
   });
 
@@ -81,8 +86,11 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
         number: Number(basicData.number),
         content: giftContent,
         hintImageUrl: giftPhotos.hintImageUrl,
+        hintText: giftPhotos.hintText || "look for a gift with this sticker",
+        imageCover: giftPhotos.imageCover || "",
         memoryPhoto: giftPhotos.memoryPhoto.photoUrl ? {
-          photoUrl: giftPhotos.memoryPhoto.photoUrl
+          photoUrl: giftPhotos.memoryPhoto.photoUrl,
+          photoDate: giftPhotos.memoryPhoto.photoDate ? new Date(giftPhotos.memoryPhoto.photoDate).toISOString() : null
         } : null,
       };
 

@@ -191,23 +191,6 @@ export function GiftBasicInfo({ data, onChange, giftId }: GiftBasicInfoProps) {
         </Textarea.Root>
       </div>
 
-      {/* Текст подсказки */}
-      <div className="flex flex-col gap-3 sm:col-span-2">
-        <Label.Root htmlFor="hintText">
-          Текст подсказки <Label.Asterisk />
-        </Label.Root>
-        <Input.Root>
-          <Input.Wrapper>
-            <Input.Input
-              id="hintText"
-              value={localData.hintText}
-              onChange={(e) => handleChange("hintText", e.target.value)}
-              placeholder="Look for a gift with this sticker"
-            />
-          </Input.Wrapper>
-        </Input.Root>
-      </div>
-
       {/* Текст для кода */}
       <div className="flex flex-col gap-3 sm:col-span-2">
         <Label.Root htmlFor="codeText">Описание для кода</Label.Root>

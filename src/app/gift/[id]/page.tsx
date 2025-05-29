@@ -6,9 +6,21 @@ import * as Button from "~/components/ui/button";
 import { loadGiftContent } from "@/utils/lib/giftContent";
 import { PolaroidPhoto } from "~/components/gallery/polaroid-photo";
 import { GiftContentRenderer } from "~/components/gift-blocks";
+import type { MemoryPhoto, Gift } from "@/utils/types/gift";
+import { NoiseBackground } from "~/components/home/NoiseBackground";
 
 interface GiftPageProps {
   params: { id: string };
+}
+
+// Расширяем тип Gift для совместимости с данными из БД
+interface DBGift extends Omit<Gift, 'codeText'> {
+  codeText: string | null;
+}
+
+// Расширяем тип MemoryPhoto для совместимости с данными из БД
+interface DBMemoryPhoto extends Omit<MemoryPhoto, 'gift'> {
+  gift?: DBGift;
 }
 
 export default async function GiftPage({ params }: GiftPageProps) {
@@ -29,7 +41,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
         }
       },
     },
-  });
+  }) as unknown as DBGift & { memoryPhoto: DBMemoryPhoto | null };
 
   // Если подарок не найден, показываем 404
   if (!gift) {
@@ -40,20 +52,21 @@ export default async function GiftPage({ params }: GiftPageProps) {
   const isAvailable = now >= gift.openDate;
 
   // Если подарок ещё не доступен
-  if (!isAvailable) {
+  {/* if (!isAvailable) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold text-gray-800">
-            Подарок ещё не доступен
+      <div className="flex min-h-screen items-center justify-center relative overflow-hidden bg-black">
+        <NoiseBackground opacity={25} />
+        <div className="text-center z-20 relative">
+          <h1 className="mb-5 text-title-h3 uppercase font-founders text-white">
+            Shhh... (noise)
           </h1>
-          <p className="text-gray-600">
-            Этот подарок откроется: {gift.openDate.toLocaleDateString("ru-RU")}
+          <p className="text-white text-paragraph-md font-styrene">
+            This gift will be available on: {gift.openDate.toLocaleDateString("ru-RU")}
           </p>
         </div>
       </div>
     );
-  }
+  }*/}
 
   // Загружаем контент поздравления
   const content = await loadGiftContent(gift.contentPath);
@@ -61,6 +74,20 @@ export default async function GiftPage({ params }: GiftPageProps) {
   if (!content) {
     notFound();
   }
+
+  // Преобразуем gift в тип, совместимый с ожидаемым типом Gift
+  const typedGift: Gift = {
+    ...gift,
+    codeText: gift.codeText || "", // Преобразуем null в пустую строку
+  };
+
+  // Преобразуем memoryPhoto в правильный тип, если оно существует
+  const typedMemoryPhoto: MemoryPhoto | undefined = gift.memoryPhoto 
+    ? {
+        ...gift.memoryPhoto,
+        gift: typedGift,
+      }
+    : undefined;
 
   // Если подарок доступен, показываем его содержимое
   return (
@@ -78,24 +105,38 @@ export default async function GiftPage({ params }: GiftPageProps) {
         </div>
 
         <div className="mx-auto flex max-w-[320px] flex-col items-center gap-6">
-          <img
-            src={gift.hintImageUrl}
-            className="rounded-2xl"
-          />
+          <div className="w-full aspect-square rounded-2xl overflow-hidden">
+            <img
+              src={gift.hintImageUrl}
+              className="w-full h-full object-cover"
+            />
+          </div>
           <p className="font-styrene text-paragraph-md font-bold uppercase text-center">
             {gift.hintText}
           </p>
         </div>
       </div>
 
-      {/* Секретный код (если есть) */}
-      {gift.code && (
+      {/* Секретный код (если есть) - только для авторизованных пользователей */}
+      {gift.code && isAuthenticated && (
         <div className="pt-24 flex flex-col items-center gap-5 text-center">
           <p className="mx-auto max-w-[440px] font-styrene text-paragraph-md font-bold uppercase">
           {gift.codeText}
           </p>
           <div className="font-founders text-title-h4 uppercase">
             {gift.code}
+          </div>
+        </div>
+      )}
+
+      {/* Заглушка для неавторизованных пользователей */}
+      {gift.code && !isAuthenticated && (
+        <div className="pt-24 flex flex-col items-center gap-5 text-center">
+          <p className="mx-auto max-w-[440px] font-styrene text-paragraph-md font-bold uppercase">
+            {gift.codeText}
+          </p>
+          <div className="font-founders text-title-h4 uppercase text-bg-strong-950 bg-bg-strong-950 select-none px-4">
+            SECRET CODE
           </div>
         </div>
       )}
@@ -117,9 +158,9 @@ export default async function GiftPage({ params }: GiftPageProps) {
             /* Рендер блоков контента*/
             <GiftContentRenderer
               content={content}
-              memoryPhoto={gift.memoryPhoto ?? undefined}
+              memoryPhoto={typedMemoryPhoto}
               className="max-w-none"
-              gift={gift}
+              gift={typedGift}
             />
           )}
         </div>
@@ -134,10 +175,10 @@ export default async function GiftPage({ params }: GiftPageProps) {
           THE MEMORY <br /> IS UNLOCKED
         </h2>
         
-        {gift.memoryPhoto && (
+        {typedMemoryPhoto && (
           <Link href="/gallery" className="mx-auto cursor-pointer transition-all duration-500 ease-out rotate-1 hover:scale-105 hover:rotate-0 ">
             <PolaroidPhoto
-              memoryPhoto={gift.memoryPhoto}
+              memoryPhoto={typedMemoryPhoto}
               isRevealed={true}
               openDate={gift.openDate}
               size="medium"

@@ -12,6 +12,7 @@ interface CreateGiftRequest {
   englishDescription: string;
   hintImageUrl: string;
   hintText?: string;
+  imageCover?: string;
   codeText?: string;
   isSecret?: boolean;
   code?: string | null;
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       englishDescription, 
       hintImageUrl, 
       hintText, 
+      imageCover,
       codeText,
       isSecret, 
       code, 
@@ -60,26 +62,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Генерируем временный путь для контента
+    const tempContentPath = await generateContentPath(Math.random().toString(36).substring(7));
+
     // Создаём подарок в базе данных
     const gift = await db.gift.create({
       data: {
         title,
-        author,
-        nickname,
+        author: author || "",
+        nickname: nickname || "",
         openDate: new Date(openDate),
         number,
         englishDescription,
-        hintImageUrl: hintImageUrl || "", // Пустая строка по умолчанию
+        hintImageUrl: hintImageUrl || "",
+        imageCover: imageCover || null,
         hintText: hintText ?? "look for a gift with this sticker",
         codeText: codeText ?? "This is the part of your cipher. Collect them all to reveal the last secret",
-        contentPath: generateContentPath(Math.random().toString(36).substring(7)), // Временный ID
+        contentPath: tempContentPath,
         isSecret: isSecret ?? false,
         code,
       },
     });
 
     // Обновляем путь к контенту с использованием реального ID
-    const contentPath = generateContentPath(gift.id);
+    const contentPath = await generateContentPath(gift.id);
     await db.gift.update({
       where: { id: gift.id },
       data: { contentPath },

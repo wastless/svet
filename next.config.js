@@ -31,6 +31,18 @@ const config = {
         hostname: 'music.yandex.ru',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lesyasvet.storage.yandexcloud.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.storage.yandexcloud.net',
+        port: '',
+        pathname: '/**',
       }
     ],
   },

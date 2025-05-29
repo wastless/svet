@@ -11,6 +11,7 @@ import * as Button from "~/components/ui/button";
 import * as IconButton from "~/components/ui/icon-button";
 import { Root as AlertRoot, Icon as AlertIcon } from "../ui/alert";
 import { RiErrorWarningLine } from "@remixicon/react";
+import type { GiftPhotos } from "./gift-photos-editor";
 
 interface GiftCreationWizardProps {
   onSave: (giftData: any) => void;
@@ -19,13 +20,6 @@ interface GiftCreationWizardProps {
 }
 
 type Step = "basic" | "photos" | "content";
-
-interface GiftPhotos {
-  hintImageUrl: string;
-  memoryPhoto: {
-    photoUrl: string;
-  };
-}
 
 // Интерфейс для основных данных подарка
 interface GiftBasicData {
@@ -87,8 +81,11 @@ export function GiftCreationWizard({
   // Фотографии подарка
   const [photos, setPhotos] = useState<GiftPhotos>({
     hintImageUrl: "",
+    hintText: "Look for a gift with this sticker",
+    imageCover: "",
     memoryPhoto: {
       photoUrl: "",
+      photoDate: null
     },
   });
 
@@ -318,6 +315,73 @@ export function GiftCreationWizard({
     }
   };
 
+  const handleUpdateGift = async () => {
+    if (!savedGiftId) return;
+
+    setIsSaving(true);
+    try {
+      // Подготавливаем полные данные для обновления
+      const updateData = {
+        ...basicData,
+        openDate: new Date(basicData.openDate).toISOString(),
+        number: Number(basicData.number),
+        hintImageUrl: photos.hintImageUrl,
+        hintText: photos.hintText,
+        imageCover: photos.imageCover, // Добавляем поле imageCover
+        content: giftContent,
+        memoryPhoto: photos.memoryPhoto.photoUrl
+          ? {
+              photoUrl: photos.memoryPhoto.photoUrl,
+              photoDate: photos.memoryPhoto.photoDate
+                ? new Date(photos.memoryPhoto.photoDate).toISOString()
+                : null,
+            }
+          : null,
+      };
+
+      const response = await fetch(`/api/gifts/${savedGiftId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        console.error("Ошибка при разборе ответа:", e);
+        setError(`Ошибка при разборе ответа: ${e}`);
+        setIsSaving(false);
+        return;
+      }
+      
+      console.log("Ответ сервера при сохранении подарка:", responseData);
+
+      if (response.ok) {
+        // Успешное завершение создания подарка
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          await onSave(responseData);
+        }
+      } else {
+        console.error("Ошибка ответа сервера:", responseData);
+        if (responseData.error) {
+          setError(`Ошибка сохранения: ${responseData.error}`);
+        } else {
+          setError(`Ошибка сохранения: ${response.status} ${response.statusText}`);
+        }
+      }
+    } catch (error) {
+      console.error("Ошибка сохранения:", error);
+      setError(`Ошибка при сохранении подарка: ${error}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const isBasicStepValid = () => {
     return (
       basicData.openDate && 
@@ -404,7 +468,7 @@ export function GiftCreationWizard({
         <div className="px-8 py-6">
           <div className="flex justify-center">
             {currentStep === "content" ? (
-              <Button.Root onClick={handleSaveContent} disabled={isSaving}>
+              <Button.Root onClick={handleUpdateGift} disabled={isSaving}>
                 {isSaving ? "Сохранение..." : "Сохранить подарок"}
               </Button.Root>
             ) : (

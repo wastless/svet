@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { MemoryPhoto } from "@/utils/types/gift";
 
 interface PolaroidPhotoProps {
@@ -19,12 +19,22 @@ export function PolaroidPhoto({
   size = 'large',
 }: PolaroidPhotoProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [rotation, setRotation] = useState(0); // Start with 0 rotation for SSR
+
+  // Set random rotation only on client side after component mounts
+  useEffect(() => {
+    setRotation(Math.floor(Math.random() * 7) - 1.5);
+  }, []);
 
   // Форматируем дату для отображения на полароиде
-  const formatDate = (date: Date) => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "";
+    
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    const day = dateObj.getDate().toString().padStart(2, "0");
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+    const year = dateObj.getFullYear();
     return `${day}/${month}/${year}`;
   };
 
@@ -56,7 +66,25 @@ export function PolaroidPhoto({
   const config = sizeConfig[size];
 
   return (
-    <div className={`inline-block ${className}`}>
+    <div 
+      className={`inline-block ${className} transition-transform duration-300 ease-out`} 
+      style={{ 
+        transform: `rotate(${rotation}deg)`,
+        transition: 'transform 0.3s ease-out'
+      }}
+      onMouseEnter={(e) => {
+        // Only apply hover effect if we're on client side
+        if (typeof window !== 'undefined') {
+          e.currentTarget.style.transform = 'rotate(0deg)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        // Only apply hover effect if we're on client side
+        if (typeof window !== 'undefined') {
+          e.currentTarget.style.transform = `rotate(${rotation}deg)`;
+        }
+      }}
+    >
       {/* Основная рамка полароида */}
       <div className={`relative ${config.frame.height} ${config.frame.width} bg-white`}>
         {/* Текстура бумаги */}
@@ -69,7 +97,7 @@ export function PolaroidPhoto({
         <div className={`bg-transparent absolute ${config.photo.padding} z-[2] ${config.photo.height} ${config.photo.width} overflow-hidden`}>
           {/* Основное изображение */}
           <img
-            src={memoryPhoto.photoUrl}
+            src={isRevealed ? memoryPhoto.photoUrl : '/placeholder.png'}
             alt="Memory photo"
             className={`duration-[800ms] relative z-[3] h-full w-full object-cover transition-all ${
               !isRevealed
@@ -122,14 +150,20 @@ export function PolaroidPhoto({
             className={`text-marker absolute ${config.textPosition.title} left-[23px] right-[23px] z-[7] flex h-[60px] items-center font-permanent ${config.textSize}`}
             style={{ transform: "rotate(-2.5deg)" }}
           >
-            {memoryPhoto.gift?.nickname ? `@${memoryPhoto.gift.nickname}` : ''}
+            {isRevealed 
+              ? (memoryPhoto.gift?.nickname ? `@${memoryPhoto.gift.nickname}` : '')
+              : 'Mister X'
+            }
           </span>
 
           <span
             className={`text-marker absolute ${config.textPosition.date} right-[23px] z-[7] flex h-[60px] items-center font-permanent ${config.textSize}`}
             style={{ transform: "rotate(-2.5deg)" }}
           >
-            {formatDate(openDate)}
+            {isRevealed 
+              ? formatDate(memoryPhoto.photoDate || null) 
+              : `${formatDate(openDate)}`
+            }
           </span>
         </div>
       </div>

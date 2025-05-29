@@ -5,6 +5,7 @@ export interface MemoryPhoto {
   id: string;
   photoUrl: string; // URL оригинальной фотографии
   createdAt: Date;
+  photoDate?: Date | null; // Дата создания фотографии (вводится пользователем)
   giftId: string;
   gift?: Gift; // связь с подарком для получения nickname
 }
@@ -20,6 +21,7 @@ export interface Gift {
   openDate: Date; // когда подарок становится доступен
   englishDescription: string; // английское описание
   hintImageUrl: string; // картинка-подсказка к физическому подарку
+  imageOrientation: string; // ориентация изображения: "horizontal", "vertical", "square"
   hintText: string; // текст подсказки
   codeText: string; // текст подсказки для кода
   code?: string | null; // секретный код (если есть)

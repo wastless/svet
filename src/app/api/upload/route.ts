@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { saveGiftFile } from "@/utils/lib/giftContent";
+import { uploadFileToYandexStorage } from "@/utils/lib/yandexStorage";
 import path from "path";
+import { env } from "../../../env.js";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest) {
     const baseName = path.basename(file.name, ext);
     const safeFileName = `${baseName}_${timestamp}${ext}`;
 
-    // Определяем подпапку в зависимости от типа файла
+    // Определяем имя файла и подпапку в зависимости от типа файла
     let subfolder: string | undefined;
     let fileName: string;
 
@@ -56,8 +58,24 @@ export async function POST(request: NextRequest) {
         break;
     }
 
-    // Сохраняем файл
-    const url = await saveGiftFile(giftId, fileName, buffer, subfolder);
+    let url: string;
+
+    // Проверяем, настроен ли Yandex Object Storage
+    if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+      try {
+        // Используем Yandex Object Storage
+        url = await uploadFileToYandexStorage(buffer, fileName, giftId, subfolder);
+        console.log(`Файл ${fileName} успешно загружен в Yandex Object Storage: ${url}`);
+      } catch (error) {
+        console.error(`Ошибка загрузки в Yandex Object Storage:`, error);
+        // Используем локальное хранилище как запасной вариант
+        console.log(`Используем локальное хранилище как запасной вариант`);
+        url = await saveGiftFile(giftId, fileName, buffer, subfolder);
+      }
+    } else {
+      // Используем локальное хранилище как запасной вариант
+      url = await saveGiftFile(giftId, fileName, buffer, subfolder);
+    }
 
     return NextResponse.json({ 
       url,

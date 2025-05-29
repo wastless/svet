@@ -2,13 +2,18 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
 import { saveGiftContent, generateContentPath, deleteGiftDir } from "@/utils/lib/giftContent";
+import { deleteGiftFilesFromYandexStorage } from "@/utils/lib/yandexStorage";
+import { env } from "../../../../env.js";
 
 interface UpdateGiftRequest {
   title?: string | null;
+  author?: string;
+  nickname?: string;
   openDate?: string;
   number?: number;
   englishDescription?: string;
   hintImageUrl?: string;
+  imageCover?: string;
   hintText?: string;
   codeText?: string;
   code?: string | null;
@@ -16,6 +21,7 @@ interface UpdateGiftRequest {
   content?: any;
   memoryPhoto?: {
     photoUrl: string;
+    photoDate?: string | null;
   } | null;
 }
 
@@ -61,11 +67,14 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json() as UpdateGiftRequest;
     const { 
-      title, 
+      title,
+      author,
+      nickname, 
       openDate, 
       number, 
       englishDescription, 
       hintImageUrl, 
+      imageCover,
       hintText, 
       codeText,
       code, 
@@ -122,10 +131,13 @@ export async function PUT(
       where: { id },
       data: {
         ...(title !== undefined && { title }),
+        ...(author && { author }),
+        ...(nickname && { nickname }),
         ...(openDate && { openDate: new Date(openDate) }),
         ...(number !== undefined && { number }),
         ...(englishDescription && { englishDescription }),
         ...(hintImageUrl && { hintImageUrl }),
+        ...(imageCover !== undefined && { imageCover }),
         ...(hintText && { hintText }),
         ...(codeText && { codeText }),
         ...(code !== undefined && { code }),
@@ -152,6 +164,9 @@ export async function PUT(
             where: { id: existingGift.memoryPhoto.id },
             data: {
               photoUrl: memoryPhoto.photoUrl,
+              ...(memoryPhoto.photoDate !== undefined && { 
+                photoDate: memoryPhoto.photoDate ? new Date(memoryPhoto.photoDate) : null 
+              }),
             },
           });
         } else {
@@ -159,6 +174,9 @@ export async function PUT(
             data: {
               photoUrl: memoryPhoto.photoUrl,
               giftId: id,
+              ...(memoryPhoto.photoDate !== undefined && { 
+                photoDate: memoryPhoto.photoDate ? new Date(memoryPhoto.photoDate) : null 
+              }),
             },
           });
         }
@@ -211,7 +229,18 @@ export async function DELETE(
       where: { id },
     });
 
-    // Удаляем папку с файлами подарка
+    // Удаляем файлы из Yandex Object Storage, если настроен
+    if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+      try {
+        const deletedCount = await deleteGiftFilesFromYandexStorage(id);
+        console.log(`Удалено ${deletedCount} файлов из Yandex Object Storage для подарка ${id}`);
+      } catch (error) {
+        console.error(`Ошибка удаления файлов из Yandex Object Storage для подарка ${id}:`, error);
+        // Продолжаем выполнение, даже если не удалось удалить файлы из Object Storage
+      }
+    }
+
+    // Удаляем локальную папку с файлами подарка
     await deleteGiftDir(id);
 
     return NextResponse.json({ success: true });

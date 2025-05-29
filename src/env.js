@@ -15,6 +15,9 @@ export const env = createEnv({
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    YANDEX_ACCESS_KEY_ID: z.string().optional(),
+    YANDEX_SECRET_ACCESS_KEY: z.string().optional(),
+    YANDEX_BUCKET_NAME: z.string().optional(),
   },
 
   /**
@@ -34,6 +37,9 @@ export const env = createEnv({
     AUTH_SECRET: process.env.AUTH_SECRET,
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
+    YANDEX_ACCESS_KEY_ID: process.env.YANDEX_ACCESS_KEY_ID,
+    YANDEX_SECRET_ACCESS_KEY: process.env.YANDEX_SECRET_ACCESS_KEY,
+    YANDEX_BUCKET_NAME: process.env.YANDEX_BUCKET_NAME,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

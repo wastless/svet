@@ -22,6 +22,7 @@ export function getGiftBlocksDir(giftId: string): string {
 
 // Функция для загрузки контента подарка по ID
 export async function loadGiftContent(giftId: string): Promise<GiftContent | null> {
+  'use server';
   try {
     const contentPath = getGiftContentPath(giftId);
     const fileContent = await fs.readFile(contentPath, 'utf-8');
@@ -35,6 +36,7 @@ export async function loadGiftContent(giftId: string): Promise<GiftContent | nul
 
 // Функция для сохранения контента подарка
 export async function saveGiftContent(giftId: string, content: GiftContent): Promise<boolean> {
+  'use server';
   try {
     const giftDir = getGiftDir(giftId);
     const contentPath = getGiftContentPath(giftId);
@@ -52,12 +54,14 @@ export async function saveGiftContent(giftId: string, content: GiftContent): Pro
 }
 
 // Функция для генерации пути к файлу контента на основе ID подарка (для совместимости с API)
-export function generateContentPath(giftId: string): string {
+export async function generateContentPath(giftId: string): Promise<string> {
+  'use server';
   return giftId; // Теперь просто возвращаем ID подарка
 }
 
 // Функция для проверки существования файла контента
 export async function contentExists(giftId: string): Promise<boolean> {
+  'use server';
   try {
     const contentPath = getGiftContentPath(giftId);
     await fs.access(contentPath);
@@ -74,6 +78,7 @@ export async function saveGiftFile(
   buffer: Buffer,
   subfolder?: string
 ): Promise<string> {
+  'use server';
   try {
     const giftDir = getGiftDir(giftId);
     const targetDir = subfolder ? path.join(giftDir, subfolder) : giftDir;
@@ -99,6 +104,7 @@ export async function saveGiftFile(
 
 // Функция для получения списка файлов в папке подарка
 export async function getGiftFiles(giftId: string, subfolder?: string): Promise<string[]> {
+  'use server';
   try {
     const targetDir = subfolder 
       ? path.join(getGiftDir(giftId), subfolder)
@@ -114,6 +120,7 @@ export async function getGiftFiles(giftId: string, subfolder?: string): Promise<
 
 // Функция для удаления папки подарка
 export async function deleteGiftDir(giftId: string): Promise<boolean> {
+  'use server';
   try {
     const giftDir = getGiftDir(giftId);
     await fs.rm(giftDir, { recursive: true, force: true });

@@ -111,7 +111,7 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
   }, [currentGreeting, isTransitioning]); // Зависит только от состояния приветствий, не от currentSlide
 
   return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden bg-gray-950 dark-container">
+    <div className="fixed inset-0 z-[9999] overflow-hidden bg-bg-strong-950 dark-container">
       {/* Первый блок */}
       <div
         className={`absolute inset-0 text-adaptive transition-opacity duration-1000 ${
