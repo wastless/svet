@@ -29,31 +29,16 @@ const fragmentShader = `
   uniform float uHover;
   uniform vec2 uImageRatio;
   
-  vec2 imageuv(vec2 uv, vec2 size, vec2 resolution) {
-    vec2 ratio = vec2(
-      min((resolution.x/resolution.y)/(size.x/size.y), 1.0),
-      min((resolution.y/resolution.x)/(size.y/size.x), 1.0)
-    );
-    return vec2(
-      uv.x * ratio.x + (1.0 - ratio.x) * 0.5,
-      uv.y * ratio.y + (1.0 - ratio.y) * 0.5
-    );
-  }
-
   void main() {
     vec2 uv = vUv;
     
-    // Применяем эффект hover
+    // Применяем эффект hover без искажения пропорций
     float HOVER_SCALE = 0.08;
     uv -= 0.5;
     float dist = length(uv);
     float scaleFactor = 1.0 - uHover * HOVER_SCALE * smoothstep(0.0, 1.0, dist * 1.4);
     uv *= scaleFactor;
-    uv *= 1.0 - uHover * 0.02;
     uv += 0.5;
-    
-    // Корректируем uv для правильного соотношения сторон
-    uv = imageuv(uv, uImageRatio, vec2(1.0));
     
     // Исправляем перевернутую ось Y
     uv.y = 1.0 - uv.y;
@@ -82,6 +67,7 @@ export function GLImage({
   const hoverValueRef = useRef<number>(0);
   const targetHoverRef = useRef<number>(0);
   const imageRef = useRef<{ width: number; height: number } | null>(null);
+  const isInitializedRef = useRef<boolean>(false);
   
   // Инициализация WebGL
   useEffect(() => {
@@ -147,7 +133,7 @@ export function GLImage({
     // Загружаем изображение
     const image = new window.Image();
     image.onload = () => {
-      if (!gl || !texture) return;
+      if (!gl || !texture || !canvas || !container) return;
       
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -158,32 +144,62 @@ export function GLImage({
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       
-      // Устанавливаем соотношение сторон
-      const uImageRatioLocation = gl.getUniformLocation(program, "uImageRatio");
-      const ratio = [image.width, image.height];
-      gl.uniform2fv(uImageRatioLocation, ratio);
-      
       // Сохраняем размеры изображения
       imageRef.current = { width: image.width, height: image.height };
       
-      // Установка размеров контейнера на основе пропорций изображения
-      const imageRatio = image.height / image.width;
-      container.style.paddingBottom = `${imageRatio * 100}%`;
+      // Устанавливаем размеры canvas в соответствии с размерами изображения
+      const updateCanvasSize = () => {
+        const rect = container.getBoundingClientRect();
+        const pixelRatio = window.devicePixelRatio || 1;
+        
+        // Вместо изменения высоты контейнера, сохраняем оригинальные пропорции изображения
+        // для отображения через WebGL
+        const aspectRatio = image.height / image.width;
+        
+        // Применяем полную ширину контейнера
+        const containerWidth = rect.width;
+        // Не меняем высоту контейнера - пусть изображение отображается в своих пропорциях
+        
+        // Устанавливаем размеры canvas
+        canvas.width = containerWidth * pixelRatio;
+        canvas.height = containerWidth * aspectRatio * pixelRatio;
+        canvas.style.width = `${containerWidth}px`;
+        canvas.style.height = `${containerWidth * aspectRatio}px`;
+        
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      };
       
-      // Устанавливаем размеры canvas
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
+      updateCanvasSize();
+      
+      // Устанавливаем соотношение сторон изображения для шейдера
+      gl.useProgram(program);
+      const uImageRatioLocation = gl.getUniformLocation(program, "uImageRatio");
+      gl.uniform2f(uImageRatioLocation, image.width, image.height);
+      
+      isInitializedRef.current = true;
       
       // Первоначальная отрисовка
       render();
+      
+      // Добавляем обработчик изменения размера окна
+      const handleResize = () => {
+        if (canvas && container && gl && isInitializedRef.current) {
+          updateCanvasSize();
+          render();
+        }
+      };
+      
+      // Используем обычный resize listener вместо ResizeObserver
+      window.addEventListener('resize', handleResize);
+      
+      // Очистка при размонтировании будет выполнена в основном useEffect
     };
     image.crossOrigin = "anonymous";
     image.src = imageUrl;
     
     // Функция рендеринга
     const render = () => {
-      if (!contextRef.current || !programRef.current || !canvasRef.current) return;
+      if (!contextRef.current || !programRef.current || !canvasRef.current || !isInitializedRef.current) return;
       const gl = contextRef.current;
       
       // Плавно анимируем значение hover
@@ -205,6 +221,12 @@ export function GLImage({
         gl.bindTexture(gl.TEXTURE_2D, textureRef.current);
         const uTextureLocation = gl.getUniformLocation(programRef.current, "uTexture");
         gl.uniform1i(uTextureLocation, 0);
+        
+        // Update image ratio uniform if needed
+        if (imageRef.current) {
+          const uImageRatioLocation = gl.getUniformLocation(programRef.current, "uImageRatio");
+          gl.uniform2f(uImageRatioLocation, imageRef.current.width, imageRef.current.height);
+        }
       }
       
       // Отрисовываем
@@ -240,16 +262,23 @@ export function GLImage({
       return program;
     }
     
-    // Обработчик изменения размера окна
+    // Обработчик изменения размера окна - УПРОЩЕН
     const handleResize = () => {
-      if (canvas && container && gl && imageRef.current) {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
+      if (canvas && container && gl && isInitializedRef.current) {
+        const rect = container.getBoundingClientRect();
+        const pixelRatio = window.devicePixelRatio || 1;
+        
+        canvas.width = rect.width * pixelRatio;
+        canvas.height = rect.height * pixelRatio;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        
         gl.viewport(0, 0, canvas.width, canvas.height);
         render();
       }
     };
     
+    // Используем обычный resize listener вместо ResizeObserver
     window.addEventListener('resize', handleResize);
     
     // Очистка при размонтировании
@@ -259,14 +288,14 @@ export function GLImage({
         cancelAnimationFrame(requestRef.current);
       }
     };
-  }, [imageUrl]);
+  }, [imageUrl, imageCover]);
   
   // Обработчики наведения
   const handleMouseEnter = () => {
     targetHoverRef.current = 1.0;
-    if (contextRef.current && programRef.current) {
+    if (contextRef.current && programRef.current && isInitializedRef.current) {
       requestRef.current = requestAnimationFrame(function animate() {
-        if (!contextRef.current || !programRef.current) return;
+        if (!contextRef.current || !programRef.current || !isInitializedRef.current) return;
         
         hoverValueRef.current += (targetHoverRef.current - hoverValueRef.current) * 0.05;
         
@@ -287,9 +316,9 @@ export function GLImage({
   
   const handleMouseLeave = () => {
     targetHoverRef.current = 0.0;
-    if (contextRef.current && programRef.current) {
+    if (contextRef.current && programRef.current && isInitializedRef.current) {
       requestRef.current = requestAnimationFrame(function animate() {
-        if (!contextRef.current || !programRef.current) return;
+        if (!contextRef.current || !programRef.current || !isInitializedRef.current) return;
         
         hoverValueRef.current += (targetHoverRef.current - hoverValueRef.current) * 0.05;
         
@@ -312,23 +341,33 @@ export function GLImage({
     <div 
       ref={containerRef}
       className="w-full relative"
-      style={{ position: 'relative', overflow: 'hidden' }}
+      style={{ 
+        position: 'relative', 
+        overflow: 'visible',
+        height: 'auto'  // Авто-высота для сохранения пропорций
+      }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <canvas 
         ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full"
+        className="w-full"
+        style={{ 
+          display: 'block',
+          position: 'relative', // Изменено с absolute на relative
+          objectFit: 'contain'
+        }}
       />
       {/* Скрытое изображение для предзагрузки */}
       <div className="hidden">
         <Image
           src={imageUrl}
           alt={alt}
-          width={1}
-          height={1}
+          width={1000}
+          height={1000}
+          unoptimized
         />
       </div>
     </div>
   );
-} 
+}

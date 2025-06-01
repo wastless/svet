@@ -141,7 +141,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
         </div>
       )}
 
-      <span className="text-label-xl m-16 flex items-center justify-center font-nyghtserif">
+      <span className="text-label-xl my-20 flex items-center justify-center font-nyghtserif">
         ***
       </span>
 
@@ -150,7 +150,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
         <div className="mx-auto max-w-4xl ">
           {gift.isSecret && !isAuthenticated ? (
             <div className="text-center">
-              <p className="text-title-h3 font-founders uppercase max-w-[460px] mx-auto">
+              <p className="text-adaptive text-title-h3 font-founders uppercase max-w-[460px] mx-auto">
                 Oops, only Lesya sees this content
               </p>
             </div>
@@ -167,16 +167,16 @@ export default async function GiftPage({ params }: GiftPageProps) {
       </div>
 
       {/* Memory unlock секция */}
-      <div className="dark-container bg-bg-strong-950 py-20 text-center text-adaptive flex flex-col items-center gap-12">
-        <span className="text-label-xl font-nyghtserif">
+      <div className="text-adaptive dark-container bg-bg-strong-950 pt-20 pb-28 text-center flex flex-col items-center gap-10">
+        <span className="text-adaptive text-label-xl font-nyghtserif">
           ***
         </span>
-        <h2 className="text-title-h4 font-founders">
+        <h2 className="text-adaptive text-title-h4 font-founders">
           THE MEMORY <br /> IS UNLOCKED
         </h2>
         
         {typedMemoryPhoto && (
-          <Link href="/gallery" className="mx-auto cursor-pointer transition-all duration-500 ease-out rotate-1 hover:scale-105 hover:rotate-0 ">
+          <Link href="/gallery" className="mx-auto cursor-pointer transition-all">
             <PolaroidPhoto
               memoryPhoto={typedMemoryPhoto}
               isRevealed={true}

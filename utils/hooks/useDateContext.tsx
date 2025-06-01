@@ -1,48 +1,123 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, memo } from 'react';
 import type { ReactNode } from 'react';
 
-interface DateContextType {
+// Контекст для секундомера (обновляется каждую секунду)
+interface TimerContextType {
   currentDate: Date | null;
   setCurrentDate: (date: Date) => void;
   isTestMode: boolean;
   setIsTestMode: (mode: boolean) => void;
 }
 
-const DateContext = createContext<DateContextType | undefined>(undefined);
+// Контекст для подарков (обновляется раз в день)
+interface GiftsContextType {
+  giftsDate: Date | null;
+}
 
+const TimerContext = createContext<TimerContextType | undefined>(undefined);
+const GiftsContext = createContext<GiftsContextType | undefined>(undefined);
+
+// Мемоизированный провайдер для подарков, чтобы предотвратить лишние ререндеры
+const GiftsProvider = memo(function GiftsProvider({ 
+  children, 
+  giftsDate 
+}: { 
+  children: ReactNode; 
+  giftsDate: Date | null;
+}) {
+  return (
+    <GiftsContext.Provider value={{ giftsDate }}>
+      {children}
+    </GiftsContext.Provider>
+  );
+});
+
+// Компонент-провайдер для обоих контекстов
 export function DateProvider({ children }: { children: ReactNode }) {
   const [isTestMode, setIsTestMode] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  const [giftsDate, setGiftsDate] = useState<Date | null>(null);
+  const lastDayRef = useRef<string | null>(null);
 
-  // Инициализируем дату только на клиенте для избежания ошибок гидратации
+  // Инициализируем даты только на клиенте
   useEffect(() => {
-    setCurrentDate(new Date());
+    const now = new Date();
+    setCurrentDate(now);
+    setGiftsDate(now);
+    lastDayRef.current = formatDateKey(now);
   }, []);
+
+  // Функция для создания ключа даты (год-месяц-день)
+  const formatDateKey = (date: Date) => {
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
 
   // Автоматическое обновление времени в обычном режиме
   useEffect(() => {
     if (isTestMode) return; // В тестовом режиме не обновляем автоматически
 
-    const interval = setInterval(() => {
-      setCurrentDate(new Date());
-    }, 1000); // Обновляем каждую секунду
+    // Функция обновления текущего времени
+    const updateCurrentTime = () => {
+      const now = new Date();
+      setCurrentDate(now);
+      
+      // Проверяем, изменился ли день
+      const currentDateKey = formatDateKey(now);
+      if (lastDayRef.current !== currentDateKey) {
+        console.log('День изменился, обновляем дату для подарков');
+        setGiftsDate(now);
+        lastDayRef.current = currentDateKey;
+      }
+    };
 
-    return () => clearInterval(interval);
+    // Обновляем время каждую секунду для корректной работы секундомера
+    const interval = setInterval(updateCurrentTime, 1000);
+    
+    return () => {
+      clearInterval(interval);
+    };
   }, [isTestMode]);
 
   return (
-    <DateContext.Provider value={{ currentDate, setCurrentDate, isTestMode, setIsTestMode }}>
-      {children}
-    </DateContext.Provider>
+    <TimerContext.Provider value={{ currentDate, setCurrentDate, isTestMode, setIsTestMode }}>
+      <GiftsProvider giftsDate={giftsDate}>
+        {children}
+      </GiftsProvider>
+    </TimerContext.Provider>
   );
 }
 
-export function useDate() {
-  const context = useContext(DateContext);
+// Хук для доступа к контексту таймера (секундомера)
+export function useTimer() {
+  const context = useContext(TimerContext);
   if (context === undefined) {
-    throw new Error('useDate must be used within a DateProvider');
+    throw new Error('useTimer must be used within a DateProvider');
   }
   return context;
+}
+
+// Хук для доступа к контексту подарков
+export function useGifts() {
+  const context = useContext(GiftsContext);
+  if (context === undefined) {
+    throw new Error('useGifts must be used within a DateProvider');
+  }
+  return context;
+}
+
+// Обратная совместимость для существующего кода
+export function useDate() {
+  const timerContext = useContext(TimerContext);
+  const giftsContext = useContext(GiftsContext);
+  
+  if (timerContext === undefined || giftsContext === undefined) {
+    throw new Error('useDate must be used within a DateProvider');
+  }
+  
+  return {
+    ...timerContext,
+    ...giftsContext
+  };
 } 

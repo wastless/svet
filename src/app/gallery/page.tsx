@@ -74,11 +74,11 @@ export default function GalleryPage() {
   };
 
   return (
-    <div className="dark-container relative bg-bg-strong-950">
-      <main className="min-h-screen bg-adaptive pb-12">
+    <div className="relative bg-white">
+      <main className="min-h-screen">
         {/* Заголовок в верхней части */}
-        <div className="flex justify-center pt-[100px] mb-16">
-          <h4 className="text-center font-founders text-title-h4 uppercase text-adaptive">
+        <div className="flex justify-center pt-24 mb-16">
+          <h4 className="text-center font-founders text-title-h4 uppercase text-black">
             remember
           </h4>
         </div>
@@ -87,7 +87,7 @@ export default function GalleryPage() {
         <div className="container mx-auto px-4 pb-20 pt-6">
           {isLoading ? (
             <div className="flex justify-center items-center min-h-[300px]">
-              <div className="text-adaptive font-styrene">Loading...</div>
+              <div className="font-styrene text-black">Loading...</div>
             </div>
           ) : photos.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -97,7 +97,7 @@ export default function GalleryPage() {
                 return (
                   <div key={photo.id} className="flex justify-center">
                     {revealed ? (
-                      <Link href={`/gift/${photo.giftId}`} className="cursor-pointer transition-all duration-500 ease-out hover:scale-105">
+                      <Link href={`/gift/${photo.giftId}`} className="cursor-pointer">
                         <PolaroidPhoto
                           memoryPhoto={photo}
                           isRevealed={revealed}
@@ -106,7 +106,7 @@ export default function GalleryPage() {
                         />
                       </Link>
                     ) : (
-                      <div className="cursor-default transition-all duration-500 ease-out hover:scale-105">
+                      <div className="cursor-default">
                         <PolaroidPhoto
                           memoryPhoto={photo}
                           isRevealed={revealed}
@@ -121,13 +121,13 @@ export default function GalleryPage() {
             </div>
           ) : (
             <div className="flex justify-center items-center min-h-[300px]">
-              <div className="text-adaptive font-styrene">No photos yet</div>
+              <div className="font-styrene text-black">No photos yet</div>
             </div>
           )}
         </div>
 
         {/* Нижний текст */}
-        <div className="dark-container flex flex-col items-center gap-8 bg-bg-strong-950 py-20 text-center text-adaptive">
+        <div className="flex flex-col items-center gap-10 pt-20 pb-28 text-center text-adaptive">
           <span className="font-nyghtserif text-label-xl">***</span>
           <h2 className="font-founders text-title-h3 uppercase">
             Happiness <br />

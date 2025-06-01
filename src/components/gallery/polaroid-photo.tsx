@@ -67,31 +67,9 @@ export function PolaroidPhoto({
 
   return (
     <div 
-      className={`inline-block ${className} transition-transform duration-300 ease-out`} 
-      style={{ 
-        transform: `rotate(${rotation}deg)`,
-        transition: 'transform 0.3s ease-out'
-      }}
-      onMouseEnter={(e) => {
-        // Only apply hover effect if we're on client side
-        if (typeof window !== 'undefined') {
-          e.currentTarget.style.transform = 'rotate(0deg)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        // Only apply hover effect if we're on client side
-        if (typeof window !== 'undefined') {
-          e.currentTarget.style.transform = `rotate(${rotation}deg)`;
-        }
-      }}
     >
       {/* Основная рамка полароида */}
-      <div className={`relative ${config.frame.height} ${config.frame.width} bg-white`}>
-        {/* Текстура бумаги */}
-        <div
-          className={`absolute inset-0 z-[1] ${config.frame.height} ${config.frame.width} bg-cover bg-center`}
-          style={{ backgroundImage: "url('/texture_paper.png')" }}
-        />
+      <div className={`relative ${config.frame.height} ${config.frame.width} bg-polaroid-paper`}>
 
         {/* Область фотографии */}
         <div className={`bg-transparent absolute ${config.photo.padding} z-[2] ${config.photo.height} ${config.photo.width} overflow-hidden`}>
@@ -99,7 +77,7 @@ export function PolaroidPhoto({
           <img
             src={isRevealed ? memoryPhoto.photoUrl : '/placeholder.png'}
             alt="Memory photo"
-            className={`duration-[800ms] relative z-[3] h-full w-full object-cover transition-all ${
+            className={`duration-800 relative z-[3] h-full w-full object-cover transition-all ${
               !isRevealed
                 ? "blur-[20px] grayscale"
                 : "animate-[reveal_1.5s_ease-out]"

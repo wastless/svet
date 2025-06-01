@@ -44,7 +44,7 @@ export default function LoginPage() {
     <div className="relative">
       <main className="min-h-screen bg-bg-white-0">
         {/* Заголовок в верхней части */}
-        <div className="flex justify-center pt-[100px]">
+        <div className="flex justify-center pt-24">
           <h4 className="text-center font-founders text-title-h4 text-text-strong-950">
             LESYA
             <br />

@@ -35,7 +35,7 @@ export const iconButtonVariants = tv({
       'bg-adaptive-text',
       'transition-all',
       'duration-700',
-      'ease-[cubic-bezier(0.22,0.61,0.36,1)]',
+      'ease-custom',
       'group-hover:w-1/2',
     ],
     underlineLeft: [

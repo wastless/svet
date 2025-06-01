@@ -1,11 +1,26 @@
 /**
  * Проверяет, открыт ли подарок на текущую дату
  * @param openDate дата открытия подарка
+ * @param currentDate текущая дата (для тестового режима)
  * @returns true, если подарок открыт
  */
-export function isGiftOpen(openDate: Date): boolean {
-  const now = new Date();
-  return new Date(openDate) <= now;
+export function isGiftOpen(openDate: Date, currentDate?: Date | null): boolean {
+  if (!currentDate) return false; // Если дата не инициализирована, считаем подарок закрытым
+  
+  // Сравниваем только даты без времени
+  const openDateOnly = new Date(
+    new Date(openDate).getFullYear(),
+    new Date(openDate).getMonth(),
+    new Date(openDate).getDate()
+  );
+  
+  const nowDateOnly = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate()
+  );
+  
+  return openDateOnly <= nowDateOnly;
 }
 
 /**

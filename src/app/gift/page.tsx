@@ -1,7 +1,7 @@
 import Link from "next/link";
 import * as Button from "~/components/ui/button";
 import { db } from "~/server/db";
-import { RoadmapGrid } from "~/components/roadmap";
+import { RoadmapGrid } from "~/components/roadmap/RoadmapGrid";
 import type { Gift } from "@prisma/client";
 
 export default async function GiftPage() {
@@ -12,21 +12,21 @@ export default async function GiftPage() {
 
   return (
     <div className="relative bg-bg-white-0">
-      <main className="min-h-screen bg-adaptive pb-12">
+      <main className="min-h-screen bg-adaptive">
         {/* Заголовок в верхней части */}
-        <div className="flex justify-center pt-[100px] mb-10">
+        <div className="flex justify-center pt-24 mb-10">
           <h4 className="text-center font-founders text-title-h4 uppercase text-adaptive">
           gift roadmap
           </h4>
         </div>
 
         {/* Основной контент - сетка с подарками */}
-        <div className="px-8">
+        <div className="pb-6">
           <RoadmapGrid gifts={gifts} />
         </div>
 
         {/* Нижний текст */}
-        <div className="flex flex-col items-center gap-8 bg-bg-white-0 py-20 text-center text-adaptive">
+        <div className="flex flex-col items-center gap-8 bg-bg-white-0 pt-20 pb-28 text-center text-adaptive">
           <span className="font-nyghtserif text-label-xl">***</span>
           <h2 className="font-founders text-title-h3 uppercase">
           To feel the  <br />

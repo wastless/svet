@@ -198,6 +198,9 @@ const config = {
       marker: {
         DEFAULT: "var(--marker)",
       },
+      polaroid: {
+        paper: "var(--polaroid-paper)",
+      },
     },
     extend: {
       borderRadius: {
@@ -211,6 +214,12 @@ const config = {
         permanent: ["var(--font-permanent)"],
       },
       fontSize: texts,
+      transitionTimingFunction: {
+        'custom': 'cubic-bezier(0.22,0.61,0.36,1)',
+      },
+      transitionDuration: {
+        '800': '800ms',
+      },
     },
   },
   plugins: [tailwindcssAnimate],

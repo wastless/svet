@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
 import * as Dropdown from "~/components/ui/dropdown";
+import { useNavVisibility } from "~/components/providers/nav-visibility-provider";
 
 const NavLink: React.FC<{
   href: string;
@@ -18,11 +19,11 @@ const NavLink: React.FC<{
       {children}
       {/* Левая линия - появляется слева и движется к центру */}
       <span 
-        className="ease-[cubic-bezier(0.22,0.61,0.36,1)] absolute bottom-0 left-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
+        className="ease-custom absolute bottom-0 left-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
       />
       {/* Правая линия - появляется справа и движется к центру */}
       <span 
-        className="ease-[cubic-bezier(0.22,0.61,0.36,1)] absolute bottom-0 right-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
+        className="ease-custom absolute bottom-0 right-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
       />
     </Link>
   );
@@ -32,6 +33,7 @@ export const Navigation = () => {
   const { data: session } = useSession();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
+  const { isNavVisible } = useNavVisibility();
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -42,6 +44,11 @@ export const Navigation = () => {
     // Перенаправляем на главную страницу с принудительной перезагрузкой
     window.location.href = "/";
   };
+
+  // Не рендерим навигацию, если она не должна быть видимой
+  if (!isNavVisible) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 px-8 pt-8 z-[10000]" style={{ mixBlendMode: 'difference' }}>
@@ -66,10 +73,10 @@ export const Navigation = () => {
                   >
                     {session.user.username}
                     <span 
-                      className="ease-[cubic-bezier(0.22,0.61,0.36,1)] absolute bottom-0 left-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
+                      className="ease-custom absolute bottom-0 left-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
                     />
                     <span 
-                      className="ease-[cubic-bezier(0.22,0.61,0.36,1)] absolute bottom-0 right-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
+                      className="ease-custom absolute bottom-0 right-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
                     />
                   </button>
                 </Dropdown.Trigger>

@@ -2,8 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import type { CountdownTime, CountdownConfig } from '../types/countdown';
+import { useTimer } from './useDateContext';
 
-export function useCountdown({ targetDate, currentDate, updateInterval = 1000 }: CountdownConfig) {
+export function useCountdown({ targetDate, currentDate: externalCurrentDate, updateInterval = 1000 }: CountdownConfig) {
+  // Получаем текущую дату из контекста таймера, если внешняя дата не предоставлена
+  const { currentDate: contextCurrentDate } = useTimer();
+  const currentDate = externalCurrentDate || contextCurrentDate;
+  
   const [timeLeft, setTimeLeft] = useState<CountdownTime>({
     days: 0,
     hours: 0,

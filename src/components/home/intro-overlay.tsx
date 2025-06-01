@@ -5,6 +5,9 @@ import * as Button from "~/components/ui/button";
 import * as IconButton from "~/components/ui/icon-button";
 import { ArrowRightIcon } from "~/components/ui/icons";
 import { GREETINGS } from "@/utils/data";
+import { Spinner } from "~/components/ui/spinner";
+import { useNavVisibility } from "~/components/providers/nav-visibility-provider";
+import { IntroductionManager } from "@/utils/hooks/useIntro";
 
 interface IntroOverlayProps {
   onComplete: () => void;
@@ -12,16 +15,36 @@ interface IntroOverlayProps {
 
 export function IntroOverlay({ onComplete }: IntroOverlayProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [scrollY, setScrollY] = useState(0);
   const [currentGreeting, setCurrentGreeting] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { setNavVisibility } = useNavVisibility();
 
   const handleSkipIntro = useCallback(() => {
-    // Сохраняем в куки что интро было пройдено
-    document.cookie =
-      "intro_completed=true; path=/; max-age=" + 60 * 60 * 24 * 365; // 1 год
+    // Используем IntroductionManager для завершения интро
+    IntroductionManager.completeIntro();
+    setNavVisibility(true); // Показываем навигацию после завершения интро
     onComplete();
-  }, [onComplete]);
+  }, [onComplete, setNavVisibility]);
+
+  useEffect(() => {
+    // Скрываем навигацию при появлении интро
+    setNavVisibility(false);
+    
+    // Показываем навигацию при размонтировании компонента
+    return () => {
+      setNavVisibility(true);
+    };
+  }, [setNavVisibility]);
+
+  useEffect(() => {
+    // Имитируем загрузку ресурсов
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500); // Симулируем задержку в 1.5 секунды
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Блокируем скролл страницы
@@ -75,7 +98,7 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         setCurrentGreeting((prev) => (prev + 1) % GREETINGS.length);
         setIsTransitioning(false);
       }, 500); // Время fade-out
-    }, 5000); // Меняем каждые 10 секунд
+    }, 5000); // Меняем каждые 5 секунд
 
     return () => clearInterval(interval);
   }, []);
@@ -109,6 +132,14 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
       </div>
     );
   }, [currentGreeting, isTransitioning]); // Зависит только от состояния приветствий, не от currentSlide
+
+  if (isLoading) {
+    return (
+      <div className="c-loader dark-container">
+        <div className="c-loader_spinner c-spinner"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] overflow-hidden bg-bg-strong-950 dark-container">
