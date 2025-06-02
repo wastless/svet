@@ -411,3 +411,18 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .dark-container .text-adaptive { 
   color: var(--adaptive-text) !important; 
 }
+
+/* Добавляем стили для 3D-трансформаций кубика */
+@keyframes rolling {
+  50% {
+    transform: rotateX(455deg) rotateY(455deg);
+  }
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective-500 {
+  perspective: 500px;
+}
