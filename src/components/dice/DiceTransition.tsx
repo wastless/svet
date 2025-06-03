@@ -76,17 +76,19 @@ const dicePageTransitionCss = `
 `;
 
 interface DiceTransitionProps {
-  onTransitionComplete: () => void;
-  giftId: string;
+  onComplete: () => void;
+  giftId?: string;
 }
 
-export const DiceTransition = ({ onTransitionComplete, giftId }: DiceTransitionProps) => {
+export const DiceTransition = ({ onComplete, giftId }: DiceTransitionProps) => {
   const [isRolling, setIsRolling] = useState(false);
-  const [isDataPreloaded, setIsDataPreloaded] = useState(false);
+  const [isDataPreloaded, setIsDataPreloaded] = useState(!giftId); // Если giftId не передан, считаем данные загруженными
   const diceContainerRef = useRef<HTMLDivElement>(null);
   
   // Эффект для предварительной загрузки данных подарка
   useEffect(() => {
+    if (!giftId) return; // Если giftId не передан, не делаем запрос
+    
     const preloadGiftData = async () => {
       try {
         // Предварительно загружаем данные подарка
@@ -178,7 +180,7 @@ export const DiceTransition = ({ onTransitionComplete, giftId }: DiceTransitionP
           ease: "power3.in",
           onComplete: () => {
             // Вызываем колбэк завершения анимации
-            onTransitionComplete();
+            onComplete();
           }
         });
       }

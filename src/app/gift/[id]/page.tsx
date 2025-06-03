@@ -2,10 +2,7 @@
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { db } from "~/server/db";
-import { auth } from "~/server/auth";
 import * as Button from "~/components/ui/button";
-import { loadGiftContent } from "@/utils/lib/giftContent";
 import { PolaroidPhoto } from "~/components/gallery/polaroid-photo";
 import { GiftContentRenderer } from "~/components/gift-blocks";
 import type { MemoryPhoto, Gift } from "@/utils/types/gift";
@@ -14,10 +11,9 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useSearchParams, useParams } from "next/navigation";
 import { DiceTransition } from "~/components/dice/DiceTransition";
-
-interface GiftPageProps {
-  params: { id: string };
-}
+import { useGiftData } from "@/utils/hooks/useGiftQueries";
+import { useAuth } from "~/components/providers/auth-provider";
+import { FullScreenLoader } from "~/components/ui/spinner";
 
 // Расширяем тип Gift для совместимости с данными из БД
 interface DBGift extends Omit<Gift, 'codeText'> {
@@ -29,16 +25,8 @@ interface DBMemoryPhoto extends Omit<MemoryPhoto, 'gift'> {
   gift?: DBGift;
 }
 
-// Объединенный тип с данными подарка и контента
-interface GiftData {
-  gift: Gift;
-  memoryPhoto?: MemoryPhoto;
-  content: any;
-  isAuthenticated: boolean;
-}
-
 export default function GiftPage() {
-  // Используем хук useParams для получения параметров URL
+  // Получаем ID подарка из параметров URL
   const params = useParams();
   const giftId = params.id as string;
   const searchParams = useSearchParams();
@@ -46,10 +34,21 @@ export default function GiftPage() {
   // Проверяем, пришел ли пользователь с главной страницы с кнопки "Let's GO"
   const fromHome = searchParams.get('from') === 'home';
   
-  // Состояние для хранения данных
-  const [giftData, setGiftData] = useState<GiftData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  // Получаем данные подарка с использованием нового хука
+  const { 
+    data: giftData, 
+    isLoading: isGiftLoading, 
+    error: giftError, 
+    refetch 
+  } = useGiftData(giftId);
+  
+  // Получаем информацию об аутентификации
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  
+  // Отслеживаем изменение статуса аутентификации
+  const prevAuthStatus = useRef(isAuthenticated);
+  
+  // Состояние для управления анимациями
   const [showDiceTransition, setShowDiceTransition] = useState(fromHome);
   const [showContent, setShowContent] = useState(!fromHome);
   
@@ -73,104 +72,92 @@ export default function GiftPage() {
     setShowDiceTransition(false);
     setShowContent(true);
   };
-  
-  // Загрузка данных при монтировании компонента
-  useEffect(() => {
-    const fetchGiftData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Получаем данные подарка по ID
-        const res = await fetch(`/api/gifts/${giftId}`);
-        if (!res.ok) {
-          throw new Error('Failed to load gift data');
-        }
-        
-        const gift = await res.json() as DBGift & { memoryPhoto: DBMemoryPhoto | null };
-        
-        // Проверяем авторизацию пользователя
-        const authRes = await fetch('/api/auth/session');
-        const session = await authRes.json();
-        const isAuthenticated = !!session?.user;
-        
-        // Загружаем контент поздравления
-        const contentRes = await fetch(`/api/gift-content/${giftId}`);
-        if (!contentRes.ok) {
-          throw new Error('Failed to load gift content');
-        }
-        
-        const content = await contentRes.json();
-        
-        // Преобразуем gift в тип, совместимый с ожидаемым типом Gift
-        const typedGift: Gift = {
-          ...gift,
-          codeText: gift.codeText || "", // Преобразуем null в пустую строку
-        };
-        
-        // Преобразуем memoryPhoto в правильный тип, если оно существует
-        const typedMemoryPhoto: MemoryPhoto | undefined = gift.memoryPhoto 
-          ? {
-              ...gift.memoryPhoto,
-              gift: typedGift,
-            }
-          : undefined;
-        
-        setGiftData({
-          gift: typedGift,
-          memoryPhoto: typedMemoryPhoto,
-          content,
-          isAuthenticated
-        });
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error loading gift data:', err);
-        setError(err instanceof Error ? err : new Error('Failed to load data'));
-        setIsLoading(false);
-      }
-    };
-    
-    fetchGiftData();
-  }, [giftId]);
-  
+
   // Эффект для запуска анимации после загрузки данных
   useEffect(() => {
-    if (!giftData || isLoading || !showContent) return;
+    if (!giftData || isGiftLoading || !showContent) return;
     
     // Создаем главный таймлайн
     const tl = gsap.timeline({
       defaults: { 
         ease: "power3.out",
-        duration: 0.5 // Ускоряем все анимации
+        duration: 0.8
       }
     });
     
-    // Анимация всей страницы
-    tl.to(pageRef.current, { opacity: 1, duration: 0.2 });
+    // Сначала скрываем все элементы кроме заголовка
+    gsap.set([
+      numberRef.current,
+      quoteRef.current,
+      imageContainerRef.current,
+      hintTextRef.current,
+      codeTextRef.current,
+      codeRef.current,
+      dividerRef.current,
+      contentRef.current,
+      memoryHeaderRef.current,
+      memoryPhotoRef.current,
+      buttonRef.current
+    ], { opacity: 0 });
     
-    // Анимация заголовка и номера
-    tl.fromTo(
-      headerRef.current,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1 }
-    );
+    // Проверяем, откуда пользователь перешел на страницу
+    if (fromHome) {
+      // Полная анимация для перехода с главной страницы
+      
+      // 1. Анимация всей страницы и большого заголовка по центру
+      tl.to(pageRef.current, { opacity: 1, duration: 0.2 })
+        .fromTo(
+          headerRef.current,
+          { 
+            opacity: 0, 
+            scale: 3.5, 
+            y: "30vh"
+          },
+          { 
+            opacity: 1, 
+            scale: 3.5, 
+            y: "30vh", 
+            duration: 1
+          }
+        )
+        // Пауза для отображения увеличенного заголовка
+        .to(headerRef.current, { scale: 3.5, duration: 0.5 })
+      
+        // 2. Заголовок уменьшается и перемещается на свое место, появляется номер и описание
+        .to(
+          headerRef.current,
+          { 
+            scale: 1, 
+            y: 0, 
+            duration: 1.2
+          }
+        )
+    } else {
+      // Упрощенная анимация для обычного перехода
+      
+      // Сразу показываем заголовок на его месте
+      gsap.set(headerRef.current, { opacity: 1 });
+      
+      // Только анимируем появление страницы
+      tl.to(pageRef.current, { opacity: 1, duration: 0.4 });
+    }
     
+    // Общая анимация для всех элементов, независимо от источника перехода
     tl.fromTo(
       numberRef.current,
       { y: 20, opacity: 0 },
-      { y: 0, opacity: 1 },
-      "-=0.4" // Ускоряем начало анимации
-    );
-    
-    // Анимация цитаты
-    tl.fromTo(
+      { y: 0, opacity: 1, duration: 0.4 },
+      "-=0.2"
+    )
+    .fromTo(
       quoteRef.current,
       { y: 30, opacity: 0 },
-      { y: 0, opacity: 1 },
-      "-=0.3"
-    );
+      { y: 0, opacity: 1, duration: 0.8 },
+      "=0.3"
+    )
     
-    // Анимация изображения и текста подсказки
-    tl.fromTo(
+    // 3. Появление остального контента
+    .fromTo(
       imageContainerRef.current,
       { 
         y: 50, 
@@ -180,17 +167,19 @@ export default function GiftPage() {
       { 
         y: 0, 
         opacity: 1,
-        scale: 1
+        scale: 1,
+        duration: 0.8
       },
-      "-=0.2"
-    );
-    
-    tl.fromTo(
+    )
+    .fromTo(
       hintTextRef.current,
       { y: 20, opacity: 0 },
-      { y: 0, opacity: 1 },
+      { y: 0, opacity: 1, duration: 0.6 },
       "-=0.4"
     );
+    
+    // Пауза перед показом кода (если есть)
+    tl.to({}, { duration: 0.2 });
     
     // Анимация секретного кода (если есть)
     if (codeTextRef.current && codeRef.current) {
@@ -207,89 +196,95 @@ export default function GiftPage() {
         { y: 0, opacity: 1, scale: 1 },
         "-=0.4"
       );
+
+      tl.fromTo(dividerRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "-=0.4");
     }
     
-    // Анимация разделителя
-    tl.fromTo(
-      dividerRef.current,
-      { opacity: 0 },
-      { opacity: 1 },
-      "-=0.2"
-    );
-    
-    // Анимация контента поздравления
-    tl.fromTo(
+    // Сразу отображаем остальные элементы без анимации
+    gsap.set([
       contentRef.current,
-      { y: 60, opacity: 0 },
-      { y: 0, opacity: 1 },
-      "-=0.2"
-    );
-    
-    // Анимация секции воспоминаний
-    tl.fromTo(
       memoryHeaderRef.current,
-      { y: 40, opacity: 0 },
-      { y: 0, opacity: 1 },
-      "-=0.2"
-    );
-    
-    if (memoryPhotoRef.current) {
-      tl.fromTo(
-        memoryPhotoRef.current,
-        { y: 50, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.7 },
-        "-=0.4"
-      );
-    }
-    
-    tl.fromTo(
-      buttonRef.current,
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1 },
-      "-=0.5"
-    );
+      memoryPhotoRef.current,
+      buttonRef.current
+    ], { opacity: 1, y: 0 });
     
     return () => {
       // Очищаем анимации при размонтировании
       tl.kill();
     };
-  }, [giftData, isLoading, showContent]);
-  
-  // Если данные загружаются, показываем скрытый контейнер вместо спиннера
-  if (isLoading) {
+  }, [giftData, isGiftLoading, showContent, fromHome]);
+
+  // Реферешим данные если изменился статус аутентификации
+  useEffect(() => {
+    // Только если данные уже были загружены и статус аутентификации изменился
+    if (giftData && !isGiftLoading && prevAuthStatus.current !== isAuthenticated) {
+      console.log('🔄 Authentication status changed, refreshing data');
+      prevAuthStatus.current = isAuthenticated;
+      refetch();
+    }
+  }, [isAuthenticated, refetch, giftData, isGiftLoading]);
+
+  // Показываем ошибку, если не удалось загрузить данные
+  if (giftError) {
     return (
-      <div className="min-h-screen bg-white opacity-0"></div>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-title-h4 font-founders text-red-500">Ошибка</h2>
+          <p className="mt-4 text-paragraph-md font-styrene">
+            Не удалось загрузить данные подарка
+          </p>
+          <div className="mt-8">
+            <Button.Root asChild>
+              <Link href="/">Вернуться на главную</Link>
+            </Button.Root>
+          </div>
+        </div>
+      </div>
     );
   }
-  
-  // Если произошла ошибка
-  if (error || !giftData) {
+
+  // Показываем лоадер во время загрузки
+  const isLoading = isGiftLoading || isAuthLoading;
+  if (isLoading || !giftData) {
+    return <FullScreenLoader />;
+  }
+
+  const { gift, content } = giftData;
+  // Убедимся, что у нас есть все необходимые данные
+  if (!gift) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white text-center p-4">
-        <h1 className="text-title-h4 mb-4 font-founders">Oops, something went wrong</h1>
-        <p className="text-paragraph-md mb-6 font-styrene">We couldn't load the gift. Please try again later.</p>
-        <Link href="/">
-          <Button.Root>Back to Home</Button.Root>
-        </Link>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-title-h4 font-founders text-red-500">Ошибка</h2>
+          <p className="mt-4 text-paragraph-md font-styrene">
+            Не удалось загрузить данные подарка
+          </p>
+          <div className="mt-8">
+            <Button.Root asChild>
+              <Link href="/">Вернуться на главную</Link>
+            </Button.Root>
+          </div>
+        </div>
       </div>
     );
   }
   
-  const { gift, memoryPhoto, content, isAuthenticated } = giftData;
+  // Получаем memoryPhoto из giftData, может быть undefined
+  const memoryPhoto = giftData.memoryPhoto;
 
   return (
-    <>
-      {/* Анимация кубика, если пришли с главной страницы */}
+    <div className="relative">
+      {/* Показываем анимацию кубика, если пользователь пришел с главной */}
       {showDiceTransition && (
-        <DiceTransition 
-          onTransitionComplete={handleDiceTransitionComplete} 
-          giftId={giftId}
-        />
+        <DiceTransition onComplete={handleDiceTransitionComplete} />
       )}
       
-      {/* Основной контент страницы */}
+      {/* Основной контент подарка */}
       {showContent && (
-        <div ref={pageRef} className="min-h-screen bg-white text-adaptive opacity-0">
+        <main 
+          ref={pageRef} 
+          className="relative min-h-screen opacity-0"
+        >
           <div className="flex flex-col gap-2 py-24 text-center font-founders">
             <h1 ref={headerRef} className="text-title-h4">
               YOUR GIFT <br /> OF THE DAY
@@ -339,8 +334,8 @@ export default function GiftPage() {
             </div>
           )}
 
-          <span ref={dividerRef} className="text-label-xl my-20 flex items-center justify-center font-nyghtserif">
-            ***
+          <span ref={dividerRef} className="text-title-h3 my-20 flex items-center justify-center font-founders">
+            SPLIT
           </span>
 
           {/* Контент поздравления */}
@@ -394,8 +389,8 @@ export default function GiftPage() {
               </Link>
             </div>
           </div>
-        </div>
+        </main>
       )}
-    </>
+    </div>
   );
 }

@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import * as Dropdown from "~/components/ui/dropdown";
 import { useNavVisibility } from "~/components/providers/nav-visibility-provider";
+import { useAuth } from "~/components/providers/auth-provider";
+import { invalidateAllCache } from "@/utils/patches/unified-fetch-patch";
 
 const NavLink: React.FC<{
   href: string;
@@ -30,7 +32,7 @@ const NavLink: React.FC<{
 };
 
 export const Navigation = () => {
-  const { data: session } = useSession();
+  const { user, isAuthenticated, invalidateSession } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
   const { isNavVisible } = useNavVisibility();
@@ -40,6 +42,12 @@ export const Navigation = () => {
   }, []);
 
   const handleLogout = async () => {
+    // Инвалидируем кеш сессии перед выходом
+    invalidateSession();
+    
+    // Очищаем весь кеш API
+    invalidateAllCache();
+    
     await signOut({ redirect: false });
     // Перенаправляем на главную страницу с принудительной перезагрузкой
     window.location.href = "/";
@@ -64,14 +72,14 @@ export const Navigation = () => {
         {/* Правая часть */}
         <div className="flex items-center gap-6">
           <NavLink href="/gallery">Gallery</NavLink>
-          {isMounted && session?.user?.username ? (
+          {isMounted && isAuthenticated ? (
             <span className="font-styrene text-paragraph-md font-bold uppercase nav-blend">
               <Dropdown.Root onOpenChange={setIsDropdownOpen}>
                 <Dropdown.Trigger asChild className="focus:outline-none">
                   <button
                     className={`group relative cursor-pointer font-styrene text-paragraph-md font-bold uppercase nav-blend ${isDropdownOpen ? "[&>span]:w-1/2" : ""}`}
                   >
-                    {session.user.username}
+                    {user?.username || user?.name}
                     <span 
                       className="ease-custom absolute bottom-0 left-0 h-[2px] w-0 translate-y-1 transform nav-blend-line transition-all duration-700 group-hover:w-1/2"
                     />

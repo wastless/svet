@@ -426,3 +426,274 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 .perspective-500 {
   perspective: 500px;
 }
+
+/* Анимация для split эффекта */
+@keyframes split-top {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-80px); }
+}
+
+@keyframes split-bottom {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(80px); }
+}
+
+@keyframes reveal-dark {
+  0% { 
+    transform: translateY(-50%) scaleY(0);
+    opacity: 0;
+  }
+  100% { 
+    transform: translateY(-50%) scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Стили для эффекта split */
+.split-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  height: 8rem;
+}
+
+.split-item {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.split-item:first-child {
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+}
+
+.split-item:last-child {
+  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+}
+
+.split-text {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Эффект разделения при скролле */
+.split-container.is-inview .split-item:first-child {
+  transform: translateY(-40px);
+}
+
+.split-container.is-inview .split-item:last-child {
+  transform: translateY(40px);
+}
+
+/* Темный контейнер */
+.dark-content-reveal {
+  position: relative;
+  width: 100%;
+  background-color: #171717;
+  color: white;
+  overflow: hidden;
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-50px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+              max-height 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-content-reveal.is-visible {
+  opacity: 1;
+  max-height: 1000px;
+  transform: translateY(0);
+}
+
+/* Новые стили для эффекта фиксации и раздвижения */
+.sticky-split-container {
+  position: sticky;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  height: 6rem;
+  z-index: 10;
+  transition: height 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: transparent;
+}
+
+.sticky-split-container .split-item {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.sticky-split-container .split-item:first-child {
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  top: 0;
+}
+
+.sticky-split-container .split-item:last-child {
+  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  bottom: 0;
+}
+
+.split-text {
+  font-size: 3rem;
+  letter-spacing: 0.1em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Эффект затемнения фона */
+.sticky-split-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #171717;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sticky-split-container.is-transitioning::after {
+  opacity: 1;
+}
+
+/* Контейнер для всего эффекта перехода */
+.split-transition-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Анимация для активного состояния */
+.sticky-split-container.is-transitioning .split-item:first-child {
+  animation: split-top 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.sticky-split-container.is-transitioning .split-item:last-child {
+  animation: split-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Стили для темного контейнера */
+#dark-content {
+  position: relative;
+  margin-top: -50vh;
+}
+
+/* Новые стили для AKONY split эффекта */
+.akony .tn-atom {
+  min-height: 100vh;
+  height: 100%;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 0;
+  top: 0;
+  width: 100%;
+  will-change: transform;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.uc-akony-top, .uc-akony-bottom {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 100%;
+  height: 50%;
+  justify-content: center;
+  align-items: center;
+}
+
+.uc-akony-bottom {
+  justify-content: flex-start;
+}
+
+.uc-akony-top .split-text, .uc-akony-bottom .split-text {
+  font-size: 3rem;
+  letter-spacing: 0.1em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Дополнительные стили для структуры akony из примера */
+.uc-akony-hide {
+  overflow: hidden;
+  z-index: 20;
+  position: relative;
+}
+
+.uc-akony-top .t396__artboard, .uc-akony-bottom .t396__artboard {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.uc-akony-bottom .t396__artboard {
+  transform: translateY(-50%);
+}
+
+/* Стили для темного контейнера с контентом */
+.dark-content-container {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 0;
+  background-color: var(--bg-strong-950);
+  color: white;
+  opacity: 0;
+  z-index: 10;
+  overflow: hidden;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              top 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-content-container.full-screen {
+  top: 0;
+  height: 100vh;
+  transform: translateY(0);
+}
+
+/* Секция с эффектом SPLIT */
+.split-transition-section {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Увеличиваем силу эффекта для мобильных устройств */
+@media (max-width: 768px) {
+  .split-container.is-inview .split-item:first-child {
+    transform: translateY(-30px);
+  }
+  
+  .split-container.is-inview .split-item:last-child {
+    transform: translateY(30px);
+  }
+}

@@ -14,7 +14,7 @@ import { GalleryBlock } from "./gallery-block";
 
 interface GiftContentRendererProps {
   content: GiftContent;
-  memoryPhoto?: MemoryPhoto; // полароидная фотография
+  memoryPhoto?: MemoryPhoto | null; // полароидная фотография
   className?: string;
   gift?: Gift; // добавляем объект Gift для получения информации об авторе
 }

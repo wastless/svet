@@ -1,13 +1,16 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
+// Импортируем патч сессии в самом начале
+import "@/utils/patches/session-patch-init";
+
 import { NavVisibilityProvider } from "~/components/providers/nav-visibility-provider";
 import { IntroProvider } from "~/components/providers/intro-provider";
 import { IntroRedirect } from "~/components/providers/intro-redirect";
+import { AuthProvider } from "~/components/providers/auth-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <AuthProvider>
       <NavVisibilityProvider> 
         <IntroProvider>
           <IntroRedirect 
@@ -18,6 +21,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </IntroRedirect>
         </IntroProvider>
       </NavVisibilityProvider>
-    </SessionProvider>
+    </AuthProvider>
   );
 } 

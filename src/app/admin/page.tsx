@@ -1,37 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { GiftEditor } from "~/components/admin/gift-editor";
 import { GiftList } from "~/components/admin/gift-list";
 import { GiftCreationWizard } from "~/components/admin/gift-creation-wizard";
 import type { Gift } from "@/utils/types/gift";
+import { useGifts, useDeleteGift, useCreateGift, useUpdateGift } from "@/utils/hooks/useGiftQueries";
+import { FullScreenLoader } from "~/components/ui/spinner";
 
 export default function AdminPage() {
-  const [gifts, setGifts] = useState<Gift[]>([]);
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Загрузка списка подарков
-  const loadGifts = async () => {
-    try {
-      const response = await fetch("/api/gifts");
-      if (response.ok) {
-        const data = await response.json();
-        setGifts(data);
-      }
-    } catch (error) {
-      console.error("Ошибка загрузки подарков:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadGifts();
-  }, []);
-
+  
+  // Получаем список подарков с использованием React Query
+  const { data: gifts, isLoading } = useGifts();
+  
+  // Получаем мутации для операций с подарками
+  const deleteGiftMutation = useDeleteGift();
+  const createGiftMutation = useCreateGift();
+  
+  // Для обновления нам нужен ID подарка, поэтому создаем хук только когда selectedGift не null
+  const updateGiftMutation = selectedGift 
+    ? useUpdateGift(selectedGift.id)
+    : null;
+  
   const handleCreateGift = () => {
     setIsCreating(true);
   };
@@ -47,15 +40,7 @@ export default function AdminPage() {
     }
 
     try {
-      const response = await fetch(`/api/gifts/${giftId}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        setGifts(gifts.filter(gift => gift.id !== giftId));
-      } else {
-        alert("Ошибка при удалении подарка");
-      }
+      await deleteGiftMutation.mutateAsync(giftId);
     } catch (error) {
       console.error("Ошибка удаления подарка:", error);
       alert("Ошибка при удалении подарка");
@@ -64,39 +49,29 @@ export default function AdminPage() {
 
   const handleSaveGift = async (giftData: any) => {
     try {
-      const isUpdate = selectedGift !== null;
-      const url = isUpdate ? `/api/gifts/${selectedGift.id}` : "/api/gifts";
-      const method = isUpdate ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(giftData),
-      });
-
-      if (response.ok) {
-        const savedGift = await response.json();
-        await loadGifts(); // Перезагружаем список
+      if (selectedGift) {
+        // Обновление существующего подарка
+        if (updateGiftMutation) {
+          await updateGiftMutation.mutateAsync(giftData);
+        }
         
-        if (!isUpdate) {
-          // Если создавали новый подарок, переходим к его редактированию
+        // Выходим из режима редактирования
+        setIsEditing(false);
+        setSelectedGift(null);
+      } else {
+        // Создание нового подарка
+        const savedGift = await createGiftMutation.mutateAsync(giftData);
+        
+        // Если успешно создали, переходим к редактированию
+        if (savedGift) {
           setSelectedGift(savedGift);
           setIsCreating(false);
           setIsEditing(true);
-        } else {
-          // Если обновляли существующий, выходим из редактирования
-          setIsEditing(false);
-          setSelectedGift(null);
         }
-      } else {
-        const error = await response.json();
-        alert(`Ошибка сохранения: ${error.error}`);
       }
     } catch (error) {
       console.error("Ошибка сохранения подарка:", error);
-      alert("Ошибка при сохранении подарка");
+      alert(`Ошибка при сохранении подарка: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
     }
   };
 
@@ -108,6 +83,11 @@ export default function AdminPage() {
   const handleCancelCreate = () => {
     setIsCreating(false);
   };
+
+  // Показываем лоадер, пока загружаются данные
+  if (isLoading) {
+    return <FullScreenLoader />;
+  }
 
   return (
     <div className="min-h-screen bg-bg-white-0">
@@ -125,7 +105,6 @@ export default function AdminPage() {
             onCancel={handleCancelCreate}
             onSuccess={() => {
               setIsCreating(false);
-              loadGifts();
             }}
           />
         ) : isEditing ? (
@@ -136,7 +115,7 @@ export default function AdminPage() {
           />
         ) : (
           <GiftList
-            gifts={gifts}
+            gifts={gifts || []}
             onCreateGift={handleCreateGift}
             onEditGift={handleEditGift}
             onDeleteGift={handleDeleteGift}

@@ -9,10 +9,13 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import * as Hint from "~/components/ui/hint";
 import { authenticate } from "~/app/actions/auth";
+import { useAuth } from "~/components/providers/auth-provider";
+import { invalidateAllCache } from "@/utils/patches/unified-fetch-patch";
 
 export default function LoginPage() {
   const router = useRouter();
   const { update } = useSession();
+  const { invalidateSession } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -24,8 +27,15 @@ export default function LoginPage() {
     try {
       const result = await authenticate(formData);
       if (result?.success) {
+        // Очищаем все кеши перед обновлением
+        invalidateAllCache();
+        
         // Успешная авторизация - обновляем сессию и перенаправляем на главную
-        await update(); // Обновляем сессию
+        await update(); // Обновляем сессию через next-auth
+        
+        // Инвалидируем кеш сессии, чтобы получить новые данные
+        invalidateSession();
+        
         router.push("/");
         router.refresh(); // Принудительно обновляем страницу для получения новой сессии
       } else if (result) {

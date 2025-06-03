@@ -6,6 +6,7 @@ import { GiftBasicInfo } from "./gift-basic-info";
 import { ContentBlocksEditor } from "./content-blocks-editor";
 import { GiftPhotosEditor } from "./gift-photos-editor";
 import * as IconButton from "~/components/ui/icon-button";
+import { useGiftContent, useUpdateGift } from "@/utils/hooks/useGiftQueries";
 
 // Импортируем интерфейс GiftPhotos из компонента GiftPhotosEditor
 import type { GiftPhotos } from "./gift-photos-editor";
@@ -18,8 +19,10 @@ interface GiftEditorProps {
 
 export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
   const [activeTab, setActiveTab] = useState<"basic" | "content" | "memory">("basic");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Получаем контент подарка с использованием React Query
+  const { data: giftContent, isLoading } = useGiftContent(gift?.id || "");
   
   // Основные данные подарка
   const [basicData, setBasicData] = useState({
@@ -35,8 +38,8 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
     isSecret: gift?.isSecret || false,
   });
 
-  // Контент подарка
-  const [giftContent, setGiftContent] = useState<GiftContent>({
+  // Локальная копия контента подарка
+  const [localGiftContent, setLocalGiftContent] = useState<GiftContent>({
     blocks: [],
     metadata: {
       description: "",
@@ -54,27 +57,12 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
     }
   });
 
-  // Загрузка контента подарка при редактировании
+  // Обновляем локальный контент когда данные загрузятся
   useEffect(() => {
-    if (gift?.contentPath) {
-      loadGiftContent(gift.contentPath);
+    if (giftContent) {
+      setLocalGiftContent(giftContent);
     }
-  }, [gift]);
-
-  const loadGiftContent = async (contentPath: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/gift-content/${contentPath}`);
-      if (response.ok) {
-        const content = await response.json();
-        setGiftContent(content);
-      }
-    } catch (error) {
-      console.error("Ошибка загрузки контента:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [giftContent]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -84,7 +72,7 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
         ...basicData,
         openDate: new Date(basicData.openDate).toISOString(),
         number: Number(basicData.number),
-        content: giftContent,
+        content: localGiftContent,
         hintImageUrl: giftPhotos.hintImageUrl,
         hintText: giftPhotos.hintText || "look for a gift with this sticker",
         imageCover: giftPhotos.imageCover || "",
@@ -133,8 +121,8 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
         <IconButton.Root onClick={onCancel}>
           Назад
         </IconButton.Root>
-        <IconButton.Root onClick={handleSave}>
-          Сохранить
+        <IconButton.Root onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Сохранение..." : "Сохранить"}
         </IconButton.Root>
         </div>
         </div>
@@ -158,8 +146,8 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
             
             {activeTab === "content" && (
               <ContentBlocksEditor
-                content={giftContent}
-                onChange={setGiftContent}
+                content={localGiftContent}
+                onChange={setLocalGiftContent}
                 giftId={gift?.id}
               />
             )}

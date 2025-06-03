@@ -22,6 +22,7 @@ export interface Gift {
   englishDescription: string; // английское описание
   hintImageUrl: string; // картинка-подсказка к физическому подарку
   imageOrientation: string; // ориентация изображения: "horizontal", "vertical", "square"
+  imageCover?: string; // обложка подарка
   hintText: string; // текст подсказки
   codeText: string; // текст подсказки для кода
   code?: string | null; // секретный код (если есть)

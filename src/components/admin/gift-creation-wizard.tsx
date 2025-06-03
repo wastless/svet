@@ -12,6 +12,7 @@ import * as IconButton from "~/components/ui/icon-button";
 import { Root as AlertRoot, Icon as AlertIcon } from "../ui/alert";
 import { RiErrorWarningLine } from "@remixicon/react";
 import type { GiftPhotos } from "./gift-photos-editor";
+import { useCreateGift, useUpdateGift } from "@/utils/hooks/useGiftQueries";
 
 interface GiftCreationWizardProps {
   onSave: (giftData: any) => void;
@@ -137,6 +138,14 @@ export function GiftCreationWizard({
     }
   };
 
+  // Используем мутации для создания и обновления подарка
+  const createGiftMutation = useCreateGift();
+  
+  // Для обновления нам нужен ID подарка, поэтому создаем хук только когда savedGiftId не null
+  const updateGiftMutation = savedGiftId 
+    ? useUpdateGift(savedGiftId)
+    : null;
+
   const handleSaveBasic = async () => {
     setIsSaving(true);
     try {
@@ -205,27 +214,11 @@ export function GiftCreationWizard({
         return;
       }
 
-      const response = await fetch("/api/gifts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(giftData),
-      });
-
-      const responseData = await response.json();
+      // Используем мутацию вместо прямого fetch
+      const responseData = await createGiftMutation.mutateAsync(giftData);
       console.log("Ответ сервера:", responseData);
       
-      if (response.ok) {
-        setSavedGiftId(responseData.id);
-      } else {
-        console.error("Ошибка ответа сервера:", responseData);
-        if (responseData.error) {
-          setError(`Ошибка сохранения: ${responseData.error}`);
-        } else {
-          setError(`Ошибка сохранения: ${response.status} ${response.statusText}`);
-        }
-      }
+      setSavedGiftId(responseData.id);
     } catch (error) {
       console.error("Ошибка сохранения:", error);
       setError("Ошибка при сохранении подарка");
@@ -235,30 +228,19 @@ export function GiftCreationWizard({
   };
 
   const handleSaveContent = async () => {
-    if (!savedGiftId) return;
+    if (!savedGiftId || !updateGiftMutation) return;
 
     setIsSaving(true);
     try {
-      // Получаем текущее состояние подарка перед обновлением
-      const getGiftResponse = await fetch(`/api/gifts/${savedGiftId}`);
-      if (!getGiftResponse.ok) {
-        const error = await getGiftResponse.json();
-        setError(`Не удалось получить данные подарка: ${error.error || getGiftResponse.statusText}`);
-        setIsSaving(false);
-        return;
+      // Получаем текущее состояние подарка
+      const giftQuery = await fetch(`/api/gifts/${savedGiftId}`);
+      if (!giftQuery.ok) {
+        const errorData = await giftQuery.json();
+        throw new Error(`Не удалось получить данные подарка: ${errorData.error || giftQuery.statusText}`);
       }
-
-      const currentGift = await getGiftResponse.json();
+      
+      const currentGift = await giftQuery.json();
       console.log("Текущее состояние подарка:", currentGift);
-
-      // Убедимся, что обязательные поля присутствуют
-      if (!currentGift.openDate || !currentGift.number || !currentGift.englishDescription) {
-        console.error("В текущем подарке отсутствуют обязательные поля:", {
-          openDate: currentGift.openDate,
-          number: currentGift.number,
-          englishDescription: currentGift.englishDescription
-        });
-      }
 
       // Передаем только те данные, которые нужно обновить
       const giftData = {
@@ -272,51 +254,26 @@ export function GiftCreationWizard({
 
       console.log("Данные для обновления:", giftData);
 
-      const response = await fetch(`/api/gifts/${savedGiftId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(giftData),
-      });
-
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (e) {
-        console.error("Ошибка при разборе ответа:", e);
-        setError(`Ошибка при разборе ответа: ${e}`);
-        setIsSaving(false);
-        return;
-      }
-      
+      // Используем мутацию для обновления
+      const responseData = await updateGiftMutation.mutateAsync(giftData);
       console.log("Ответ сервера при сохранении контента:", responseData);
 
-      if (response.ok) {
-        // Успешное завершение создания подарка
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          await onSave(responseData);
-        }
+      // Успешное завершение создания подарка
+      if (onSuccess) {
+        onSuccess();
       } else {
-        console.error("Ошибка ответа сервера:", responseData);
-        if (responseData.error) {
-          setError(`Ошибка сохранения: ${responseData.error}`);
-        } else {
-          setError(`Ошибка сохранения: ${response.status} ${response.statusText}`);
-        }
+        await onSave(responseData);
       }
     } catch (error) {
       console.error("Ошибка сохранения:", error);
-      setError(`Ошибка при сохранении подарка: ${error}`);
+      setError(`Ошибка при сохранении подарка: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleUpdateGift = async () => {
-    if (!savedGiftId) return;
+    if (!savedGiftId || !updateGiftMutation) return;
 
     setIsSaving(true);
     try {
@@ -327,7 +284,7 @@ export function GiftCreationWizard({
         number: Number(basicData.number),
         hintImageUrl: photos.hintImageUrl,
         hintText: photos.hintText,
-        imageCover: photos.imageCover, // Добавляем поле imageCover
+        imageCover: photos.imageCover,
         content: giftContent,
         memoryPhoto: photos.memoryPhoto.photoUrl
           ? {
@@ -339,44 +296,19 @@ export function GiftCreationWizard({
           : null,
       };
 
-      const response = await fetch(`/api/gifts/${savedGiftId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (e) {
-        console.error("Ошибка при разборе ответа:", e);
-        setError(`Ошибка при разборе ответа: ${e}`);
-        setIsSaving(false);
-        return;
-      }
-      
+      // Используем мутацию для обновления
+      const responseData = await updateGiftMutation.mutateAsync(updateData);
       console.log("Ответ сервера при сохранении подарка:", responseData);
 
-      if (response.ok) {
-        // Успешное завершение создания подарка
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          await onSave(responseData);
-        }
+      // Успешное завершение создания подарка
+      if (onSuccess) {
+        onSuccess();
       } else {
-        console.error("Ошибка ответа сервера:", responseData);
-        if (responseData.error) {
-          setError(`Ошибка сохранения: ${responseData.error}`);
-        } else {
-          setError(`Ошибка сохранения: ${response.status} ${response.statusText}`);
-        }
+        await onSave(responseData);
       }
     } catch (error) {
       console.error("Ошибка сохранения:", error);
-      setError(`Ошибка при сохранении подарка: ${error}`);
+      setError(`Ошибка при сохранении подарка: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsSaving(false);
     }

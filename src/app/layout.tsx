@@ -6,6 +6,7 @@ import { Navigation } from "~/components/ui/navigation";
 import { DateProvider } from "@/utils/hooks/useDateContext";
 import { DateTestControl } from "~/components/ui/date-test-control";
 import { SmoothScrollScript } from "~/components/ui/smooth-scroll";
+import { ReactQueryProvider } from "@/utils/providers/ReactQueryProvider";
 
 export const metadata: Metadata = {
   title: "Lesya Svet",
@@ -116,22 +117,26 @@ function generateInlineScript() {
 
 export default function RootLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className={fontVariables}>
+    <html lang="en" className={`${fontVariables} ${fontClasses}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: generateInlineScript() }} />
       </head>
-      <body>
-        <Providers>
-          <DateProvider>
-            <Navigation />
-            <div className="page-content">
-            {children}
-            </div>
-            <DateTestControl />
-          </DateProvider>
-        </Providers>
+      <body className="min-h-screen">
+        <ReactQueryProvider>
+          <Providers>
+            <DateProvider>
+              <Navigation />
+              <div className="page-content">
+                {children}
+              </div>
+              <DateTestControl />
+            </DateProvider>
+          </Providers>
+        </ReactQueryProvider>
         <SmoothScrollScript />
       </body>
     </html>

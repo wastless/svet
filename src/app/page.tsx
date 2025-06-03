@@ -1,6 +1,5 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import * as Button from "~/components/ui/button";
 import { Countdown } from "~/components/home/countdown";
@@ -8,11 +7,13 @@ import { WordOfDay } from "~/components/home/word-of-day";
 import { IntroOverlay } from "~/components/home/intro-overlay";
 import { useIntro } from "@/utils/hooks/useIntro";
 import { COUNTDOWN_CONFIG, WORD_SYSTEM } from "@/utils/data/constants";
-import { useTimer, useGifts } from "@/utils/hooks/useDateContext";
+import { useTimer, useGifts as useDateGifts } from "@/utils/hooks/useDateContext";
 import { FullScreenLoader } from "~/components/ui/spinner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import gsap from "gsap";
 import { isGiftOpen } from "@/utils/hooks/gift-helpers";
+import { useGifts } from "@/utils/hooks/useGiftQueries";
+import { useAuth } from "~/components/providers/auth-provider";
 
 // Тип для подарка из API
 interface GiftData {
@@ -23,16 +24,17 @@ interface GiftData {
 }
 
 export default function HomePage() {
-  const { data: session, status } = useSession();
-  const isAuthenticated = !!session?.user;
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const { currentDate, isTestMode } = useTimer();
-  const { giftsDate } = useGifts();
-  const { shouldShowIntro, isLoading, completeIntro } = useIntro();
+  const { giftsDate } = useDateGifts(); // Переименовываем чтобы избежать конфликта имен
+  const { shouldShowIntro, isLoading: isIntroLoading, completeIntro } = useIntro();
+  
+  // Получаем список подарков с использованием React Query
+  const { data: gifts, isLoading: isGiftsLoading, error: giftsError } = useGifts();
   
   // Состояние для контента
   const [contentVisible, setContentVisible] = useState(true);
-  const [availableGiftId, setAvailableGiftId] = useState<string | null>(null);
   
   // Рефы для анимации
   const titleRef = useRef(null);
@@ -41,42 +43,22 @@ export default function HomePage() {
   const buttonRef = useRef(null);
   const contentRef = useRef(null);
   
-  // Эффект для получения доступного сегодня подарка
-  useEffect(() => {
-    const fetchAvailableGift = async () => {
-      try {
-        // Получаем все подарки
-        const res = await fetch('/api/gifts');
-        if (!res.ok) throw new Error('Failed to fetch gifts');
-        
-        const gifts = await res.json() as GiftData[];
-        
-        if (!giftsDate) return;
-        
-        // Находим последний доступный подарок
-        const availableGifts = gifts
-          .filter((gift: GiftData) => {
-            return isGiftOpen(new Date(gift.openDate), giftsDate);
-          })
-          .sort((a: GiftData, b: GiftData) => new Date(b.openDate).getTime() - new Date(a.openDate).getTime());
-        
-        if (availableGifts.length > 0 && availableGifts[0]) {
-          setAvailableGiftId(availableGifts[0].id);
-        }
-      } catch (error) {
-        console.error('Error fetching available gift:', error);
-      }
-    };
+  // Определяем доступный подарок с использованием useMemo
+  const availableGiftId = useMemo(() => {
+    if (!gifts || !giftsDate) return null;
     
-    if (giftsDate) {
-      fetchAvailableGift();
-    }
-  }, [giftsDate]);
+    // Находим последний доступный подарок
+    const availableGifts = gifts
+      .filter((gift) => isGiftOpen(new Date(gift.openDate), giftsDate))
+      .sort((a, b) => new Date(b.openDate).getTime() - new Date(a.openDate).getTime());
+    
+    return availableGifts.length > 0 && availableGifts[0] ? availableGifts[0].id : null;
+  }, [gifts, giftsDate]);
   
   // Анимация элементов страницы
   useEffect(() => {
     // Проверяем, чтобы не запускать анимацию при наличии интро
-    if (!shouldShowIntro && !isLoading && contentVisible) {
+    if (!shouldShowIntro && !isIntroLoading && contentVisible) {
       // Таймлайн для последовательной анимации
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       
@@ -111,17 +93,15 @@ export default function HomePage() {
         "-=0.2"
       );
     }
-  }, [shouldShowIntro, isLoading, contentVisible]);
+  }, [shouldShowIntro, isIntroLoading, contentVisible]);
 
   // Показываем лоадер пока проверяем куки или дата не инициализирована
-  if (isLoading || !currentDate) {
+  if (isIntroLoading || !currentDate || isGiftsLoading || isAuthLoading) {
     return <FullScreenLoader />;
   }
   
   // Функция для обработки клика по кнопке
   const handleButtonClick = () => {
-    if (status === "loading") return;
-    
     // Проверяем авторизацию пользователя
     if (!isAuthenticated) {
       // Если пользователь не авторизован, перенаправляем на страницу входа
@@ -196,7 +176,7 @@ export default function HomePage() {
             <div ref={buttonRef}>
               <Button.Root 
                 onClick={handleButtonClick}
-                disabled={!contentVisible || status === "loading"}
+                disabled={!contentVisible || isAuthLoading}
               >
                 Let's GO
               </Button.Root>
