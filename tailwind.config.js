@@ -11,6 +11,22 @@ export const texts = {
       textTransform: "uppercase",
     },
   ],
+  "md-title-h1": [
+    "16rem",
+    {
+      lineHeight: "11rem",
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+  ],
+  "sm-title-h1": [
+    "11.25rem",
+    {
+      lineHeight: "8rem",
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+  ],
   "title-h2": [
     "11.25rem",
     {
@@ -98,6 +114,11 @@ const config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      'sm': '380px',
+      'md': '1024px',
+      'lg': '1536px',
+    },
     colors: {
       gray: {
         0: "var(--gray-0)",

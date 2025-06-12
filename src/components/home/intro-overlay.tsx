@@ -27,6 +27,15 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
     onComplete();
   }, [onComplete, setNavVisibility]);
 
+  // Функция для переключения слайдов
+  const handleNextSlide = useCallback(() => {
+    if (currentSlide === 0) {
+      setCurrentSlide(1);
+    } else {
+      handleSkipIntro();
+    }
+  }, [currentSlide, handleSkipIntro]);
+
   useEffect(() => {
     // Скрываем навигацию при появлении интро
     setNavVisibility(false);
@@ -116,8 +125,8 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
   // Мемоизированный заголовок - избегаем перерендера при смене слайдов
   const introHeaderElement = useMemo(() => {
     return (
-      <div className="flex justify-center font-founders text-title-h2 uppercase text-adaptive">
-        <span className="relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-center items-center font-founders text-title-h3 md:text-title-h2 lg:text-title-h2 uppercase text-adaptive text-center">
+        <span className="relative overflow-hidden flex justify-center">
           {/* Анимированное приветствие */}
           <span
             key={`${currentGreeting}-${isTransitioning}`}
@@ -127,8 +136,9 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
           >
             {GREETINGS[currentGreeting]}
           </span>
+          <span className="md:mr-4">,</span>
         </span>
-        <span className="ml-1">, LESYA</span>
+        <span className="sm:-mt-2 flex justify-center">LESYA</span>
       </div>
     );
   }, [currentGreeting, isTransitioning]); // Зависит только от состояния приветствий, не от currentSlide
@@ -148,14 +158,15 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         className={`absolute inset-0 text-adaptive transition-opacity duration-1000 ${
           currentSlide === 0 ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
+        onClick={() => handleNextSlide()}
       >
         {/* Заголовок - фиксированная позиция */}
-        <div className="absolute left-1/2 top-1/2 -mt-28 -translate-x-1/2 -translate-y-1/2 transform">
+        <div className="absolute left-1/2 top-1/2 -mt-16 sm:-mt-20 md:-mt-28 -translate-x-1/2 -translate-y-1/2 transform">
           {introHeaderElement}
         </div>
 
         {/* Основной текст - фиксированная позиция по центру */}
-        <div className="absolute left-1/2 top-1/2 mt-16 w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-8 text-center font-styrene text-paragraph-md font-bold uppercase text-adaptive">
+        <div className="absolute left-1/2 top-1/2 mt-20 md:mt-10 lg:mt-16 w-full max-w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-4 sm:px-6 md:px-8 text-center font-styrene text-paragraph-xs md:text-paragraph-sm md:font-bold lg:text-paragraph-md lg:font-bold font-bold uppercase text-adaptive">
           <span>
             This website is your personal assistant for your advent calendar
             gifts. Every day, you'll get a new gift to open — only you can open
@@ -167,6 +178,11 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
           <br />
           <span>Your login and password can be found on the card.</span>
         </div>
+        
+        {/* Индикатор для мобильных устройств */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 md:hidden flex flex-col items-center">
+          <div className="mt-4 text-center text-paragraph-xs font-styrene uppercase font-bold text-adaptive">Tap to continue</div>
+        </div>
       </div>
 
       {/* Второй блок */}
@@ -174,15 +190,15 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         className={`absolute inset-0 text-adaptive transition-opacity duration-1000 ${
           currentSlide === 1 ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
+        onClick={() => handleSkipIntro()}
       >
         {/* Заголовок - фиксированная позиция */}
-        <div className="absolute left-1/2 top-1/2 -mt-28 -translate-x-1/2 -translate-y-1/2 transform">
+        <div className="absolute left-1/2 top-1/2 -mt-16 sm:-mt-20 md:-mt-28 -translate-x-1/2 -translate-y-1/2 transform">
           {introHeaderElement}
         </div>
 
         {/* Основной текст - фиксированная позиция по центру */}
-        <div className="absolute left-1/2 top-1/2 mt-16 w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-8 text-center font-styrene text-paragraph-md font-bold uppercase text-adaptive">
-          <span>
+        <div className="absolute left-1/2 top-1/2 mt-20 md:mt-10 lg:mt-16 w-full max-w-[550px] -translate-x-1/2 -translate-y-1/2 transform px-4 sm:px-6 md:px-8 text-center font-styrene text-paragraph-xs md:text-paragraph-sm md:font-bold lg:text-paragraph-md lg:font-bold font-bold uppercase text-adaptive">         <span>
             The roadmap page displays all the open gifts. gallery page — open
             memories. Some gifts may be kept secret from others. It's easy to
             find a gift — there is a small Easter egg and a photo sticker.
@@ -195,24 +211,40 @@ export function IntroOverlay({ onComplete }: IntroOverlayProps) {
         </div>
 
         {/* Кнопка - фиксированная позиция */}
-        <div className="absolute left-1/2 top-1/2 mt-44 -translate-x-1/2 -translate-y-1/2 transform">
+        <div className="absolute left-1/2 top-1/2 mt-48 md:mt-40 lg:mt-44 -translate-x-1/2 -translate-y-1/2 transform hidden md:block">
           <Button.Root onClick={handleSkipIntro}>Let's GO</Button.Root>
+        </div>
+        
+        {/* Индикатор для мобильных устройств */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 md:hidden flex flex-col items-center">
+          <div className="mt-4 text-center text-paragraph-xs font-styrene uppercase font-bold text-adaptive">Tap to continue</div>
         </div>
       </div>
 
-      {/* Skip кнопка */}
+      {/* Skip кнопка - полная версия (для больших экранов) */}
       <IconButton.Root
         onClick={handleSkipIntro}
         position="absolute"
         iconPosition="end"
         icon={<ArrowRightIcon size={16} />}
+        className="hidden md:flex"
       >
         SKIP INTRO
       </IconButton.Root>
+      
+      {/* Skip кнопка - компактная версия (для мобильных) */}
+      <div className="hidden absolute top-6 right-6 z-10">
+        <Button.Root 
+          onClick={handleSkipIntro}
+          className="text-paragraph-xs py-2 px-4"
+        >
+          Skip
+        </Button.Root>
+      </div>
 
       {/* Scroll Indicator - внутри dark-container для правильной темы */}
       <div
-        className="c-introduction_scroll-indicator text-adaptive visible"
+        className="c-introduction_scroll-indicator text-adaptive visible md:block hidden"
       ></div>
     </div>
   );

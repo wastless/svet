@@ -132,32 +132,32 @@ export default function HomePage() {
   };
 
   return (
-      <div className="relative">
+      <div className="fixed inset-0 overflow-hidden">
         {/* Интро оверлей */}
         {shouldShowIntro && (
           <IntroOverlay onComplete={completeIntro} />
         )}
         
-        <main className="bg-adaptive min-h-screen">
-          <div className="flex min-h-screen flex-col items-center justify-center">
+        <main className="bg-adaptive h-full w-full overflow-hidden">
+          <div className="flex h-full flex-col items-center justify-center px-4 md:px-8">
             {contentVisible && (
-              <div ref={contentRef} className="flex flex-col items-center justify-center gap-12">
+              <div ref={contentRef} className="flex flex-col items-center justify-center gap-4 md:gap-10 lg:gap-12 -mt-8">
                 <div className="flex flex-col items-center justify-center">
-                  <h2 ref={subtitleRef} className="text-adaptive font-nyghtserif text-label-lg text-center italic">
+                  <h2 ref={subtitleRef} className="text-adaptive font-nyghtserif text-label-sm md:text-label-md lg:text-label-lg text-center italic">
                     <WordOfDay
                       startDate={WORD_SYSTEM.START_DATE}
                       cycleLength={WORD_SYSTEM.CYCLE_LENGTH}
                       currentDate={giftsDate}
                     />
                   </h2>
-                  <h1 ref={titleRef} className="text-adaptive text-title-h1 font-founders text-center -mt-2">
+                  <h1 ref={titleRef} className="text-adaptive text-sm-title-h1 md:text-md-title-h1 lg:text-title-h1 font-founders text-center -mt-2">
                     LESYA
                     <br />
                     SVET
                   </h1>
                 </div>
                 
-                <h2 ref={countdownRef} className="text-adaptive font-styrene text-paragraph-md font-bold text-center uppercase">
+                <h2 ref={countdownRef} className="text-adaptive font-styrene text-paragraph-sm md:text-paragraph-md md:font-bold font-bold text-center uppercase">
                   Before the birthday:
                   <br />
                   <Countdown
@@ -172,7 +172,7 @@ export default function HomePage() {
 
         {/* Кнопка фиксирована к viewport */}
         <div className="pointer-events-none fixed inset-0 z-50">
-          <div className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2">
+          <div className="pointer-events-auto absolute bottom-12 sm:bottom-8 left-1/2 -translate-x-1/2">
             <div ref={buttonRef}>
               <Button.Root 
                 onClick={handleButtonClick}
