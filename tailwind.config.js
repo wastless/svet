@@ -220,6 +220,20 @@ const config = {
       transitionDuration: {
         '800': '800ms',
       },
+      transformStyle: {
+        'preserve-3d': 'preserve-3d',
+      },
+      perspective: {
+        '1000': '1000px',
+        '2000': '2000px',
+      },
+      backfaceVisibility: {
+        'hidden': 'hidden',
+        'visible': 'visible',
+      },
+      transformOrigin: {
+        'center': 'center',
+      },
     },
   },
   plugins: [tailwindcssAnimate],

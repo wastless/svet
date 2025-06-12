@@ -10,6 +10,8 @@ export default function SplitDemo() {
   
   // Состояние для отслеживания фиксации SPLIT
   const [isSticky, setIsSticky] = useState(false);
+  // Состояние для текста в черном контейнере
+  const [darkContentVisible, setDarkContentVisible] = useState(false);
   
   // Эффект для обработки прокрутки и анимации
   useEffect(() => {
@@ -60,6 +62,9 @@ export default function SplitDemo() {
           const heightValue = `${easedProgress * 100}vh`;
           darkContent.style.height = heightValue;
           
+          // Показываем текст в черном контейнере, когда он достаточно расширился
+          setDarkContentVisible(easedProgress > 0.3);
+          
           // Анимация разделения текста с тем же прогрессом
           // Увеличиваем максимальное расстояние разделения для более выраженного эффекта
           const moveDistance = easedProgress * 80; // Увеличиваем с 60 до 80px
@@ -77,6 +82,7 @@ export default function SplitDemo() {
           darkContent.style.height = '0px';
           topText.style.transform = 'translateY(0)';
           bottomText.style.transform = 'translateY(0)';
+          setDarkContentVisible(false);
         }
       } else {
         // Не фиксируем SPLIT, если скролл не достиг нужной позиции
@@ -86,6 +92,7 @@ export default function SplitDemo() {
         darkContent.style.height = '0px';
         topText.style.transform = 'translateY(0)';
         bottomText.style.transform = 'translateY(0)';
+        setDarkContentVisible(false);
       }
     };
     
@@ -151,9 +158,69 @@ export default function SplitDemo() {
             height: '0px',
             backgroundColor: 'black',
             transform: 'translateY(-50%)',
-            zIndex: 20
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden'
           }}
-        ></div>
+        >
+          {darkContentVisible && (
+            <div className="text-white text-center px-4" style={{
+              overflowY: 'auto',
+              maxHeight: '90vh',
+              width: '100%',
+              padding: '40px 20px'
+            }}>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+              <h2 className="text-4xl font-bold mb-4">Заголовок в черном контейнере</h2>
+              <p className="text-xl max-w-2xl mx-auto">
+                Этот текст отображается в черном контейнере после того, как он достаточно расширился при прокрутке страницы.
+                Вы можете добавить здесь любой контент, который должен появляться в этой области.
+              </p>
+            </div>
+            
+          )}
+        </div>
         
         {/* Контейнер для SPLIT текста с эффектом разделения */}
         <div style={{

@@ -81,7 +81,7 @@ export default function GiftPage() {
     const tl = gsap.timeline({
       defaults: { 
         ease: "power3.out",
-        duration: 0.8
+        duration: 0.4
       }
     });
     
@@ -105,7 +105,7 @@ export default function GiftPage() {
       // Полная анимация для перехода с главной страницы
       
       // 1. Анимация всей страницы и большого заголовка по центру
-      tl.to(pageRef.current, { opacity: 1, duration: 0.2 })
+      tl.to(pageRef.current, { opacity: 1, duration: 0.1 })
         .fromTo(
           headerRef.current,
           { 
@@ -117,11 +117,11 @@ export default function GiftPage() {
             opacity: 1, 
             scale: 3.5, 
             y: "30vh", 
-            duration: 1
+            duration: 0.5
           }
         )
         // Пауза для отображения увеличенного заголовка
-        .to(headerRef.current, { scale: 3.5, duration: 0.5 })
+        .to(headerRef.current, { scale: 3.5, duration: 0.2 })
       
         // 2. Заголовок уменьшается и перемещается на свое место, появляется номер и описание
         .to(
@@ -129,7 +129,7 @@ export default function GiftPage() {
           { 
             scale: 1, 
             y: 0, 
-            duration: 1.2
+            duration: 0.6
           }
         )
     } else {
@@ -139,21 +139,21 @@ export default function GiftPage() {
       gsap.set(headerRef.current, { opacity: 1 });
       
       // Только анимируем появление страницы
-      tl.to(pageRef.current, { opacity: 1, duration: 0.4 });
+      tl.to(pageRef.current, { opacity: 1, duration: 0.2 });
     }
     
     // Общая анимация для всех элементов, независимо от источника перехода
     tl.fromTo(
       numberRef.current,
       { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.4 },
-      "-=0.2"
+      { y: 0, opacity: 1, duration: 0.2 },
+      "-=0.1"
     )
     .fromTo(
       quoteRef.current,
       { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8 },
-      "=0.3"
+      { y: 0, opacity: 1, duration: 0.4 },
+      "=0.1"
     )
     
     // 3. Появление остального контента
@@ -168,18 +168,18 @@ export default function GiftPage() {
         y: 0, 
         opacity: 1,
         scale: 1,
-        duration: 0.8
+        duration: 0.4
       },
     )
     .fromTo(
       hintTextRef.current,
       { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6 },
-      "-=0.4"
+      { y: 0, opacity: 1, duration: 0.3 },
+      "-=0.2"
     );
     
     // Пауза перед показом кода (если есть)
-    tl.to({}, { duration: 0.2 });
+    tl.to({}, { duration: 0.1 });
     
     // Анимация секретного кода (если есть)
     if (codeTextRef.current && codeRef.current) {
@@ -187,17 +187,17 @@ export default function GiftPage() {
         codeTextRef.current,
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1 },
-        "-=0.3"
+        "-=0.1"
       );
       
       tl.fromTo(
         codeRef.current,
         { y: 20, opacity: 0, scale: 0.95 },
         { y: 0, opacity: 1, scale: 1 },
-        "-=0.4"
+        "-=0.2"
       );
 
-      tl.fromTo(dividerRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "-=0.4");
+      tl.fromTo(dividerRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, "-=0.2");
     }
     
     // Сразу отображаем остальные элементы без анимации
@@ -297,7 +297,7 @@ export default function GiftPage() {
               „{gift.englishDescription}"
             </div>
 
-            <div className="mx-auto flex max-w-[320px] flex-col items-center gap-6">
+            <div className="mx-auto flex max-w-[320px] flex-col items-center gap-4">
               <div ref={imageContainerRef} className="w-full aspect-square rounded-2xl overflow-hidden">
                 <img
                   src={gift.hintImageUrl}
@@ -312,7 +312,7 @@ export default function GiftPage() {
 
           {/* Секретный код (если есть) - только для авторизованных пользователей */}
           {gift.code && isAuthenticated && (
-            <div className="pt-24 flex flex-col items-center gap-5 text-center">
+            <div className="pt-24 flex flex-col items-center gap-4 text-center">
               <p ref={codeTextRef} className="mx-auto max-w-[440px] font-styrene text-paragraph-md font-bold uppercase">
               {gift.codeText}
               </p>
@@ -334,8 +334,8 @@ export default function GiftPage() {
             </div>
           )}
 
-          <span ref={dividerRef} className="text-title-h3 my-20 flex items-center justify-center font-founders">
-            SPLIT
+          <span ref={dividerRef} className="font-nyghtserif text-label-xl text-adaptive mt-16 mb-10 flex items-center justify-center">
+          ***
           </span>
 
           {/* Контент поздравления */}
