@@ -59,10 +59,10 @@ export const Navigation = () => {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 px-8 pt-8 z-[10000]" style={{ mixBlendMode: 'difference' }}>
+    <nav className="fixed top-0 left-0 right-0 px-6 md:px-8 pt-8 z-[10000]" style={{ mixBlendMode: 'difference' }}>
       <div className="flex items-center justify-between">
         {/* Левая часть */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6">
           <NavLink href="/" isActive={true}>
             Home
           </NavLink>
@@ -70,14 +70,14 @@ export const Navigation = () => {
         </div>
 
         {/* Правая часть */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-6 ">
           <NavLink href="/gallery">Gallery</NavLink>
           {isMounted && isAuthenticated ? (
             <span className="font-styrene text-paragraph-md font-bold uppercase nav-blend">
               <Dropdown.Root onOpenChange={setIsDropdownOpen}>
                 <Dropdown.Trigger asChild className="focus:outline-none">
                   <button
-                    className={`group relative cursor-pointer font-styrene text-paragraph-md font-bold uppercase nav-blend ${isDropdownOpen ? "[&>span]:w-1/2" : ""}`}
+                    className={`group relative cursor-pointer font-styrene text-paragraph-md font-bold uppercase nav-blend truncate max-w-[120px] md:max-w-none ${isDropdownOpen ? "[&>span]:w-1/2" : ""}`}
                   >
                     {user?.username || user?.name}
                     <span 

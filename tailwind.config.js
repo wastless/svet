@@ -51,6 +51,14 @@ export const texts = {
       textTransform: "uppercase",
     },
   ],
+  "sm-title-h4": [
+    "2.75rem",
+    {
+      lineHeight: "3.125rem",
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+  ],
   "title-h5": [
     "2.25rem",
     {
@@ -88,6 +96,7 @@ export const texts = {
   "label-lg": ["2.5rem", { lineHeight: "3.5rem", fontWeight: "400" }],
   "label-md": ["2rem", { lineHeight: "2.75rem", fontWeight: "400" }],
   "label-sm": ["1.5rem", { lineHeight: "2rem", fontWeight: "400" }],
+  "label-xs": ["1.25rem", { lineHeight: "1.75rem", fontWeight: "400" }],
   // Marker styles
   "marker-lg": [
     "3rem",

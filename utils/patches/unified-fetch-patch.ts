@@ -67,11 +67,12 @@ function getTTL(url: string): number {
 function shouldCacheUrl(url: string, method: string): boolean {
   if (method !== 'GET') return false;
   
-  return (
-    url.includes('/api/auth/session') ||
-    url.includes('/api/gifts') ||
-    url.includes('/api/gift-content')
-  );
+  // Кешируем только сессию, но не запросы к подаркам
+  return url.includes('/api/auth/session');
+  
+  // Отключаем кеширование для подарков
+  // url.includes('/api/gifts') || 
+  // url.includes('/api/gift-content')
 }
 
 // Для отладки
@@ -91,6 +92,9 @@ function getUrlFromCacheKey(cacheKey: string): string {
 export function applyUnifiedFetchPatch() {
   // Не применяем патч, если он уже был применен
   if ((globalThis.fetch as any).__patchedUnified) return;
+  
+  // Очищаем кеш подарков при инициализации
+  invalidateGiftCache();
   
   // Загружаем кеш из localStorage при инициализации
   loadCacheFromStorage();
@@ -336,6 +340,30 @@ export function invalidateGiftCache(giftId?: string) {
     
     keysToDelete.forEach(key => delete requestCache[key]);
     console.log(`🗑️ Invalidated cache for gift ${giftId}`);
+    
+    // Принудительно очищаем localStorage для этого подарка
+    try {
+      const savedCache = localStorage.getItem('api_request_cache');
+      if (savedCache) {
+        const parsed = JSON.parse(savedCache);
+        let changed = false;
+        
+        Object.keys(parsed).forEach(key => {
+          const url = getUrlFromCacheKey(key);
+          if (url.includes(`/api/gifts/${giftId}`) || url.includes(`/api/gift-content/${giftId}`)) {
+            delete parsed[key];
+            changed = true;
+          }
+        });
+        
+        if (changed) {
+          localStorage.setItem('api_request_cache', JSON.stringify(parsed));
+          console.log(`🗑️ LocalStorage cache cleared for gift ${giftId}`);
+        }
+      }
+    } catch (e) {
+      console.error('Error clearing localStorage cache:', e);
+    }
   } else {
     // Иначе очищаем весь кеш подарков
     const keysToDelete = Object.keys(requestCache).filter(key => {
@@ -345,6 +373,30 @@ export function invalidateGiftCache(giftId?: string) {
     
     keysToDelete.forEach(key => delete requestCache[key]);
     console.log('🗑️ Gift cache invalidated');
+    
+    // Принудительно очищаем localStorage для всех подарков
+    try {
+      const savedCache = localStorage.getItem('api_request_cache');
+      if (savedCache) {
+        const parsed = JSON.parse(savedCache);
+        let changed = false;
+        
+        Object.keys(parsed).forEach(key => {
+          const url = getUrlFromCacheKey(key);
+          if (url.includes('/api/gifts') || url.includes('/api/gift-content')) {
+            delete parsed[key];
+            changed = true;
+          }
+        });
+        
+        if (changed) {
+          localStorage.setItem('api_request_cache', JSON.stringify(parsed));
+          console.log('🗑️ LocalStorage cache cleared for all gifts');
+        }
+      }
+    } catch (e) {
+      console.error('Error clearing localStorage cache:', e);
+    }
   }
   
   saveCacheToStorage();

@@ -14,7 +14,7 @@ export default async function GiftPage() {
     <div className="relative bg-bg-white-0">
       <main className="min-h-screen bg-adaptive">
         {/* Заголовок в верхней части */}
-        <div className="flex justify-center pt-24 mb-10">
+        <div className="flex justify-center pt-24 md:pt-20 lg:pt-24 mb-8 md:mb-16">
           <h4 className="text-center font-founders text-title-h4 uppercase text-adaptive">
           gift roadmap
           </h4>
@@ -26,15 +26,15 @@ export default async function GiftPage() {
         </div>
 
         {/* Нижний текст */}
-        <div className="flex flex-col items-center gap-8 bg-bg-white-0 pt-20 pb-28 text-center text-adaptive">
+        <div className="flex flex-col items-center gap-6 sm:gap-8 md:gap-10 pt-12 sm:pt-16 md:pt-20 pb-16 sm:pb-20 md:pb-28 text-center px-4">
           <span className="font-nyghtserif text-label-xl">***</span>
-          <h2 className="font-founders text-title-h3 uppercase">
+          <h2 className="font-founders text-title-h4 md:text-title-h3 uppercase">
           To feel the  <br />
           sunlight
           </h2>
 
           <Link href="/">
-            <Button.Root>to the home</Button.Root>
+            <Button.Root>go home</Button.Root>
           </Link>
         </div>
       </main>

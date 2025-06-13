@@ -25,7 +25,29 @@ interface DBMemoryPhoto extends Omit<MemoryPhoto, 'gift'> {
   gift?: DBGift;
 }
 
+// Хук для определения размера экрана
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const media = window.matchMedia(query);
+      setMatches(media.matches);
+
+      const listener = () => setMatches(media.matches);
+      media.addEventListener('change', listener);
+
+      return () => media.removeEventListener('change', listener);
+    }
+  }, [query]);
+
+  return matches;
+}
+
 export default function GiftPage() {
+  // Определяем размер экрана
+  const isMobile = useMediaQuery('(max-width: 640px)');
+  
   // Получаем ID подарка из параметров URL
   const params = useParams();
   const giftId = params.id as string;
@@ -196,9 +218,15 @@ export default function GiftPage() {
         { y: 0, opacity: 1, scale: 1 },
         "-=0.2"
       );
-
-      tl.fromTo(dividerRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, "-=0.2");
     }
+
+    // Анимация разделителя (всегда показываем)
+    tl.fromTo(
+      dividerRef.current, 
+      { y: 20, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.3 }, 
+      "-=0.2"
+    );
     
     // Сразу отображаем остальные элементы без анимации
     gsap.set([
@@ -227,15 +255,15 @@ export default function GiftPage() {
   // Показываем ошибку, если не удалось загрузить данные
   if (giftError) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-title-h4 font-founders text-red-500">Ошибка</h2>
-          <p className="mt-4 text-paragraph-md font-styrene">
-            Не удалось загрузить данные подарка
+          <h2 className="text-title-h2 font-founders">ERROR</h2>
+          <p className="mt-4 text-paragraph-md uppercase font-bold font-styrene">
+          Couldn't upload gift data
           </p>
           <div className="mt-8">
             <Button.Root asChild>
-              <Link href="/">Вернуться на главную</Link>
+              <Link href="/">Go Home</Link>
             </Button.Root>
           </div>
         </div>
@@ -253,15 +281,15 @@ export default function GiftPage() {
   // Убедимся, что у нас есть все необходимые данные
   if (!gift) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center p-4">
         <div className="text-center">
-          <h2 className="text-title-h4 font-founders text-red-500">Ошибка</h2>
-          <p className="mt-4 text-paragraph-md font-styrene">
-            Не удалось загрузить данные подарка
+          <h2 className="text-title-h2 font-founders">ERROR</h2>
+          <p className="mt-4 text-paragraph-md uppercase font-bold font-styrene">
+          Couldn't upload gift data
           </p>
           <div className="mt-8">
             <Button.Root asChild>
-              <Link href="/">Вернуться на главную</Link>
+              <Link href="/">Go Home</Link>
             </Button.Root>
           </div>
         </div>
@@ -273,7 +301,7 @@ export default function GiftPage() {
   const memoryPhoto = giftData.memoryPhoto;
 
   return (
-    <div className="relative">
+    <div className="relative bg-bg-white-0">
       {/* Показываем анимацию кубика, если пользователь пришел с главной */}
       {showDiceTransition && (
         <DiceTransition onComplete={handleDiceTransitionComplete} />
@@ -283,7 +311,7 @@ export default function GiftPage() {
       {showContent && (
         <main 
           ref={pageRef} 
-          className="relative min-h-screen opacity-0"
+          className="relative min-h-screen opacity-0 bg-bg-white-0"
         >
           <div className="flex flex-col gap-2 py-24 text-center font-founders">
             <h1 ref={headerRef} className="text-title-h4">
@@ -292,19 +320,19 @@ export default function GiftPage() {
             <div ref={numberRef} className="text-title-h5">({gift.number})</div>
           </div>
 
-          <div className="flex flex-col items-center justify-center gap-8">
-            <div ref={quoteRef} className="text-center font-nyghtserif text-label-lg italic">
+          <div className="flex flex-col items-center justify-center gap-4 px-4">
+            <div ref={quoteRef} className="text-center font-nyghtserif text-label-md md:text-label-lg italic max-w-xs sm:max-w-md md:max-w-lg mx-auto">
               „{gift.englishDescription}"
             </div>
 
-            <div className="mx-auto flex max-w-[320px] flex-col items-center gap-4">
+            <div className="mx-auto flex w-full max-w-[280px] sm:max-w-[320px] flex-col items-center gap-3 sm:gap-4">
               <div ref={imageContainerRef} className="w-full aspect-square rounded-2xl overflow-hidden">
                 <img
                   src={gift.hintImageUrl}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <p ref={hintTextRef} className="font-styrene text-paragraph-md font-bold uppercase text-center">
+              <p ref={hintTextRef} className="font-styrene text-paragraph-sm md:text-paragraph-md md:font-bold font-bold uppercase text-center">
                 {gift.hintText}
               </p>
             </div>
@@ -312,8 +340,8 @@ export default function GiftPage() {
 
           {/* Секретный код (если есть) - только для авторизованных пользователей */}
           {gift.code && isAuthenticated && (
-            <div className="pt-24 flex flex-col items-center gap-4 text-center">
-              <p ref={codeTextRef} className="mx-auto max-w-[440px] font-styrene text-paragraph-md font-bold uppercase">
+            <div className="pt-24 sm:pt-20 md:pt-24 flex flex-col items-center gap-3 sm:gap-4 text-center px-4">
+              <p ref={codeTextRef} className="mx-auto max-w-[300px] sm:max-w-[380px] md:max-w-[440px] font-styrene text-paragraph-sm md:text-paragraph-md md:font-bold lg:font-bold font-bold uppercase">
               {gift.codeText}
               </p>
               <div ref={codeRef} className="font-founders text-title-h4 uppercase">
@@ -324,8 +352,8 @@ export default function GiftPage() {
 
           {/* Заглушка для неавторизованных пользователей */}
           {gift.code && !isAuthenticated && (
-            <div className="pt-24 flex flex-col items-center gap-5 text-center">
-              <p ref={codeTextRef} className="mx-auto max-w-[440px] font-styrene text-paragraph-md font-bold uppercase">
+            <div className="pt-16 sm:pt-20 md:pt-24 flex flex-col items-center gap-3 sm:gap-5 text-center px-4">
+              <p ref={codeTextRef} className="mx-auto max-w-[300px] sm:max-w-[380px] md:max-w-[440px] font-styrene text-paragraph-sm md:text-paragraph-md md:font-bold lg:font-bold font-bold uppercase">
                 {gift.codeText}
               </p>
               <div ref={codeRef} className="font-founders text-title-h4 uppercase text-bg-strong-950 bg-bg-strong-950 select-none px-4">
@@ -334,16 +362,16 @@ export default function GiftPage() {
             </div>
           )}
 
-          <span ref={dividerRef} className="font-nyghtserif text-label-xl text-adaptive mt-16 mb-10 flex items-center justify-center">
+          <span ref={dividerRef} className="font-nyghtserif text-label-lg sm:text-label-xl text-adaptive mt-16 mb-6 md:mt-16 md:mb-10 flex items-center justify-center">
           ***
           </span>
 
           {/* Контент поздравления */}
-          <div ref={contentRef} className="py-16 text-adaptive bg-bg-strong-950 dark-container">
-            <div className="mx-auto max-w-4xl">
+          <div ref={contentRef} className="py-12 sm:py-14 md:py-16 text-adaptive bg-bg-strong-950 dark-container px-4 sm:px-6">
+            <div className="mx-auto max-w-sm sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
               {gift.isSecret && !isAuthenticated ? (
                 <div className="text-center">
-                  <p className="text-adaptive text-title-h3 font-founders uppercase max-w-[460px] mx-auto">
+                  <p className="text-adaptive text-title-h4 md:text-title-h3 font-founders uppercase max-w-[290px] md:max-w-[460px] mx-auto">
                     Oops, only Lesya sees this content
                   </p>
                 </div>
@@ -362,8 +390,8 @@ export default function GiftPage() {
           </div>
 
           {/* Memory unlock секция */}
-          <div className="text-adaptive dark-container bg-bg-strong-950 pt-20 pb-28 text-center flex flex-col items-center gap-10">
-            <span className="text-adaptive text-label-xl font-nyghtserif">
+          <div className="text-adaptive dark-container bg-bg-strong-950 pt-12 pb-16 sm:pt-16 sm:pb-20 md:pt-20 md:pb-28 text-center flex flex-col items-center gap-6 sm:gap-8 md:gap-10 px-4">
+            <span className="text-adaptive md:text-label-xl sm:text-label-lg font-nyghtserif">
               ***
             </span>
             <h2 ref={memoryHeaderRef} className="text-adaptive text-title-h4 font-founders">
@@ -371,24 +399,27 @@ export default function GiftPage() {
             </h2>
             
             {memoryPhoto && (
-              <div ref={memoryPhotoRef}>
-                <Link href="/gallery" className="mx-auto cursor-pointer transition-all">
+              <div ref={memoryPhotoRef} className="w-full flex justify-center items-center mx-auto">
+                <Link href="/gallery" className="flex justify-center items-center transition-all">
                   <PolaroidPhoto
                     memoryPhoto={memoryPhoto}
                     isRevealed={true}
                     openDate={gift.openDate}
-                    size="medium"
+                    size={isMobile ? "small" : "medium"}
                   />
                 </Link>
               </div>
             )}
             
-            <div ref={buttonRef}>
+            <div ref={buttonRef} className="mt-2 sm:mt-4">
               <Link href="/gallery">
                 <Button.Root>to the gallery</Button.Root>
               </Link>
             </div>
           </div>
+          
+          {/* Дополнительный темный блок для заполнения пустого пространства внизу */}
+          <div className="bg-bg-strong-950 h-16"></div>
         </main>
       )}
     </div>

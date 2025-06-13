@@ -417,7 +417,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     <div className="w-full">
       
       {/* Кнопки для навигации по неделям */}
-      <div ref={weekButtonsRef} className="flex justify-center gap-6 mb-8">
+      <div ref={weekButtonsRef} className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-6 mb-6 md:mb-8 px-2">
         <IconButton.Root 
           onClick={() => scrollToWeek(null)}
           className="opacity-50"
@@ -492,7 +492,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
               }
             }, 50);
           }}
-          className="pb-4 px-8 h-full"
+          className="pb-4 px-2 sm:px-4 md:px-8 h-full"
         >
           {sortedGifts.map((gift) => {
             const week = getGiftWeek(gift.openDate, WORD_SYSTEM.START_DATE);

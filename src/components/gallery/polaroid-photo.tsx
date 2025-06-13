@@ -105,7 +105,7 @@ export function PolaroidPhoto({
 
   return (
     <div 
-      className="perspective-[1000px] transition-transform duration-300 polaroid-3d"
+      className={`perspective-[1000px] transition-transform duration-300 polaroid-3d ${className}`}
       ref={polaroidRef}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
@@ -113,13 +113,14 @@ export function PolaroidPhoto({
     >
       {/* Основная рамка полароида */}
       <div 
-        className={`relative ${config.frame.height} ${config.frame.width} bg-polaroid-paper shadow-md polaroid-3d-content`}
+        className={`${config.frame.height} ${config.frame.width} bg-polaroid-paper shadow-md polaroid-3d-content`}
         style={{
           transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
           transition: 'transform 0.3s ease-out',
           transformStyle: 'preserve-3d',
           transformOrigin: 'center center',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+          position: 'relative'
         }}
       >
         {/* Область фотографии */}

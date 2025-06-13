@@ -51,10 +51,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative">
-      <main className="min-h-screen bg-bg-white-0">
+    <div className="fixed inset-0 overflow-hidden">
+      <main className="h-full w-full bg-bg-white-0 px-4 md:px-6 lg:px-8 flex flex-col">
         {/* Заголовок в верхней части */}
-        <div className="flex justify-center pt-24">
+        <div className="flex justify-center pt-24 md:pt-20 lg:pt-24">
           <h4 className="text-center font-founders text-title-h4 text-text-strong-950">
             LESYA
             <br />
@@ -62,16 +62,16 @@ export default function LoginPage() {
           </h4>
         </div>
 
-        {/* Форма по центру относительно всей высоты экрана */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="flex flex-col items-center justify-center">
+        {/* Форма по центру */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full max-w-xs sm:max-w-sm md:max-w-md px-4 sm:px-0">
             <form
               id="login-form"
               action={handleSubmit}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-4 w-full"
               noValidate
             >
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-5 sm:gap-6">
                 <div className="flex flex-col gap-2">
                   <Label.Root htmlFor="username">username</Label.Root>
                   <Input.Root>
@@ -120,11 +120,14 @@ export default function LoginPage() {
             </form>
           </div>
         </div>
+
+        {/* Пустое пространство для нижней части */}
+        <div className="h-[15vh]"></div>
       </main>
 
       {/* Кнопка фиксирована к viewport */}
       <div className="pointer-events-none fixed inset-0 z-50">
-        <div className="pointer-events-auto absolute bottom-8 left-1/2 -translate-x-1/2">
+        <div className="pointer-events-auto absolute bottom-12 sm:bottom-8 left-1/2 -translate-x-1/2">
           <Button.Root type="submit" form="login-form" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Log in"}
           </Button.Root>

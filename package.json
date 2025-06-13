@@ -62,7 +62,6 @@
     "tailwind-variants": "^1.0.0",
     "three": "^0.177.0",
     "wavesurfer.js": "^7.9.5",
-    "yandex-music-api": "^0.0.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -6,6 +6,7 @@ import { useDate } from "@/utils/hooks/useDateContext";
 import Link from "next/link";
 import * as Button from "~/components/ui/button";
 import type { MemoryPhoto, Gift } from "@/utils/types/gift";
+import { Spinner } from "~/components/ui/spinner";
 
 export default function GalleryPage() {
   const { currentDate } = useDate();
@@ -75,70 +76,72 @@ export default function GalleryPage() {
 
   return (
     <div className="relative bg-white">
-      <main className="min-h-screen">
-        {/* Заголовок в верхней части */}
-        <div className="flex justify-center pt-24 mb-16">
-          <h4 className="text-center font-founders text-title-h4 uppercase text-black">
-            remember
-          </h4>
+      {isLoading && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <Spinner className="text-black w-8 h-8" />
         </div>
+      )}
+      
+      {!isLoading && (
+        <main className="min-h-screen">
+          {/* Заголовок в верхней части */}
+          <div className="flex justify-center pt-24 md:pt-20 lg:pt-24 mb-8 md:mb-16">
+            <h4 className="text-center font-founders text-title-h4 uppercase text-black">
+              remember?
+            </h4>
+          </div>
 
-        {/* Полароиды */}
-        <div className="container mx-auto px-4 pb-20 pt-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center min-h-[300px]">
-              <div className="font-styrene text-black">Loading...</div>
-            </div>
-          ) : photos.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {photos.map((photo) => {
-                const revealed = isGiftRevealed(photo.gift?.openDate);
-                
-                return (
-                  <div key={photo.id} className="flex justify-center">
-                    {revealed ? (
-                      <Link href={`/gift/${photo.giftId}`} className="cursor-pointer">
-                        <PolaroidPhoto
-                          memoryPhoto={photo}
-                          isRevealed={revealed}
-                          openDate={ensureDate(photo.gift?.openDate)}
-                          size="small"
-                        />
-                      </Link>
-                    ) : (
-                      <div className="cursor-default">
-                        <PolaroidPhoto
-                          memoryPhoto={photo}
-                          isRevealed={revealed}
-                          openDate={ensureDate(photo.gift?.openDate)}
-                          size="small"
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex justify-center items-center min-h-[300px]">
-              <div className="font-styrene text-black">No photos yet</div>
-            </div>
-          )}
-        </div>
+          {/* Полароиды */}
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 md:pb-20 pt-4 sm:pt-6">
+            {photos.length > 0 ? (
+              <div className="flex flex-col items-center sm:grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-y-12 sm:gap-6 md:gap-8">
+                {photos.map((photo) => {
+                  const revealed = isGiftRevealed(photo.gift?.openDate);
+                  
+                  return (
+                    <div key={photo.id} className="mb-8 sm:mb-0">
+                      {revealed ? (
+                        <Link href={`/gift/${photo.giftId}`} className="cursor-pointer block">
+                          <PolaroidPhoto
+                            memoryPhoto={photo}
+                            isRevealed={revealed}
+                            openDate={ensureDate(photo.gift?.openDate)}
+                            size="small"
+                          />
+                        </Link>
+                      ) : (
+                        <div className="cursor-default block">
+                          <PolaroidPhoto
+                            memoryPhoto={photo}
+                            isRevealed={revealed}
+                            openDate={ensureDate(photo.gift?.openDate)}
+                            size="small"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+  <></>
+            )}
+          </div>
 
-        {/* Нижний текст */}
-        <div className="flex flex-col items-center gap-10 pt-20 pb-28 text-center text-adaptive">
-          <span className="font-nyghtserif text-label-xl">***</span>
-          <h2 className="font-founders text-title-h3 uppercase">
-            Happiness <br />
-            is nearby
-          </h2>
+          {/* Нижний текст */}
+          <div className="flex flex-col items-center gap-6 sm:gap-8 md:gap-10 pt-12 sm:pt-16 md:pt-20 pb-16 sm:pb-20 md:pb-28 text-center px-4">
+            <span className="font-nyghtserif text-label-xl">***</span>
+            <h2 className="font-founders text-title-h4 md:text-title-h3 uppercase">
+              Happiness <br />
+              is nearby
+            </h2>
 
-          <Link href="/">
-            <Button.Root>to the home</Button.Root>
-          </Link>
-        </div>
-      </main>
+            <Link href="/" className="mt-2 sm:mt-4">
+              <Button.Root>go home</Button.Root>
+            </Link>
+          </div>
+        </main>
+      )}
     </div>
   );
 }

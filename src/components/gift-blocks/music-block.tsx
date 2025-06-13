@@ -220,7 +220,7 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
           {/* Заголовок */}
           {block.title && (
             <div className="text-center text-adaptive">
-              <p className="font-nyghtserif text-label-md italic">
+              <p className="font-nyghtserif text-label-sm md:text-label-md italic">
                 ({block.title})
               </p>
             </div>
@@ -230,9 +230,9 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
           {block.text && (
             <div className="text-center text-adaptive">
               <p className={`font-euclid ${
-                block.textSize === "small" 
-                  ? "text-paragraph-lg" 
-                  : "text-paragraph-xl"
+              block.textSize === "medium" 
+              ? "text-paragraph-lg md:text-paragraph-xl"
+              : "text-paragraph-md md:text-paragraph-lg" 
               }`}>
                 {block.text}
               </p>

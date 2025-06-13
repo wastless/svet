@@ -22,10 +22,10 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
       // При центральном расположении используем новые размеры
       switch (size) {
         case "small":
-          sizeClasses = "w-1/3 mx-auto";
+          sizeClasses = "w-full md:w-1/3 mx-auto";
           break;
         case "medium":
-          sizeClasses = "w-2/3 mx-auto";
+          sizeClasses = "w-full md:w-2/3 mx-auto";
           break;
         case "large":
         default:
@@ -143,7 +143,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     if (!block.title) return null;
     return (
       <div className={`text-adaptive ${centered ? 'text-center' : ''}`}>
-        <p className="text-label-md font-nyghtserif italic">
+        <p className="text-label-sm md:text-label-md font-nyghtserif italic">
           ({block.title})
         </p>
       </div>
@@ -155,7 +155,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     if (!block.text) return null;
     return (
       <div className={`text-adaptive ${centered ? 'text-center' : ''}`}>
-        <p className="text-paragraph-xl font-euclid">
+        <p className="text-paragraph-lg md:text-paragraph-xl font-euclid">
           {block.text}
         </p>
       </div>
@@ -260,20 +260,20 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
   
   // Для вертикальных изображений в центральном расположении используем flex
   if (isVertical) {
-    let imageWidth = "w-1/2"; // по умолчанию для large
+    let imageWidth = "md:w-1/2"; // по умолчанию для large
     
     switch (block.size) {
       case "large":
-        imageWidth = "w-1/2"; // 50%
+        imageWidth = "md:w-1/2"; // 50%
         break;
       case "medium":
-        imageWidth = "w-1/3"; // 33.33%
+        imageWidth = "md:w-1/3"; // 33.33%
         break;
       case "small":
-        imageWidth = "w-1/4"; // 25%
+        imageWidth = "md:w-1/4"; // 25%
         break;
       default:
-        imageWidth = "w-1/2";
+        imageWidth = "md:w-1/2";
         break;
     }
 
@@ -284,7 +284,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
           <img
             src={block.url}
             alt={block.caption || "Фотография"}
-            className={`${imageWidth} aspect-[3/4] h-auto rounded-2xl object-cover`}
+            className={`w-full ${imageWidth} aspect-[3/4] h-auto rounded-2xl object-cover`}
           />
           {/* Подпись под фото (если есть) */}
           {block.caption && (

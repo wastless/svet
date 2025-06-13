@@ -75,7 +75,7 @@ export interface GalleryBlock {
   type: "gallery";
   title?: string; // заголовок галереи
   text?: string; // текст галереи
-  textSize?: "small" | "large"; // размер текста
+  textSize?: "small" | "medium"; // размер текста
   images: {
     url: string; // URL изображения
     caption?: string; // подпись под изображением
@@ -88,7 +88,7 @@ export interface VideoCircleBlock {
   type: "video-circle";
   title?: string; // заголовок
   text?: string; // текст
-  textSize?: "small" | "large"; // размер текста
+  textSize?: "small" | "medium"; // размер текста
   url: string; // URL видео файла
   caption?: string; // подпись под видео
   size?: "small" | "medium" | "large"; // размер видеокружка
@@ -102,7 +102,7 @@ export interface VideoBlock {
   type: "video";
   title?: string; // заголовок
   text?: string; // текст
-  textSize?: "small" | "large"; // размер текста
+  textSize?: "small" | "medium"; // размер текста
   url: string; // видео
   caption?: string; // подпись под видео
   size?: "small" | "medium" | "large"; // размер видео
@@ -116,7 +116,7 @@ export interface AudioMessageBlock {
   type: "audio-message";
   title?: string; // заголовок
   text?: string; // текст
-  textSize?: "small" | "large"; // размер текста
+  textSize?: "medium" | "small"; // размер текста
   url: string; // URL аудио файла
   duration?: number; // длительность в секундах (опционально)
 }
@@ -126,7 +126,7 @@ export interface MusicBlock {
   type: "music";
   title?: string; // заголовок
   text?: string; // текст
-  textSize?: "small" | "large"; // размер текста
+  textSize?: "small" | "medium"; // размер текста
   url: string; // URL аудио файла
   coverUrl: string; // URL обложки
   artist: string; // исполнитель

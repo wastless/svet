@@ -11,12 +11,12 @@ export function TextBlock({ block, className = "" }: TextBlockProps) {
   const getTextStyles = (style?: string) => {
     switch (style) {
       case "title":
-        return "text-label-md font-nyghtserif italic";
+        return "text-label-sm md:text-label-md font-nyghtserif italic";
       case "subtitle":
-        return "text-label-sm font-nyghtserif italic";
+        return "text-label-xs md:text-label-sm font-nyghtserif italic";
       case "normal":
       default:
-        return "text-paragraph-xl font-euclid";
+        return "md:text-paragraph-xl text-paragraph-lg font-euclid";
     }
   };
 

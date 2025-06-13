@@ -32,7 +32,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     if (!title) return null;
     return (
       <div className="text-adaptive">
-        <p className="text-label-md font-nyghtserif italic">
+        <p className="text-label-sm md:text-label-md font-nyghtserif italic">
           ({title})
         </p>
       </div>
@@ -44,7 +44,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     if (!text) return null;
     return (
       <div className="text-adaptive">
-        <p className="text-paragraph-xl font-euclid">
+        <p className="md:text-paragraph-xl text-paragraph-lg font-euclid">
           {text}
         </p>
       </div>
@@ -56,7 +56,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     if (layout === "text-bottom") {
       // Порядок: заголовок -> текст
       return (
-        <div className="space-y-12">
+        <div className="space-y-6 md:space-y-12">
           <TitleComponent title={title} />
           <TextComponent text={text} />
         </div>
@@ -65,7 +65,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     
     // layout === "text-top" - порядок: текст -> заголовок
     return (
-      <div className="space-y-12">
+      <div className="space-y-6 md:space-y-12">
         <TextComponent text={text} />
         <TitleComponent title={title} />
       </div>
@@ -130,7 +130,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
 
   // Компонент фотографий в две колонки
   const ImagesComponent = () => (
-    <div className="grid grid-cols-2 gap-10">
+    <div className="grid grid-cols-2 gap-4 md:gap-10">
       {block.images.map((image, index) => (
         <ImageItemComponent key={index} image={image} index={index} />
       ))}

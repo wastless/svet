@@ -141,10 +141,9 @@ export function GiftCreationWizard({
   // Используем мутации для создания и обновления подарка
   const createGiftMutation = useCreateGift();
   
-  // Для обновления нам нужен ID подарка, поэтому создаем хук только когда savedGiftId не null
-  const updateGiftMutation = savedGiftId 
-    ? useUpdateGift(savedGiftId)
-    : null;
+  // Всегда вызываем хук, но передаем пустую строку если ID нет
+  // Это соответствует правилам хуков React - вызывать хуки в одинаковом порядке при каждом рендере
+  const updateGiftMutation = useUpdateGift(savedGiftId || "");
 
   const handleSaveBasic = async () => {
     setIsSaving(true);
@@ -228,7 +227,7 @@ export function GiftCreationWizard({
   };
 
   const handleSaveContent = async () => {
-    if (!savedGiftId || !updateGiftMutation) return;
+    if (!savedGiftId) return;
 
     setIsSaving(true);
     try {
@@ -254,6 +253,11 @@ export function GiftCreationWizard({
 
       console.log("Данные для обновления:", giftData);
 
+      // Проверяем, что у нас есть ID подарка перед вызовом мутации
+      if (!savedGiftId) {
+        throw new Error("ID подарка не указан");
+      }
+      
       // Используем мутацию для обновления
       const responseData = await updateGiftMutation.mutateAsync(giftData);
       console.log("Ответ сервера при сохранении контента:", responseData);
@@ -273,7 +277,7 @@ export function GiftCreationWizard({
   };
 
   const handleUpdateGift = async () => {
-    if (!savedGiftId || !updateGiftMutation) return;
+    if (!savedGiftId) return;
 
     setIsSaving(true);
     try {
@@ -295,6 +299,11 @@ export function GiftCreationWizard({
             }
           : null,
       };
+
+      // Проверяем, что у нас есть ID подарка перед вызовом мутации
+      if (!savedGiftId) {
+        throw new Error("ID подарка не указан");
+      }
 
       // Используем мутацию для обновления
       const responseData = await updateGiftMutation.mutateAsync(updateData);

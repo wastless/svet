@@ -9,7 +9,6 @@ import * as Input from "~/components/ui/input";
 import * as Select from "~/components/ui/select";
 import { RiCloseLine } from "@remixicon/react";
 import * as Checkbox from "~/components/ui/checkbox";
-import { fetchYandexMusicMetadata, isYandexMusicUrl } from "@/utils/yandex-music";
 
 interface BlockEditorProps {
   block: GiftBlock;
@@ -23,9 +22,6 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
   const [uploadingImageIndexes, setUploadingImageIndexes] = useState<number[]>(
     [],
   );
-  const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
-  const [loadingStatus, setLoadingStatus] = useState<string | null>(null);
-  const [metadataError, setMetadataError] = useState<string | null>(null);
 
   useEffect(() => {
     setLocalBlock(block);
@@ -325,46 +321,6 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
   );
 
   const renderMusicEditor = () => {
-    // Handle Yandex Music URL change with metadata fetching
-    const handleYandexMusicUrlChange = async (url: string) => {
-      handleChange({ yandexMusicUrl: url });
-      
-      // Clear previous errors and status
-      setMetadataError(null);
-      setLoadingStatus(null);
-      
-      // Check if it's a valid Yandex Music URL
-      if (isYandexMusicUrl(url)) {
-        setIsFetchingMetadata(true);
-        setLoadingStatus("Загрузка данных из Яндекс.Музыки...");
-        try {
-          const metadata = await fetchYandexMusicMetadata(url);
-          // Update the block with the fetched metadata
-          handleChange({
-            artist: metadata.artist,
-            trackName: metadata.trackName,
-            coverUrl: metadata.coverUrl,
-            yandexMusicUrl: url,
-            // Only update duration if it's provided
-            ...(metadata.duration ? { duration: metadata.duration } : {}),
-          });
-          setLoadingStatus("Данные успешно загружены!");
-          
-          // Clear success message after 3 seconds
-          setTimeout(() => {
-            if (url === (localBlock as any).yandexMusicUrl) {
-              setLoadingStatus(null);
-            }
-          }, 3000);
-        } catch (error) {
-          console.error("Ошибка при загрузке метаданных из Яндекс.Музыки:", error);
-          setMetadataError(error instanceof Error ? error.message : "Ошибка при загрузке данных");
-        } finally {
-          setIsFetchingMetadata(false);
-        }
-      }
-    };
-
     return (
       <div className="space-y-4">
         <div>
@@ -502,47 +458,6 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
                 />
               </Input.Wrapper>
             </Input.Root>
-          </div>
-        </div>
-
-        <div className="pt-2">
-          <Label.Root className="mb-3 block text-paragraph-sm">
-            Ссылка на Яндекс.Музыку <Label.Asterisk />
-          </Label.Root>
-          <Input.Root>
-            <Input.Wrapper>
-              <Input.Input
-                type="url"
-                value={(localBlock as any).yandexMusicUrl || ""}
-                onChange={(e) => handleYandexMusicUrlChange(e.target.value)}
-                placeholder="https://music.yandex.ru/..."
-                disabled={isFetchingMetadata}
-              />
-              {isFetchingMetadata && (
-                <div className="p-1">
-                  <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary"></div>
-                </div>
-              )}
-            </Input.Wrapper>
-          </Input.Root>
-          {loadingStatus && (
-            <div className="mt-1 text-xs text-blue-500">
-              {loadingStatus}
-            </div>
-          )}
-          {metadataError && (
-            <div className="mt-2 text-xs text-red-500 p-2 border border-red-300 bg-red-50 rounded">
-              <p>{metadataError}</p>
-              <p className="mt-1 font-medium">Заполните данные о треке вручную:</p>
-              <ul className="list-disc list-inside mt-1">
-                <li>Исполнитель</li>
-                <li>Название трека</li>
-                <li>URL обложки</li>
-              </ul>
-            </div>
-          )}
-          <div className="mt-1 text-xs text-gray-500">
-            Вставьте ссылку на трек из Яндекс.Музыки, чтобы автоматически заполнить поля
           </div>
         </div>
       </div>
@@ -1055,7 +970,7 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             <Select.Content>
               {[
                 { label: "Маленький", value: "small" },
-                { label: "Большой", value: "large" },
+                { label: "Большой", value: "medium" },
               ].map(({ label, value }) => (
                 <Select.Item key={value} value={value}>
                   {label}
@@ -1276,7 +1191,7 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
           <Select.Content>
             {[
               { label: "Маленький", value: "small" },
-              { label: "Большой", value: "large" },
+              { label: "Большой", value: "medium" },
             ].map(({ label, value }) => (
               <Select.Item key={value} value={value}>
                 {label}
@@ -1464,7 +1379,7 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             <Select.Content>
               {[
                 { label: "Маленький", value: "small" },
-                { label: "Большой", value: "large" },
+                { label: "Большой", value: "medium" },
               ].map(({ label, value }) => (
                 <Select.Item key={value} value={value}>
                   {label}
@@ -1652,7 +1567,7 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             <Select.Content>
               {[
                 { label: "Маленький", value: "small" },
-                { label: "Большой", value: "large" },
+                { label: "Большой", value: "medium" },
               ].map(({ label, value }) => (
                 <Select.Item key={value} value={value}>
                   {label}

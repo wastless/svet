@@ -18,16 +18,19 @@ export function useGifts() {
   return useQuery({
     queryKey: [QUERY_KEYS.GIFTS],
     queryFn: async () => {
-      const response = await fetch("/api/gifts");
+      // Добавляем случайный параметр к URL, чтобы обойти кеш браузера
+      const timestamp = Date.now();
+      const response = await fetch(`/api/gifts?_t=${timestamp}`);
       if (!response.ok) {
         throw new Error("Ошибка загрузки подарков");
       }
       return response.json() as Promise<Gift[]>;
     },
-    staleTime: 5 * 60 * 1000, // Кешируем на 5 минут
-    refetchOnWindowFocus: false, // Не обновляем при фокусе окна
-    refetchOnMount: false, // Не обновляем при монтировании компонента
-    refetchOnReconnect: false, // Не обновляем при переподключении
+    staleTime: 0, // Отключаем кеширование
+    gcTime: 0, // Отключаем хранение в кеше
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании компонента
+    refetchOnReconnect: true, // Обновляем при переподключении
   });
 }
 
@@ -36,17 +39,20 @@ export function useGift(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.GIFT(id),
     queryFn: async () => {
-      const response = await fetch(`/api/gifts/${id}`);
+      // Добавляем случайный параметр к URL, чтобы обойти кеш браузера
+      const timestamp = Date.now();
+      const response = await fetch(`/api/gifts/${id}?_t=${timestamp}`);
       if (!response.ok) {
         throw new Error(`Ошибка загрузки подарка ${id}`);
       }
       return response.json() as Promise<Gift>;
     },
     enabled: !!id,
-    staleTime: 10 * 60 * 1000, // Кешируем на 10 минут
-    refetchOnWindowFocus: false, // Не обновляем при фокусе окна
-    refetchOnMount: false, // Не обновляем при монтировании компонента
-    refetchOnReconnect: false, // Не обновляем при переподключении
+    staleTime: 0, // Отключаем кеширование
+    gcTime: 0, // Отключаем хранение в кеше (в новых версиях React Query cacheTime переименован в gcTime)
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании компонента
+    refetchOnReconnect: true, // Обновляем при переподключении
   });
 }
 
@@ -55,17 +61,20 @@ export function useGiftContent(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.GIFT_CONTENT(id),
     queryFn: async () => {
-      const response = await fetch(`/api/gift-content/${id}`);
+      // Добавляем случайный параметр к URL, чтобы обойти кеш браузера
+      const timestamp = Date.now();
+      const response = await fetch(`/api/gift-content/${id}?_t=${timestamp}`);
       if (!response.ok) {
         throw new Error(`Ошибка загрузки контента подарка ${id}`);
       }
       return response.json() as Promise<GiftContent>;
     },
     enabled: !!id,
-    staleTime: 30 * 60 * 1000, // Кешируем на 30 минут
-    refetchOnWindowFocus: false, // Не обновляем при фокусе окна
-    refetchOnMount: false, // Не обновляем при монтировании компонента
-    refetchOnReconnect: false, // Не обновляем при переподключении
+    staleTime: 0, // Отключаем кеширование
+    gcTime: 0, // Отключаем хранение в кеше (в новых версиях React Query cacheTime переименован в gcTime)
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании компонента
+    refetchOnReconnect: true, // Обновляем при переподключении
   });
 }
 
@@ -162,6 +171,11 @@ export function useUpdateGift(id: string) {
   
   return useMutation({
     mutationFn: async (giftData: any) => {
+      // Проверяем, что ID не пустой перед выполнением запроса
+      if (!id) {
+        throw new Error("ID подарка не указан");
+      }
+      
       const response = await fetch(`/api/gifts/${id}`, {
         method: "PUT",
         headers: {
@@ -178,6 +192,9 @@ export function useUpdateGift(id: string) {
       return response.json();
     },
     onSuccess: (data) => {
+      // Проверяем, что ID не пустой перед обновлением кеша
+      if (!id) return;
+      
       // Обновляем кеш для этого конкретного подарка
       queryClient.setQueryData(QUERY_KEYS.GIFT(id), data);
       // Инвалидируем кеш списка всех подарков

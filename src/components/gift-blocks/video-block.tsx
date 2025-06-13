@@ -20,14 +20,14 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
 
     switch (size) {
       case "small":
-        sizeClasses = "w-1/2 mx-auto";
+        sizeClasses = "md:w-1/2 w-full mx-auto";
         break;
       case "medium":
-        sizeClasses = "w-2/3 mx-auto";
+        sizeClasses = "md:w-2/3 w-full mx-auto";
         break;
       case "large":
       default:
-        sizeClasses = "w-full mx-auto";
+        sizeClasses = "md:w-full mx-auto";
         break;
     }
 
@@ -40,7 +40,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {/* Заголовок */}
         {block.title && (
           <div className="text-center text-adaptive">
-            <p className="font-nyghtserif text-label-md italic">
+            <p className="font-nyghtserif text-label-sm md:text-label-md italic">
               ({block.title})
             </p>
           </div>
@@ -50,9 +50,9 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {block.text && (
           <div className="text-center text-adaptive">
             <p className={`font-euclid ${
-              block.textSize === "small" 
-                ? "text-paragraph-lg" 
-                : "text-paragraph-xl"
+              block.textSize === "medium" 
+              ? "text-paragraph-lg md:text-paragraph-xl"
+              : "text-paragraph-md md:text-paragraph-lg" 
             }`}>
               {block.text}
             </p>
@@ -63,7 +63,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
 <div className="flex flex-col gap-3">
       {/* Видео с стандартными контролами */}
       <div className="w-full">
-        <div className={getVideoClasses(block.size)}>
+        <div className={getVideoClasses(block.size) + " relative"}>
           {!isReady && (
             <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-gray-200">
               <div className="border-blue-500 h-8 w-8 animate-spin rounded-full border-b-2"></div>

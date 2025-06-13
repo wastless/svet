@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { GiftEditor } from "~/components/admin/gift-editor";
 import { GiftList } from "~/components/admin/gift-list";
 import { GiftCreationWizard } from "~/components/admin/gift-creation-wizard";
@@ -20,10 +20,27 @@ export default function AdminPage() {
   const deleteGiftMutation = useDeleteGift();
   const createGiftMutation = useCreateGift();
   
-  // Для обновления нам нужен ID подарка, поэтому создаем хук только когда selectedGift не null
-  const updateGiftMutation = selectedGift 
-    ? useUpdateGift(selectedGift.id)
-    : null;
+  // Always call the hook with a dummy ID, but use it conditionally
+  const dummyId = "placeholder-id";
+  const updateGiftMutation = useUpdateGift(dummyId);
+  
+  // Create a wrapper function to handle the update mutation
+  const updateGift = useCallback(async (id: string, giftData: any) => {
+    const response = await fetch(`/api/gifts/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(giftData),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Ошибка при обновлении подарка");
+    }
+    
+    return response.json();
+  }, []);
   
   const handleCreateGift = () => {
     setIsCreating(true);
@@ -51,8 +68,11 @@ export default function AdminPage() {
     try {
       if (selectedGift) {
         // Обновление существующего подарка
-        if (updateGiftMutation) {
-          await updateGiftMutation.mutateAsync(giftData);
+        if (selectedGift.id) {
+          // Use our custom update function instead of the mutation directly
+          await updateGift(selectedGift.id, giftData);
+          // Manually invalidate queries after update
+          updateGiftMutation.reset();
         }
         
         // Выходим из режима редактирования
