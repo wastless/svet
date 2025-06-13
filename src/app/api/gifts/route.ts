@@ -1,4 +1,3 @@
-import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
 import { saveGiftContent, generateContentPath } from "@/utils/lib/giftContent";
@@ -22,7 +21,7 @@ interface CreateGiftRequest {
   } | null;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const body = await request.json() as CreateGiftRequest;
     const { 
@@ -115,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем полароидную фотографию, если данные переданы
-    if (memoryPhoto && memoryPhoto.photoUrl) {
+    if (memoryPhoto?.photoUrl) {
       await db.memoryPhoto.create({
         data: {
           photoUrl: memoryPhoto.photoUrl,

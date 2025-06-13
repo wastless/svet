@@ -55,7 +55,7 @@ export default function GalleryPage() {
       }
     }
     
-    fetchGifts();
+    void fetchGifts();
   }, []);
   
   // Проверяем, открыт ли подарок (если текущая дата больше или равна дате открытия)

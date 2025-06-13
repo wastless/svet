@@ -34,7 +34,7 @@ export async function authenticate(formData: FormData) {
     }
 
     // Выполнение входа в систему
-    const result = await signIn("credentials", { 
+    const result: { error?: string } = await signIn("credentials", { 
       username, 
       password,
       redirect: false 

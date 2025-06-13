@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 interface YandexMusicMetadata {
   artist: string;
@@ -12,9 +12,10 @@ function extractTrackId(url: string): { albumId: string; trackId: string } | nul
   // Поддерживаемые форматы:
   // https://music.yandex.ru/album/1193829/track/10994777
   // https://music.yandex.com/album/1193829/track/10994777
-  const trackMatch = url.match(/\/album\/(\d+)\/track\/(\d+)/);
+  const trackRegex = /\/album\/(\d+)\/track\/(\d+)/;
+  const trackMatch = trackRegex.exec(url);
   
-  if (trackMatch && trackMatch[1] && trackMatch[2]) {
+  if (trackMatch?.[1] && trackMatch[2]) {
     return {
       albumId: trackMatch[1],
       trackId: trackMatch[2]
@@ -52,14 +53,21 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
     const html = await response.text();
     
     // Извлекаем данные из HTML
-    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const ogImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
-    const ogTitleMatch = html.match(/<meta property="og:title" content="([^"]+)"/i);
-    const descriptionMatch = html.match(/<meta name="description" content="([^"]+)"/i);
+    const titleRegex = /<title[^>]*>([^<]+)<\/title>/i;
+    const ogImageRegex = /<meta property="og:image" content="([^"]+)"/i;
+    const ogTitleRegex = /<meta property="og:title" content="([^"]+)"/i;
+    const descriptionRegex = /<meta name="description" content="([^"]+)"/i;
     
     // Дополнительные источники данных
-    const h1Match = html.match(/<h1[^>]*class="[^"]*track[^"]*"[^>]*>([^<]+)<\/h1>/i);
-    const artistLinkMatch = html.match(/<a[^>]*class="[^"]*artist[^"]*"[^>]*>([^<]+)<\/a>/i);
+    const h1Regex = /<h1[^>]*class="[^"]*track[^"]*"[^>]*>([^<]+)<\/h1>/i;
+    const artistLinkRegex = /<a[^>]*class="[^"]*artist[^"]*"[^>]*>([^<]+)<\/a>/i;
+    
+    const titleMatch = titleRegex.exec(html);
+    const ogImageMatch = ogImageRegex.exec(html);
+    const ogTitleMatch = ogTitleRegex.exec(html);
+    const descriptionMatch = descriptionRegex.exec(html);
+    const h1Match = h1Regex.exec(html);
+    const artistLinkMatch = artistLinkRegex.exec(html);
     
     console.log('Debug info:', {
       title: titleMatch?.[1],
@@ -69,7 +77,7 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
       artistLink: artistLinkMatch?.[1]
     });
     
-    if (!titleMatch || !titleMatch[1]) {
+    if (!titleMatch?.[1]) {
       throw new Error('Could not extract track title');
     }
     
@@ -77,7 +85,7 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
     let trackName = 'Неизвестный трек';
     
     // Стратегия 1: Парсинг og:title (обычно более точный)
-    if (ogTitleMatch && ogTitleMatch[1]) {
+    if (ogTitleMatch?.[1]) {
       const ogTitle = ogTitleMatch[1];
       console.log('Parsing og:title:', ogTitle);
       
@@ -115,8 +123,9 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
       
       // Новый подход: ищем паттерн "Название ИСПОЛНИТЕЛЬ"
       // где ИСПОЛНИТЕЛЬ написан заглавными буквами или в конце
-      const titleArtistMatch = cleanTitle.match(/^(.+?)\s+([А-ЯA-Z][А-ЯA-Z\s]+)$/);
-      if (titleArtistMatch && titleArtistMatch[1] && titleArtistMatch[2]) {
+      const titleArtistRegex = /^(.+?)\s+([А-ЯA-Z][А-ЯA-Z\s]+)$/;
+      const titleArtistMatch = titleArtistRegex.exec(cleanTitle);
+      if (titleArtistMatch?.[1] && titleArtistMatch[2]) {
         trackName = titleArtistMatch[1].trim();
         artist = titleArtistMatch[2].trim();
         console.log('Parsed with title-artist pattern:', { artist, trackName });
@@ -149,20 +158,22 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
     }
     
     // Стратегия 3: Попробуем извлечь из description
-    if ((artist === 'Неизвестный исполнитель' || trackName === 'Неизвестный трек') && descriptionMatch && descriptionMatch[1]) {
+    if ((artist === 'Неизвестный исполнитель' || trackName === 'Неизвестный трек') && descriptionMatch?.[1]) {
       const description = descriptionMatch[1];
       console.log('Parsing description:', description);
       
       // description часто содержит "Слушайте «Название трека» от Исполнитель"
-      const descMatch1 = description.match(/Слушайте\s+[«"']([^«"']+)[«"']\s+от\s+(.+?)(?:\s+в|$)/i);
-      if (descMatch1 && descMatch1[1] && descMatch1[2]) {
+      const descRegex1 = /Слушайте\s+[«"']([^«"']+)[«"']\s+от\s+(.+?)(?:\s+в|$)/i;
+      const descMatch1 = descRegex1.exec(description);
+      if (descMatch1?.[1] && descMatch1[2]) {
         trackName = descMatch1[1].trim();
         artist = descMatch1[2].trim();
         console.log('Parsed from description pattern 1:', { artist, trackName });
       } else {
         // Или "Исполнитель — Название трека"
-        const descMatch2 = description.match(/^([^—]+)\s+—\s+(.+?)(?:\s+слушать|$)/i);
-        if (descMatch2 && descMatch2[1] && descMatch2[2]) {
+        const descRegex2 = /^([^—]+)\s+—\s+(.+?)(?:\s+слушать|$)/i;
+        const descMatch2 = descRegex2.exec(description);
+        if (descMatch2?.[1] && descMatch2[2]) {
           artist = descMatch2[1].trim();
           trackName = descMatch2[2].trim();
           console.log('Parsed from description pattern 2:', { artist, trackName });
@@ -171,16 +182,17 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
     }
     
     // Стратегия 4: Попробуем найти JSON-LD данные
-    const jsonLdMatch = html.match(/<script type="application\/ld\+json"[^>]*>([^<]+)<\/script>/i);
-    if (jsonLdMatch && jsonLdMatch[1] && (artist === 'Неизвестный исполнитель' || trackName === 'Неизвестный трек')) {
+    const jsonLdRegex = /<script type="application\/ld\+json"[^>]*>([^<]+)<\/script>/i;
+    const jsonLdMatch = jsonLdRegex.exec(html);
+    if (jsonLdMatch?.[1] && (artist === 'Неизвестный исполнитель' || trackName === 'Неизвестный трек')) {
       try {
         const jsonData = JSON.parse(jsonLdMatch[1]);
         console.log('Found JSON-LD:', jsonData);
         
-        if (jsonData.name) {
+        if (jsonData?.name) {
           trackName = jsonData.name;
         }
-        if (jsonData.byArtist && jsonData.byArtist.name) {
+        if (jsonData?.byArtist?.name) {
           artist = jsonData.byArtist.name;
         }
         console.log('Parsed from JSON-LD:', { artist, trackName });
@@ -209,7 +221,7 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
     
     // Получаем URL обложки
     let coverUrl = '/images/default-album-cover.jpg'; // дефолтная обложка
-    if (ogImageMatch && ogImageMatch[1]) {
+    if (ogImageMatch?.[1]) {
       coverUrl = ogImageMatch[1];
       // Убираем размер из URL обложки и ставим больший размер
       coverUrl = coverUrl.replace(/\/\d+x\d+$/, '/400x400');
@@ -227,7 +239,7 @@ async function fetchTrackMetadata(albumId: string, trackId: string): Promise<Yan
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const { url } = await request.json();
     

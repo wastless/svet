@@ -137,7 +137,11 @@ function saveCacheToStorage() {
     const keys = Object.keys(apiCache);
     if (keys.length > 20) {
       // Если в кеше больше 20 записей, оставляем только 10 самых свежих
-      const sortedKeys = keys.sort((a, b) => apiCache[b].timestamp - apiCache[a].timestamp);
+      const sortedKeys = keys.sort((a, b) => {
+        const cacheA = apiCache[a];
+        const cacheB = apiCache[b];
+        return cacheB?.timestamp ?? 0 - (cacheA?.timestamp ?? 0);
+      });
       const keysToKeep = sortedKeys.slice(0, 10);
       
       for (const key of keysToKeep) {

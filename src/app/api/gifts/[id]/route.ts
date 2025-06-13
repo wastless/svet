@@ -1,4 +1,3 @@
-import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
 import { saveGiftContent, generateContentPath, deleteGiftDir } from "@/utils/lib/giftContent";
@@ -26,11 +25,11 @@ interface UpdateGiftRequest {
 }
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const gift = await db.gift.findUnique({
       where: { id },
       include: {
@@ -60,11 +59,11 @@ export async function GET(
 }
 
 export async function PUT(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json() as UpdateGiftRequest;
     const { 
       title,
@@ -206,11 +205,11 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
+    const { id } = params;
     // Проверяем существование подарка
     const existingGift = await db.gift.findUnique({
       where: { id },

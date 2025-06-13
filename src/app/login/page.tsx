@@ -112,9 +112,9 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {(errors.username || errors.password || errors.error) && (
+              {(errors.username ?? errors.password ?? errors.error) && (
                 <Hint.Root hasError>
-                  {errors.username || errors.password || errors.error}
+                  {errors.username ?? errors.password ?? errors.error}
                 </Hint.Root>
               )}
             </form>

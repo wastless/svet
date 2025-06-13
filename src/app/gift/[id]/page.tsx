@@ -322,13 +322,14 @@ export default function GiftPage() {
 
           <div className="flex flex-col items-center justify-center gap-4 px-4">
             <div ref={quoteRef} className="text-center font-nyghtserif text-label-md md:text-label-lg italic max-w-xs sm:max-w-md md:max-w-lg mx-auto">
-              „{gift.englishDescription}"
+              &ldquo;{gift.englishDescription}&rdquo;
             </div>
 
             <div className="mx-auto flex w-full max-w-[280px] sm:max-w-[320px] flex-col items-center gap-3 sm:gap-4">
               <div ref={imageContainerRef} className="w-full aspect-square rounded-2xl overflow-hidden">
                 <img
                   src={gift.hintImageUrl}
+                  alt={gift.hintText || "Gift hint image"}
                   className="w-full h-full object-cover"
                 />
               </div>

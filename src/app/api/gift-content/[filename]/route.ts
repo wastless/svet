@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { loadGiftContent } from "@/utils/lib/giftContent";
 
 export async function GET(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { filename: string } }
 ) {
   try {
     // filename теперь это ID подарка
-    const { filename } = await params;
+    const { filename } = params;
     const giftId = filename;
     const content = await loadGiftContent(giftId);
 
