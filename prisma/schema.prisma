@@ -32,6 +32,7 @@ model Gift {
   codeText          String?   @default("This is the part of your cipher. Collect them all to reveal the last secret") // текст подсказки
   code              String?  // секретный код (если есть)
   contentPath       String   // путь к файлу с контентом поздравления
+  contentUrl        String?  // URL к файлу с контентом в облачном хранилище
   
   // Связь с полароидной фотографией (один к одному)
   memoryPhoto       MemoryPhoto?

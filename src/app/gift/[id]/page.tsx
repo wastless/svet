@@ -132,18 +132,18 @@ export default function GiftPage() {
           headerRef.current,
           { 
             opacity: 0, 
-            scale: 3.5, 
+            scale: isMobile ? 1.5 : 3.5, 
             y: "30vh"
           },
           { 
             opacity: 1, 
-            scale: 3.5, 
+            scale: isMobile ? 1.5 : 3.5, 
             y: "30vh", 
             duration: 0.5
           }
         )
         // Пауза для отображения увеличенного заголовка
-        .to(headerRef.current, { scale: 3.5, duration: 0.2 })
+        .to(headerRef.current, { scale: isMobile ? 1.5 : 3.5, duration: 0.2 })
       
         // 2. Заголовок уменьшается и перемещается на свое место, появляется номер и описание
         .to(
@@ -363,7 +363,7 @@ export default function GiftPage() {
             </div>
           )}
 
-          <span ref={dividerRef} className="font-nyghtserif text-label-lg sm:text-label-xl text-adaptive mt-16 mb-6 md:mt-16 md:mb-10 flex items-center justify-center">
+          <span ref={dividerRef} className="font-nyghtserif text-label-lg sm:text-label-xl text-adaptive mt-16 mb-6 md:mt-20 md:mb-20 flex items-center justify-center">
           ***
           </span>
 

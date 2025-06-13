@@ -22,6 +22,7 @@ interface UpdateGiftRequest {
     photoUrl: string;
     photoDate?: string | null;
   } | null;
+  contentUrl?: string;
 }
 
 export async function GET(
@@ -123,6 +124,13 @@ export async function PUT(
           { status: 500 }
         );
       }
+      
+      // Если используется Yandex Object Storage, обновляем contentUrl
+      if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+        const contentUrl = `https://${env.YANDEX_BUCKET_NAME}.storage.yandexcloud.net/${id}_content.json`;
+        // Добавляем contentUrl к данным для обновления
+        body.contentUrl = contentUrl;
+      }
     }
 
     // Обновляем основные данные подарка
@@ -141,6 +149,7 @@ export async function PUT(
         ...(codeText && { codeText }),
         ...(code !== undefined && { code }),
         ...(isSecret !== undefined && { isSecret }),
+        ...(body.contentUrl && { contentUrl: body.contentUrl }),
       },
       include: {
         memoryPhoto: true,

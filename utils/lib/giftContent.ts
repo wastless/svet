@@ -1,6 +1,14 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import type { GiftContent } from '../types/gift';
+import { 
+  uploadFileToYandexStorage, 
+  deleteFileFromYandexStorage,
+  uploadContentToYandexStorage,
+  loadContentFromYandexStorage,
+  contentExistsInYandexStorage
+} from './yandexStorage';
+import { env } from '../../src/env.js';
 
 // Базовая папка для хранения всех данных подарков
 const GIFTS_BASE_DIR = path.join(process.cwd(), 'static', 'gifts');
@@ -24,6 +32,15 @@ export function getGiftBlocksDir(giftId: string): string {
 export async function loadGiftContent(giftId: string): Promise<GiftContent | null> {
   'use server';
   try {
+    // Пытаемся загрузить из Yandex Object Storage, если настроен
+    if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+      const content = await loadContentFromYandexStorage(giftId);
+      if (content) {
+        return content as GiftContent;
+      }
+    }
+    
+    // Используем локальный файл как запасной вариант
     const contentPath = getGiftContentPath(giftId);
     const fileContent = await fs.readFile(contentPath, 'utf-8');
     const content = JSON.parse(fileContent) as GiftContent;
@@ -38,6 +55,17 @@ export async function loadGiftContent(giftId: string): Promise<GiftContent | nul
 export async function saveGiftContent(giftId: string, content: GiftContent): Promise<boolean> {
   'use server';
   try {
+    // Сохраняем в Yandex Object Storage, если настроен
+    if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+      try {
+        await uploadContentToYandexStorage(giftId, content);
+        return true;
+      } catch (error) {
+        console.error(`Ошибка сохранения контента в Yandex Object Storage: ${giftId}`, error);
+      }
+    }
+    
+    // Используем локальное хранилище как запасной вариант
     const giftDir = getGiftDir(giftId);
     const contentPath = getGiftContentPath(giftId);
     
@@ -63,6 +91,15 @@ export async function generateContentPath(giftId: string): Promise<string> {
 export async function contentExists(giftId: string): Promise<boolean> {
   'use server';
   try {
+    // Проверяем в Yandex Object Storage, если настроен
+    if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+      const exists = await contentExistsInYandexStorage(giftId);
+      if (exists) {
+        return true;
+      }
+    }
+    
+    // Используем локальный файл как запасной вариант
     const contentPath = getGiftContentPath(giftId);
     await fs.access(contentPath);
     return true;
@@ -80,22 +117,14 @@ export async function saveGiftFile(
 ): Promise<string> {
   'use server';
   try {
-    const giftDir = getGiftDir(giftId);
-    const targetDir = subfolder ? path.join(giftDir, subfolder) : giftDir;
+    // Сохраняем в Yandex Object Storage
+    if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+      const url = await uploadFileToYandexStorage(buffer, fileName, giftId, subfolder);
+      return url;
+    }
     
-    // Создаем нужную папку
-    await fs.mkdir(targetDir, { recursive: true });
-    
-    // Сохраняем файл
-    const filePath = path.join(targetDir, fileName);
-    await fs.writeFile(filePath, buffer);
-    
-    // Возвращаем относительный URL для доступа
-    const relativePath = subfolder 
-      ? `/static/gifts/${giftId}/${subfolder}/${fileName}`
-      : `/static/gifts/${giftId}/${fileName}`;
-    
-    return relativePath;
+    // Если Yandex Object Storage не настроен, выбрасываем ошибку
+    throw new Error('Yandex Object Storage is not configured');
   } catch (error) {
     console.error(`Ошибка сохранения файла ${fileName} для подарка ${giftId}:`, error);
     throw error;

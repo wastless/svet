@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "~/server/db";
 import { saveGiftContent, generateContentPath } from "@/utils/lib/giftContent";
+import { env } from "../../../env.js";
 
 interface CreateGiftRequest {
   title?: string | null;
@@ -101,6 +102,15 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
+      
+      // Если используется Yandex Object Storage, сохраняем URL к контенту
+      if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+        const contentUrl = `https://${env.YANDEX_BUCKET_NAME}.storage.yandexcloud.net/${gift.id}_content.json`;
+        await db.gift.update({
+          where: { id: gift.id },
+          data: { contentUrl },
+        });
+      }
     } else {
       // Создаем пустой контент по умолчанию
       const defaultContent = {
@@ -111,6 +121,15 @@ export async function POST(request: Request) {
         },
       };
       await saveGiftContent(gift.id, defaultContent);
+      
+      // Если используется Yandex Object Storage, сохраняем URL к контенту
+      if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+        const contentUrl = `https://${env.YANDEX_BUCKET_NAME}.storage.yandexcloud.net/${gift.id}_content.json`;
+        await db.gift.update({
+          where: { id: gift.id },
+          data: { contentUrl },
+        });
+      }
     }
 
     // Создаем полароидную фотографию, если данные переданы

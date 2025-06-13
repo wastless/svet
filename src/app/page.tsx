@@ -14,6 +14,10 @@ import gsap from "gsap";
 import { isGiftOpen } from "@/utils/hooks/gift-helpers";
 import { useGifts } from "@/utils/hooks/useGiftQueries";
 import { useAuth } from "~/components/providers/auth-provider";
+import dynamic from "next/dynamic";
+
+// Динамически импортируем Confetti для избежания проблем с SSR
+const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 
 // Тип для подарка из API
 interface GiftData {
@@ -35,6 +39,12 @@ export default function HomePage() {
   
   // Состояние для контента
   const [contentVisible, setContentVisible] = useState(true);
+  // Состояние для конфетти
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0
+  });
   
   // Рефы для анимации
   const titleRef = useRef(null);
@@ -54,6 +64,42 @@ export default function HomePage() {
     
     return availableGifts.length > 0 && availableGifts[0] ? availableGifts[0].id : null;
   }, [gifts, giftsDate]);
+  
+  // Проверка, является ли текущая дата днем рождения
+  const isBirthdayToday = useMemo(() => {
+    if (!giftsDate || !COUNTDOWN_CONFIG.TARGET_DATE) return false;
+    
+    const birthday = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
+    // Проверяем только день и месяц, игнорируя год
+    return giftsDate.getDate() === birthday.getDate() && 
+           giftsDate.getMonth() === birthday.getMonth();
+  }, [giftsDate]);
+
+  // Обновляем размеры окна для конфетти
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+      handleResize(); // Вызываем сразу для установки начальных размеров
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
+
+  // Показываем конфетти, если сегодня день рождения
+  useEffect(() => {
+    if (isBirthdayToday) {
+      setShowConfetti(true);
+      console.log('Сегодня день рождения! Показываем конфетти!');
+    } else {
+      setShowConfetti(false);
+    }
+  }, [isBirthdayToday]);
   
   // Анимация элементов страницы
   useEffect(() => {
@@ -105,7 +151,7 @@ export default function HomePage() {
     // Проверяем авторизацию пользователя
     if (!isAuthenticated) {
       // Если пользователь не авторизован, перенаправляем на страницу входа
-      router.push('/signin');
+      router.push('/login');
       return;
     }
     
@@ -133,6 +179,17 @@ export default function HomePage() {
 
   return (
       <div className="fixed inset-0 overflow-hidden">
+        {/* Конфетти эффект в день рождения */}
+        {showConfetti && (
+          <ReactConfetti
+            width={windowSize.width}
+            height={windowSize.height}
+            recycle={true}
+            numberOfPieces={200}
+            gravity={0.2}
+          />
+        )}
+        
         {/* Интро оверлей */}
         {shouldShowIntro && (
           <IntroOverlay onComplete={completeIntro} />

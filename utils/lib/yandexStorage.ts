@@ -369,4 +369,109 @@ export async function listFilesInYandexStorage(
     console.error(`Ошибка получения списка файлов из Yandex Object Storage:`, error);
     return [];
   }
+}
+
+/**
+ * Загружает JSON-контент в Yandex Object Storage
+ * @param giftId - ID подарка
+ * @param content - Контент для загрузки
+ * @returns URL загруженного файла
+ */
+export async function uploadContentToYandexStorage(
+  giftId: string,
+  content: any
+): Promise<string> {
+  'use server';
+  try {
+    // Инициализируем S3, если еще не инициализирован
+    if (!s3) {
+      await initS3();
+    }
+    
+    // Преобразуем контент в строку JSON
+    const contentJson = JSON.stringify(content, null, 2);
+    const buffer = Buffer.from(contentJson, 'utf-8');
+    
+    // Формируем имя файла
+    const storageFileName = `${giftId}_content.json`;
+    
+    console.log(`Загрузка контента в Yandex Object Storage: ${storageFileName}`);
+    
+    // Загружаем файл в хранилище
+    const upload = await s3.Upload({
+      buffer,
+      name: storageFileName,
+      ContentType: 'application/json'
+    }, '');
+    
+    if (!upload || typeof upload === 'boolean' || !('Location' in upload)) {
+      throw new Error('Не удалось загрузить контент в Yandex Object Storage');
+    }
+    
+    return upload.Location as string;
+  } catch (error) {
+    console.error(`Ошибка загрузки контента для подарка ${giftId} в Yandex Object Storage:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Загружает JSON-контент из Yandex Object Storage
+ * @param giftId - ID подарка
+ * @returns Контент подарка или null, если контент не найден
+ */
+export async function loadContentFromYandexStorage(giftId: string): Promise<any | null> {
+  'use server';
+  try {
+    // Инициализируем S3, если еще не инициализирован
+    if (!s3) {
+      await initS3();
+    }
+    
+    // Формируем имя файла
+    const storageFileName = `${giftId}_content.json`;
+    
+    console.log(`Загрузка контента из Yandex Object Storage: ${storageFileName}`);
+    
+    // Получаем файл из хранилища
+    const download = await s3.GetObject(storageFileName);
+    
+    if (!download || typeof download !== 'object' || !('Body' in download)) {
+      return null;
+    }
+    
+    // Преобразуем содержимое в строку
+    const contentJson = download.Body.toString('utf-8');
+    
+    // Преобразуем JSON в объект
+    return JSON.parse(contentJson);
+  } catch (error) {
+    console.error(`Ошибка загрузки контента для подарка ${giftId} из Yandex Object Storage:`, error);
+    return null;
+  }
+}
+
+/**
+ * Проверяет существование контента в Yandex Object Storage
+ * @param giftId - ID подарка
+ * @returns true, если контент существует, иначе false
+ */
+export async function contentExistsInYandexStorage(giftId: string): Promise<boolean> {
+  'use server';
+  try {
+    // Инициализируем S3, если еще не инициализирован
+    if (!s3) {
+      await initS3();
+    }
+    
+    // Формируем имя файла
+    const storageFileName = `${giftId}_content.json`;
+    
+    // Проверяем существование файла
+    const exists = await s3.FileExists(storageFileName);
+    return exists === true;
+  } catch (error) {
+    console.error(`Ошибка проверки существования контента для подарка ${giftId} в Yandex Object Storage:`, error);
+    return false;
+  }
 } 

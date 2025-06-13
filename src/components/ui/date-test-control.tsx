@@ -51,7 +51,7 @@ export function DateTestControl() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-bg-strong-950 p-4 rounded-lg shadow-lg">
+    <div className="fixed bottom-4 right-4 z-50 bg-white p-4 rounded-lg shadow-lg">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span className="font-styrene text-paragraph-sm">Test Mode</span>

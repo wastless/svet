@@ -54,6 +54,13 @@ export function DateProvider({ children }: { children: ReactNode }) {
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   };
 
+  // Синхронизация giftsDate с currentDate в тестовом режиме
+  useEffect(() => {
+    if (isTestMode && currentDate) {
+      setGiftsDate(currentDate);
+    }
+  }, [isTestMode, currentDate]);
+
   // Автоматическое обновление времени в обычном режиме
   useEffect(() => {
     if (isTestMode) return; // В тестовом режиме не обновляем автоматически

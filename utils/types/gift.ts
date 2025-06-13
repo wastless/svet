@@ -27,6 +27,7 @@ export interface Gift {
   codeText: string; // текст подсказки для кода
   code?: string | null; // секретный код (если есть)
   contentPath: string; // путь к файлу с контентом поздравления
+  contentUrl?: string | null; // URL к файлу с контентом в облачном хранилище
   memoryPhoto?: MemoryPhoto | null; // связанная полароидная фотография
 }
 

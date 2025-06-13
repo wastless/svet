@@ -64,9 +64,20 @@ export function useGiftContent(id: string) {
       // Добавляем случайный параметр к URL, чтобы обойти кеш браузера
       const timestamp = Date.now();
       const response = await fetch(`/api/gift-content/${id}?_t=${timestamp}`);
+      
       if (!response.ok) {
         throw new Error(`Ошибка загрузки контента подарка ${id}`);
       }
+      
+      // Если это редирект на contentUrl, следуем за ним
+      if (response.redirected) {
+        const contentResponse = await fetch(response.url);
+        if (!contentResponse.ok) {
+          throw new Error(`Ошибка загрузки контента подарка ${id} из облачного хранилища`);
+        }
+        return contentResponse.json() as Promise<GiftContent>;
+      }
+      
       return response.json() as Promise<GiftContent>;
     },
     enabled: !!id,
