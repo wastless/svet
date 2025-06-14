@@ -52,3 +52,10 @@ yarn-error.log*
 # ignore all files in static/gifts
 /static/gifts/*
 !/static/gifts/.gitkeep
+
+# SSL сертификаты
+nginx/ssl/
+*.pem
+*.key
+*.crt
+*.csr

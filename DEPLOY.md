@@ -48,7 +48,7 @@
 
 1. Клонируйте репозиторий:
    ```bash
-   git clone https://github.com/yourusername/lesya.svet.git
+   git clone https://github.com/wastless/svet.git
    cd lesya.svet
    ```
 
