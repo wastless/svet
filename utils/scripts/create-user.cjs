@@ -9,7 +9,7 @@ async function createUser() {
   try {
     // Проверяем, есть ли уже пользователь
     const existingUser = await prisma.user.findUnique({
-      where: { username: 'lesya.svet' }
+      where: { username: 'savdis' }
     });
 
     if (existingUser) {
@@ -18,12 +18,12 @@ async function createUser() {
     }
 
     // Создаем хешированный пароль
-    const hashedPassword = await bcrypt.hash('curiositykilledthecat', 12);
+    const hashedPassword = await bcrypt.hash('bombardierkrokodilo', 12);
     
     // Создаем пользователя
     const user = await prisma.user.create({
       data: {
-        username: 'lesya.svet',
+        username: 'savdis',
         password: hashedPassword
       }
     });
