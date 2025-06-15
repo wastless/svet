@@ -514,7 +514,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
                   id={gift.id}
                   number={gift.number}
                   hintImageUrl={gift.hintImageUrl}
-                  imageCover={gift.imageCover ?? undefined}
+                  imageCover={gift.imageCover ?? ""}
                   openDate={gift.openDate}
                   title={gift.title || undefined}
                   isTargetDay={isTargetGift}
