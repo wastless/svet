@@ -3,113 +3,166 @@
 ## Предварительные требования
 
 1. VPS с операционной системой Ubuntu/Debian
-2. Установленный Docker и Docker Compose
-3. Зарегистрированный домен на Reg.ru
+2. Установленные Docker и Docker Compose
+3. Зарегистрированный домен lesyasvet.ru
 4. Открытые порты 80 и 443 на VPS
+5. SSL-сертификаты для домена
 
-## Шаг 1: Настройка DNS на Reg.ru
+## Шаг 1: Настройка DNS
 
-1. Войдите в панель управления Reg.ru
-2. Перейдите в раздел управления доменом
-3. Добавьте A-запись, указывающую на IP-адрес вашего VPS:
-   - Имя: @ (или оставьте пустым для корневого домена)
-   - Тип: A
-   - Значение: IP-адрес вашего VPS
-4. Добавьте также A-запись для поддомена www:
-   - Имя: www
-   - Тип: A
-   - Значение: IP-адрес вашего VPS
-5. Сохраните изменения и дождитесь обновления DNS (может занять до 24 часов)
+1. В панели управления доменом убедитесь, что A-записи указывают на IP-адрес вашего VPS:
+   - А-запись для корневого домена (@) указывает на 185.185.69.255
+   - А-запись для поддомена www указывает на 185.185.69.255
+2. Дождитесь обновления DNS (может занять до 24 часов)
 
-## Шаг 2: Подготовка сервера
+## Шаг 2: Подключение к серверу
 
-1. Подключитесь к вашему VPS через SSH:
+1. Подключитесь к VPS через SSH:
    ```bash
-   ssh user@your_server_ip
+   ssh root@185.185.69.255
    ```
 
-2. Установите Docker и Docker Compose:
+## Шаг 3: Установка необходимых компонентов
+
+1. Обновите индекс пакетов и установите Git, Docker и Docker Compose:
    ```bash
-   # Установка Docker
-   curl -fsSL https://get.docker.com -o get-docker.sh
-   sh get-docker.sh
-   
-   # Установка Docker Compose
-   sudo apt-get update
-   sudo apt-get install -y docker-compose-plugin
+   apt-get update
+   apt-get install -y git docker.io docker-compose
    ```
 
-3. Установите Git:
+## Шаг 4: Клонирование репозитория и настройка проекта
+
+1. Клонируйте репозиторий проекта с веткой deploy-branch:
    ```bash
-   sudo apt-get install -y git
+   git clone -b deploy-branch https://github.com/wastless/svet.git
+   cd svet
    ```
 
-## Шаг 3: Клонирование и настройка проекта
-
-1. Клонируйте репозиторий:
-   ```bash
-   git clone https://github.com/wastless/svet.git
-   cd lesya.svet
-   ```
-
-2. Отредактируйте файл .env.production, указав реальные значения:
+2. Создайте файл .env.production с нужными переменными окружения:
    ```bash
    nano .env.production
    ```
 
-   Укажите:
-   - DB_PASSWORD - надежный пароль для базы данных
-   - DB_NAME - имя базы данных (например, lesya_svet_db)
-   - AUTH_SECRET - секретный ключ для авторизации (сгенерируйте с помощью `openssl rand -base64 32`)
-   - YANDEX_ACCESS_KEY_ID - ваш ключ доступа к Yandex Object Storage
-   - YANDEX_SECRET_ACCESS_KEY - ваш секретный ключ к Yandex Object Storage
-   - YANDEX_BUCKET_NAME - имя бакета в Yandex Object Storage
+   Содержимое файла должно выглядеть примерно так:
+   ```
+   # Next Auth
+   AUTH_SECRET="ваш_секретный_ключ_здесь"
+   
+   # Prisma
+   DATABASE_URL="postgres://postgres:надежный_пароль@db:5432/lesya_svet_db"
+   DIRECT_URL="postgres://postgres:надежный_пароль@db:5432/lesya_svet_db"
+   
+   # Yandex Object Storage
+   YANDEX_ACCESS_KEY_ID="ваш_ключ_доступа_yandex_cloud"
+   YANDEX_SECRET_ACCESS_KEY="ваш_секретный_ключ_yandex_cloud"
+   YANDEX_BUCKET_NAME="lesyasvet"
+   
+   # База данных: также устанавливаем для Docker Compose
+   DB_PASSWORD="надежный_пароль"
+   DB_NAME="lesya_svet_db"
+   ```
 
-3. Сделайте скрипты исполняемыми:
+3. Создайте директории для Nginx и подготовьте SSL-сертификаты:
+   ```bash
+   mkdir -p nginx/ssl
+   mkdir -p nginx/logs
+   mkdir -p nginx/conf.d
+   ```
+
+4. Загрузите ваши SSL-сертификаты в папку nginx/ssl:
+   ```bash
+   # Если у вас есть сертификаты локально, вы можете загрузить их через SCP
+   # или скопировать содержимое в файлы на сервере
+   nano nginx/ssl/certificate.crt  # Скопируйте основной сертификат
+   nano nginx/ssl/certificate.key  # Скопируйте ключ сертификата
+   
+   # Убедитесь, что права доступа к файлам настроены правильно
+   chmod 644 nginx/ssl/certificate.crt
+   chmod 600 nginx/ssl/certificate.key
+   ```
+
+5. Сделайте скрипты исполняемыми:
    ```bash
    chmod +x *.sh
    ```
 
-## Шаг 4: Развертывание приложения
+## Шаг 5: Развертывание приложения
 
-1. Запустите скрипт развертывания, указав ваш домен:
+1. Запустите скрипт развертывания:
    ```bash
-   ./deploy.sh lesyasvet.ru
+   ./simplified-deploy.sh lesyasvet.ru
    ```
 
    Этот скрипт:
-   - Настроит SSL-сертификаты с помощью Certbot
-   - Соберет и запустит Docker-контейнеры
-   - Применит миграции Prisma к базе данных
+   - Экспортирует переменные окружения из .env.production
+   - Устанавливает необходимые зависимости
+   - Собирает приложение Next.js
+   - Запускает Docker-контейнеры
+   - Применяет миграции Prisma к базе данных
 
-2. Настройте автоматическое обновление SSL-сертификатов:
+2. Проверьте статус контейнеров:
    ```bash
-   ./setup-cron.sh yourdomain.ru
+   docker-compose ps
    ```
 
-## Шаг 5: Проверка работоспособности
+   Все контейнеры должны быть в состоянии "Up"
 
-1. Откройте ваш домен в браузере: https://yourdomain.ru
-2. Убедитесь, что приложение работает корректно и SSL-сертификат установлен (замок в адресной строке)
+## Шаг 6: Проверка работоспособности и устранение неполадок
+
+1. Откройте ваш домен в браузере: https://lesyasvet.ru
+
+2. Если приложение недоступно, проверьте логи:
+   ```bash
+   # Логи приложения Next.js
+   docker-compose logs app
+   
+   # Логи Nginx
+   docker-compose logs nginx
+   
+   # Логи базы данных
+   docker-compose logs db
+   ```
+
+3. Распространенные проблемы и их решения:
+   
+   - Проблема с базой данных:
+     ```bash
+     # Проверьте переменные окружения
+     cat .env
+     
+     # Проверьте статус контейнера базы данных
+     docker-compose ps db
+     ```
+   
+   - Проблемы с Nginx или SSL:
+     ```bash
+     # Проверьте наличие сертификатов
+     ls -la nginx/ssl/
+     
+     # Проверьте конфигурацию Nginx
+     cat nginx/conf.d/default.conf
+     ```
 
 ## Обновление приложения
 
-Для обновления приложения после внесения изменений в код:
-
-1. Подключитесь к серверу через SSH
-2. Перейдите в директорию проекта
-3. Запустите скрипт развертывания:
+1. Для обновления приложения после внесения изменений в код:
    ```bash
-   ./deploy.sh yourdomain.ru
+   cd ~/svet
+   git pull
+   ./simplified-deploy.sh lesyasvet.ru
    ```
 
 ## Резервное копирование базы данных
 
-Для создания резервной копии базы данных:
+1. Создание резервной копии:
+   ```bash
+   docker-compose exec db pg_dump -U postgres -d $DB_NAME > backup_$(date +%Y%m%d).sql
+   ```
 
-```bash
-docker-compose exec db pg_dump -U postgres -d lesya_svet_db > backup_$(date +%Y%m%d).sql
-```
+2. Восстановление из резервной копии:
+   ```bash
+   docker-compose exec -T db psql -U postgres -d $DB_NAME < backup_filename.sql
+   ```
 
 ## Мониторинг логов
 
@@ -143,3 +196,8 @@ docker-compose logs -f nginx
    ```
 
 4. Проверьте настройки DNS на Reg.ru и убедитесь, что A-записи указывают на правильный IP-адрес 
+
+
+docker-compose down
+docker-compose up -d
+docker-compose logs app

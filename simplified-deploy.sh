@@ -7,12 +7,12 @@ if [ $# -eq 0 ]; then
 fi
 
 DOMAIN=$1
-REPO_URL="https://github.com/wastless/lesya.svet.git"
+REPO_URL="https://github.com/wastless/svet.git"
 DEPLOY_DIR="/root/svet"
 
 # Обновление пакетов
 apt-get update
-apt-get install -y git nodejs npm
+apt-get install -y git nodejs
 
 # Клонирование/обновление репозитория
 if [ -d "$DEPLOY_DIR" ]; then
@@ -21,12 +21,17 @@ if [ -d "$DEPLOY_DIR" ]; then
     git pull
 else
     echo "Клонирование репозитория..."
-    git clone "$REPO_URL" "$DEPLOY_DIR"
+    git clone -b deploy-branch "$REPO_URL" "$DEPLOY_DIR"
     cd "$DEPLOY_DIR"
 fi
 
 # Копирование .env.production в .env для docker-compose
 cp .env.production .env
+
+# Экспорт переменных из .env в окружение
+set -a
+source .env
+set +a
 
 # Создание директорий для Nginx
 mkdir -p nginx/ssl
@@ -48,7 +53,9 @@ npm run build
 docker-compose down
 docker-compose up -d
 
-# Применение миграций Prisma
+# Применение миграций Prisma после запуска контейнеров
+echo "Ожидание запуска контейнеров..."
+sleep 10
 docker-compose exec -T app npx prisma migrate deploy
 
 echo "Приложение успешно развернуто и доступно по адресу https://$DOMAIN" 

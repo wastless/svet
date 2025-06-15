@@ -2,16 +2,20 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 # Копируем только необходимые файлы
-COPY .next ./.next
-COPY public ./public
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY next.config.js ./
+# Явное создание директории src перед копированием
+RUN mkdir -p src
 COPY src/env.js ./src/env.js
 
 # Устанавливаем только production зависимости
 RUN npm install --production
 RUN npx prisma generate
+
+# Копируем готовую сборку
+COPY .next ./.next
+COPY public ./public
 
 # Настройка переменных окружения
 ENV NODE_ENV=production
