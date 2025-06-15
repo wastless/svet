@@ -509,12 +509,11 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
                 data-next={isNextGift ? 'true' : undefined}
                 data-current={isCurrentGift ? 'true' : undefined}
               >
-                {/* Явно передаем undefined вместо пустой строки при null */}
                 <RoadmapItem
                   id={gift.id}
                   number={gift.number}
                   hintImageUrl={gift.hintImageUrl}
-                  imageCover={gift.imageCover ?? ""}
+                  imageCover={gift.imageCover || ""}
                   openDate={gift.openDate}
                   title={gift.title || undefined}
                   isTargetDay={isTargetGift}

@@ -117,7 +117,6 @@ function RoadmapItemComponent({
   
   // Используем imageCover если он предоставлен, иначе используем hintImageUrl
   const coverImage = imageCover || hintImageUrl;
-
   
   // Мемоизируем состояние открытия подарка, чтобы избежать лишних перерисовок
   const isOpen = useMemo(() => {
