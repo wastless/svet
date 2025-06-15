@@ -60,3 +60,7 @@ nginx/ssl/
 *.key
 *.crt
 *.csr
+
+# Added for deployment
+/deploy-package/
+/deploy-package.zip
