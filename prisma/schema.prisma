@@ -1,0 +1,54 @@
+// Генератор Prisma клиента
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+// Настройки подключения к базе данных PostgreSQL
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id       String   @id @default(cuid())
+  username String  @unique
+  password String?
+}
+
+model Gift {
+  id                String   @id @default(cuid())
+  number            Int      @unique // номер подарка
+  title             String?  // название подарка
+  author            String  // автор подарка
+  nickname          String  // никнейм (связан с MemoryPhoto.text)
+  isSecret          Boolean  @default(false) // публичность/конфиденциальность
+  openDate          DateTime // когда подарок становится доступен
+  englishDescription String  // английское описание
+  hintImageUrl      String   // 
+  imageCover        String?   // картинка для отображения в roadmap
+  hintText          String   @default("look for a gift with this sticker") // текст подсказки
+  codeText          String?   @default("This is the part of your cipher. Collect them all to reveal the last secret") // текст подсказки
+  code              String?  // секретный код (если есть)
+  contentPath       String   // путь к файлу с контентом поздравления
+  contentUrl        String?  // URL к файлу с контентом в облачном хранилище
+  
+  // Связь с полароидной фотографией (один к одному)
+  memoryPhoto       MemoryPhoto?
+  
+  @@map("gifts")
+}
+
+model MemoryPhoto {
+  id          String   @id @default(cuid())
+  photoUrl    String   // URL оригинальной фотографии
+  createdAt   DateTime @default(now())
+  photoDate   DateTime? // Дата создания фотографии (вводится пользователем)
+  
+  // Связь с подарком (один к одному)
+  giftId      String   @unique
+  gift        Gift     @relation(fields: [giftId], references: [id], onDelete: Cascade)
+  
+  @@map("memory_photos")
+}

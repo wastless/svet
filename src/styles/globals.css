@@ -1,0 +1,700 @@
+@import './polaroid-3d.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Ensure body doesn't create stacking context issues */
+  body {
+    isolation: auto;
+  }
+  
+  /*#region Colors */
+  :root {
+    --gray-950: #171717;
+    --gray-900: #3D3D3D;
+    --gray-800: #454545;
+    --gray-700: #4F4F4F;
+    --gray-600: #5D5D5D;
+    --gray-500: #6D6D6D;
+    --gray-400: #888888;
+    --gray-300: #B0B0B0;
+    --gray-200: #D1D1D1;
+    --gray-100: #E7E7E7;
+    --gray-50: #F6F6F6;
+    --gray-0: #ffffff;
+
+    --marker: #272526;
+    --polaroid-paper: #E3E2DC;
+
+    --neutral-950: var(--gray-950);
+    --neutral-900: var(--gray-900);
+    --neutral-800: var(--gray-800);
+    --neutral-700: var(--gray-700);
+    --neutral-600: var(--gray-600);
+    --neutral-500: var(--gray-500);
+    --neutral-400: var(--gray-400);
+    --neutral-300: var(--gray-300);
+    --neutral-200: var(--gray-200);
+    --neutral-100: var(--gray-100);
+    --neutral-50: var(--gray-50);
+    --neutral-0: var(--gray-0);
+
+    --red-950: #681219;
+    --red-900: #8b1822;
+    --red-800: #ad1f2b;
+    --red-700: #d02533;
+    --red-600: #e93544;
+    --red-500: #fb3748;
+    --red-400: #ff6875;
+    --red-300: #ff97a0;
+    --red-200: #ffc0c5;
+    --red-100: #ffd5d8;
+    --red-50: #ffebec;
+
+    --red-alpha-24: #fb37483d;
+    --red-alpha-16: #fb374829;
+    --red-alpha-10: #fb37481a;
+
+    --overlay-gray: #3333333d;
+    --overlay: var(--overlay-gray);
+
+    --bg-strong-950: var(--neutral-950);
+    --bg-surface-800: var(--neutral-800);
+    --bg-sub-300: var(--neutral-300);
+    --bg-soft-200: var(--neutral-200);
+    --bg-weak-50: var(--neutral-50);
+    --bg-white-0: var(--neutral-0);
+
+    --text-strong-950: var(--neutral-950);
+    --text-sub-600: var(--neutral-600);
+    --text-soft-400: var(--neutral-400);
+    --text-disabled-300: var(--neutral-300);
+    --text-white-0: var(--neutral-0);
+
+    --stroke-strong-950: var(--neutral-950);
+    --stroke-sub-300: var(--neutral-300);
+    --stroke-soft-200: var(--neutral-200);
+    --stroke-white-0: var(--neutral-0);
+
+    --error-dark: var(--red-950);
+    --error-base: var(--red-500);
+    --error-light: var(--red-200);
+    --error-lighter: var(--red-50);
+
+    /* Adaptive color variables */
+    --adaptive-text: var(--neutral-950);
+    --adaptive-text-inverted: var(--neutral-0);
+    --adaptive-bg: var(--neutral-0);
+    --adaptive-bg-inverted: var(--neutral-950);
+    --adaptive-stroke: var(--neutral-200);
+    --adaptive-stroke-inverted: var(--neutral-0);
+    
+    /* Selection colors */
+    --selection-bg: var(--neutral-950);
+    --selection-text: var(--neutral-0);
+  }
+}
+
+@layer utilities {
+  /* Adaptive button styles */
+  .btn-adaptive {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 0;
+    
+    /* Typography */
+    font-family: var(--font-styrene);
+    font-size: 0.875rem;
+    line-height: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    
+    /* Layout */
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    overflow: hidden;
+    
+    /* Transitions */
+    transition: opacity 300ms ease-out, color 300ms ease-out;
+    
+    /* Default state - dark button on light background */
+    background-color: var(--adaptive-bg-inverted);
+    color: var(--adaptive-text-inverted);
+    
+    /* Focus */
+    outline: none;
+  }
+  
+  .btn-adaptive:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--adaptive-bg);
+    transform: translateY(100%);
+    transition: transform 600ms ease-out;
+    z-index: -20;
+  }
+  
+  .btn-adaptive:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--adaptive-stroke);
+    opacity: 0;
+    border-radius: 9999px;
+    pointer-events: none;
+    z-index: 10;
+    transition: opacity 300ms ease-out;
+  }
+  
+  .btn-adaptive:hover {
+    color: var(--adaptive-text);
+  }
+  
+  .btn-adaptive:hover:before {
+    transform: translateY(0);
+  }
+  
+  .btn-adaptive:hover:after {
+    opacity: 1;
+  }
+
+  /* Dark container - inverts colors for child elements */
+  .dark-container,
+  .dark-bg,
+  .dark-theme {
+    --adaptive-text: var(--neutral-0);
+    --adaptive-text-inverted: var(--neutral-950);
+    --adaptive-bg: var(--neutral-950);
+    --adaptive-bg-inverted: var(--neutral-0);
+    --adaptive-stroke: var(--neutral-0);
+    --adaptive-stroke-inverted: var(--neutral-200);
+    --selection-bg: var(--neutral-0);
+    --selection-text: var(--neutral-950);
+  }
+  
+  /* Helper class to make any element dark themed */
+  .make-dark {
+    @apply dark-container;
+  }
+
+  /* Global text selection styles */
+  ::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-text);
+  }
+  
+  /* Text selection styles for specific elements */
+  .adaptive-selection::selection {
+    background-color: var(--selection-bg);
+    color: var(--selection-text);
+  }
+
+  /* Navigation adaptive styles */
+  .nav-adaptive {
+    color: var(--adaptive-text);
+  }
+  
+  .nav-adaptive .nav-underline {
+    background-color: var(--adaptive-text);
+  }
+
+  /* Mix blend mode navigation */
+  .nav-blend {
+    color: #ffffff !important;
+  }
+  
+  .nav-blend-line {
+    background-color: #ffffff !important;
+  }
+  
+  /* Dropdown blend mode - ensures proper color adaptation */
+  .dropdown-blend {
+    color: #ffffff !important;
+    mix-blend-mode: difference;
+    position: relative;
+    z-index: 9999;
+  }
+  
+  /* Ensure navigation container doesn't create isolation */
+  .nav-container {
+    isolation: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    mix-blend-mode: normal;
+    pointer-events: none;
+  }
+  
+  .nav-container > * {
+    pointer-events: auto;
+    position: relative;
+    z-index: 50;
+  }
+
+  /* Dropdown adaptive styles */
+  .dropdown-adaptive {
+    color: var(--adaptive-text);
+  }
+
+  /* Utility classes for quick application */
+  .text-adaptive { color: var(--adaptive-text); }
+  .text-adaptive-inverted { color: var(--adaptive-text-inverted); }
+  .bg-adaptive { background-color: var(--adaptive-bg); }
+  .bg-adaptive-inverted { background-color: var(--adaptive-bg-inverted); }
+  .border-adaptive { border-color: var(--adaptive-stroke); }
+  .border-adaptive-inverted { border-color: var(--adaptive-stroke-inverted); }
+
+  /* Spinner and loader styles */
+  .c-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(var(--vh, 1vh) * 100);
+    z-index: 1000;
+    color: var(--adaptive-text-inverted);
+    transition: opacity 0.2s cubic-bezier(0.215, 0.61, 0.355, 1);
+    background-color: var(--adaptive-bg);
+  }
+
+  .c-loader_spinner {
+    position: absolute;
+    right: 1.875rem;
+    bottom: 1.875rem;
+    z-index: 20;
+    color: var(--adaptive-text) !important;
+    transition: opacity .3s cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+
+  .c-spinner {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-right-color: currentColor;
+    border-radius: 50%;
+    animation: loaderSpinner .3s linear infinite;
+  }
+
+  @keyframes loaderSpinner {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+@keyframes fade-in {
+  0% { 
+    opacity: 0;
+  }
+  100% { 
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  0% { 
+    opacity: 1;
+  }
+  100% { 
+    opacity: 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.4s ease-in forwards;
+}
+  
+/* custom scale for Remix Icon */
+.remixicon path {
+  transform: scale(0.8996);
+  transform-origin: center;
+}
+
+/* Scroll Indicator for Introduction */
+.c-introduction_scroll-indicator {
+  position: absolute;
+  bottom: 30px;
+  left: calc(50% - 7px);
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  width: 14px;
+  height: 24px;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 0.9s cubic-bezier(0.215, 0.61, 0.355, 1), 
+              transform 0.9s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition-delay: 2s;
+}
+
+.c-introduction_scroll-indicator.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.c-introduction_scroll-indicator.last-step {
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.c-introduction_scroll-indicator::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 2px;
+  height: 2px;
+  border-radius: 2px;
+  background-color: currentColor;
+  animation: scrolling 3.5s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+
+@keyframes scrolling {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .c-introduction_scroll-indicator {
+    display: none;
+  }
+}
+
+/* Hide scrollbar for all elements while maintaining scroll functionality */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Apply to all scrollable elements */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Более специфичный селектор для text-adaptive внутри dark-container */
+.dark-container .text-adaptive { 
+  color: var(--adaptive-text) !important; 
+}
+
+/* Добавляем стили для 3D-трансформаций кубика */
+@keyframes rolling {
+  50% {
+    transform: rotateX(455deg) rotateY(455deg);
+  }
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.perspective-500 {
+  perspective: 500px;
+}
+
+/* Анимация для split эффекта */
+@keyframes split-top {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-80px); }
+}
+
+@keyframes split-bottom {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(80px); }
+}
+
+@keyframes reveal-dark {
+  0% { 
+    transform: translateY(-50%) scaleY(0);
+    opacity: 0;
+  }
+  100% { 
+    transform: translateY(-50%) scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Стили для эффекта split */
+.split-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  height: 8rem;
+}
+
+.split-item {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.split-item:first-child {
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+}
+
+.split-item:last-child {
+  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+}
+
+.split-text {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Эффект разделения при скролле */
+.split-container.is-inview .split-item:first-child {
+  transform: translateY(-40px);
+}
+
+.split-container.is-inview .split-item:last-child {
+  transform: translateY(40px);
+}
+
+/* Темный контейнер */
+.dark-content-reveal {
+  position: relative;
+  width: 100%;
+  background-color: #171717;
+  color: white;
+  overflow: hidden;
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-50px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+              max-height 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-content-reveal.is-visible {
+  opacity: 1;
+  max-height: 1000px;
+  transform: translateY(0);
+}
+
+/* Новые стили для эффекта фиксации и раздвижения */
+.sticky-split-container {
+  position: sticky;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  height: 6rem;
+  z-index: 10;
+  transition: height 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  background-color: transparent;
+}
+
+.sticky-split-container .split-item {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.sticky-split-container .split-item:first-child {
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  top: 0;
+}
+
+.sticky-split-container .split-item:last-child {
+  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
+  bottom: 0;
+}
+
+.split-text {
+  font-size: 3rem;
+  letter-spacing: 0.1em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+/* Эффект затемнения фона */
+.sticky-split-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #171717;
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sticky-split-container.is-transitioning::after {
+  opacity: 1;
+}
+
+/* Контейнер для всего эффекта перехода */
+.split-transition-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Анимация для активного состояния */
+.sticky-split-container.is-transitioning .split-item:first-child {
+  animation: split-top 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.sticky-split-container.is-transitioning .split-item:last-child {
+  animation: split-bottom 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Стили для темного контейнера */
+#dark-content {
+  position: relative;
+  margin-top: -50vh;
+}
+
+/* Новые стили для AKONY split эффекта */
+.akony .tn-atom {
+  min-height: 100vh;
+  height: 100%;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 0;
+  top: 0;
+  width: 100%;
+  will-change: transform;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.uc-akony-top, .uc-akony-bottom {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  width: 100%;
+  height: 50%;
+  justify-content: center;
+  align-items: center;
+}
+
+.uc-akony-bottom {
+  justify-content: flex-start;
+}
+
+.uc-akony-top .split-text, .uc-akony-bottom .split-text {
+  font-size: 3rem;
+  letter-spacing: 0.1em;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Дополнительные стили для структуры akony из примера */
+.uc-akony-hide {
+  overflow: hidden;
+  z-index: 20;
+  position: relative;
+}
+
+.uc-akony-top .t396__artboard, .uc-akony-bottom .t396__artboard {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.uc-akony-bottom .t396__artboard {
+  transform: translateY(-50%);
+}
+
+/* Стили для темного контейнера с контентом */
+.dark-content-container {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 0;
+  background-color: var(--bg-strong-950);
+  color: white;
+  opacity: 0;
+  z-index: 10;
+  overflow: hidden;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              top 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark-content-container.full-screen {
+  top: 0;
+  height: 100vh;
+  transform: translateY(0);
+}
+
+/* Секция с эффектом SPLIT */
+.split-transition-section {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Увеличиваем силу эффекта для мобильных устройств */
+@media (max-width: 768px) {
+  .split-container.is-inview .split-item:first-child {
+    transform: translateY(-30px);
+  }
+  
+  .split-container.is-inview .split-item:last-child {
+    transform: translateY(30px);
+  }
+}
