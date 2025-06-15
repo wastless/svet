@@ -58,7 +58,7 @@ export default function GiftPage() {
           </h4>
         </div>
 
-        {/* Основной контент - сетка с подарками */}
+        {/* Основной контент сетка с подарками */}
         <div className="pb-6">
           <RoadmapGrid gifts={gifts} />
         </div>
