@@ -67,6 +67,11 @@ function getTTL(url: string): number {
 function shouldCacheUrl(url: string, method: string): boolean {
   if (method !== 'GET') return false;
   
+  // В продакшн режиме отключаем кэширование сессии
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return false;
+  }
+  
   // Кешируем только сессию, но не запросы к подаркам
   return url.includes('/api/auth/session');
   
@@ -315,16 +320,32 @@ export function invalidateAllCache() {
 }
 
 /**
- * Очищает кеш для сессии
+ * Инвалидирует кеш сессии
  */
 export function invalidateSessionCache() {
-  const sessionKeys = Object.keys(requestCache).filter(key => 
-    getUrlFromCacheKey(key).includes('/api/auth/session')
-  );
+  if (typeof window === 'undefined') return;
   
-  sessionKeys.forEach(key => delete requestCache[key]);
-  saveCacheToStorage();
-  console.log('🗑️ Session cache invalidated');
+  console.log('🔄 Invalidating session cache');
+  
+  // Удаляем все записи с URL, содержащим /api/auth/session
+  Object.keys(requestCache).forEach(key => {
+    if (key.includes('/api/auth/session')) {
+      delete requestCache[key];
+    }
+  });
+  
+  // Удаляем сохраненную сессию из localStorage
+  try {
+    localStorage.removeItem('auth_session_cache');
+  } catch (e) {
+    console.error('Error removing session from localStorage:', e);
+  }
+  
+  // Удаляем все cookie связанные с авторизацией
+  if (typeof document !== 'undefined') {
+    document.cookie = 'next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = '__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
+  }
 }
 
 /**

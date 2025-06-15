@@ -5,15 +5,19 @@ services:
     container_name: app
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     restart: always
     environment:
-      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/${DB_NAME}
-      - DIRECT_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
       - AUTH_SECRET=${AUTH_SECRET}
       - YANDEX_ACCESS_KEY_ID=${YANDEX_ACCESS_KEY_ID}
       - YANDEX_SECRET_ACCESS_KEY=${YANDEX_SECRET_ACCESS_KEY}
       - YANDEX_BUCKET_NAME=${YANDEX_BUCKET_NAME}
+      - SKIP_ENV_VALIDATION=1
+      - NODE_ENV=production
+      - NEXTAUTH_URL=https://lesyasvet.ru
+      - NEXTAUTH_SECRET=${AUTH_SECRET}
     depends_on:
       - db
     networks:
