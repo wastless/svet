@@ -1,14 +1,52 @@
+"use client";
+
 import Link from "next/link";
 import * as Button from "~/components/ui/button";
-import { db } from "~/server/db";
 import { RoadmapGrid } from "~/components/roadmap/RoadmapGrid";
 import type { Gift } from "@prisma/client";
+import { useState, useEffect } from "react";
+import { Spinner } from "~/components/ui/spinner";
 
-export default async function GiftPage() {
-  // Получаем все подарки из базы данных, сортировка по номеру
-  const gifts = await db.gift.findMany({
-    orderBy: { number: "asc" },
-  });
+export default function GiftPage() {
+  const [gifts, setGifts] = useState<Gift[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Загружаем данные о подарках
+  useEffect(() => {
+    async function fetchGifts() {
+      try {
+        setIsLoading(true);
+        // Добавляем timestamp, чтобы избежать кеширования
+        const timestamp = Date.now();
+        const response = await fetch(`/api/gifts?_t=${timestamp}`);
+        
+        if (!response.ok) {
+          throw new Error('Не удалось загрузить данные о подарках');
+        }
+        
+        const giftsData = await response.json();
+        // Сортировка по номеру
+        giftsData.sort((a: Gift, b: Gift) => a.number - b.number);
+        setGifts(giftsData);
+      } catch (error) {
+        console.error("Ошибка при загрузке подарков:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    void fetchGifts();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="relative bg-bg-white-0 min-h-screen">
+        <div className="fixed bottom-6 right-6 z-50">
+          <Spinner className="text-adaptive w-8 h-8" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative bg-bg-white-0">
@@ -20,7 +58,7 @@ export default async function GiftPage() {
           </h4>
         </div>
 
-        {/* Основной контент - сетка с подарками */}
+        {/* Основной контент сетка с подарками */}
         <div className="pb-6">
           <RoadmapGrid gifts={gifts} />
         </div>
