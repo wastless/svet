@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 COPY next.config.js ./
+# Явное создание директории src перед копированием
+RUN mkdir -p src
 COPY src/env.js ./src/env.js
 
 # Устанавливаем только production зависимости

@@ -85,4 +85,5 @@ export const authConfig = {
     signIn: "/login",
   },
   secret: process.env.AUTH_SECRET,
+  trustHost: true,
 } satisfies NextAuthConfig;
