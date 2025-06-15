@@ -12,6 +12,9 @@ RUN npm ci
 # Копируем остальные файлы проекта
 COPY . .
 
+# Копируем src/env.js для работы next.config.js
+COPY src/env.js ./src/
+
 # Собираем приложение
 RUN npm run build
 
