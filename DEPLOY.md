@@ -74,7 +74,7 @@
 
 1. Запустите скрипт развертывания, указав ваш домен:
    ```bash
-   ./deploy.sh yourdomain.ru
+   ./deploy.sh lesyasvet.ru
    ```
 
    Этот скрипт:

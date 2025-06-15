@@ -1,0 +1,16 @@
+{
+  "/api/gift-content/[filename]/route": "app/api/gift-content/[filename]/route.js",
+  "/api/upload/route": "app/api/upload/route.js",
+  "/api/gifts/[id]/route": "app/api/gifts/[id]/route.js",
+  "/api/gifts/route": "app/api/gifts/route.js",
+  "/api/yandex-music/metadata/route": "app/api/yandex-music/metadata/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/gallery/page": "app/gallery/page.js",
+  "/cipher/page": "app/cipher/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/gift/page": "app/gift/page.js",
+  "/login/page": "app/login/page.js",
+  "/gift/[id]/page": "app/gift/[id]/page.js",
+  "/page": "app/page.js"
+}

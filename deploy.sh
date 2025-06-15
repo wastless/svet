@@ -14,11 +14,19 @@ git pull
 # Копирование .env.production в .env для docker-compose
 cp .env.production .env
 
-# Проверка наличия SSL-сертификатов
-if [ ! -f "nginx/ssl/fullchain.pem" ] || [ ! -f "nginx/ssl/privkey.pem" ]; then
-    echo "SSL-сертификаты не найдены. Запуск скрипта setup-ssl.sh..."
-    bash setup-ssl.sh $DOMAIN
+# Создание директорий для Nginx, если они не существуют
+mkdir -p nginx/ssl
+mkdir -p nginx/logs
+mkdir -p nginx/conf.d
+
+# Проверка наличия SSL-сертификатов с уже имеющимися названиями файлов
+if [ ! -f "nginx/ssl/certificate.crt" ] || [ ! -f "nginx/ssl/certificate.key" ]; then
+    echo "SSL-сертификаты не найдены. Убедитесь, что файлы certificate.crt и certificate.key находятся в папке nginx/ssl"
+    exit 1
 fi
+
+# Добавляем переменную для пропуска валидации переменных окружения
+export SKIP_ENV_VALIDATION=1
 
 # Сборка и запуск контейнеров
 docker-compose down
