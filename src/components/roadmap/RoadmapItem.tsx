@@ -115,8 +115,9 @@ function RoadmapItemComponent({
   const router = useRouter();
   const { giftsDate } = useGifts();
   
-  // Используем imageCover если он предоставлен, иначе используем hintImageUrl
-  const coverImage = imageCover || hintImageUrl;
+  // Используем imageCover если он предоставлен и не пустой, иначе используем hintImageUrl
+  // Для закрытых подарков изображение не будет использоваться
+  const coverImage = imageCover && imageCover !== "" ? imageCover : hintImageUrl;
   
   // Мемоизируем состояние открытия подарка, чтобы избежать лишних перерисовок
   const isOpen = useMemo(() => {

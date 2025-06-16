@@ -76,6 +76,7 @@
   position: absolute;
   will-change: opacity, transform;
   pointer-events: none;
+  max-opacity: 0.4; /* Уменьшаем максимальную непрозрачность для открытых подарков */
 }
 
 .polaroid-gloss--animatable {

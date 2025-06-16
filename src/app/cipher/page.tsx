@@ -3,6 +3,7 @@
 import * as Button from "~/components/ui/button";
 import * as Input from "~/components/ui/input-login";
 import * as Label from "~/components/ui/label";
+import * as Hint from "~/components/ui/hint";
 import { useState } from "react";
 import CryptoJS from 'crypto-js';
 
@@ -11,18 +12,61 @@ export default function CipherPage() {
   const [encryptedText, setEncryptedText] = useState("");
   const [decryptedText, setDecryptedText] = useState("");
   const [error, setError] = useState("");
+  const [touched, setTouched] = useState({
+    key: false,
+    encryptedText: false
+  });
 
-  const handleDecrypt = () => {
-    if (!key || !encryptedText) return;
+  const validateForm = () => {
+    if (!key && !encryptedText) {
+      setError("Fill in both fields");
+      return false;
+    }
+    if (!key) {
+      setError("Enter key");
+      return false;
+    }
+    if (!encryptedText) {
+      setError("Enter encrypted text");
+      return false;
+    }
+    return true;
+  };
+
+  const handleDecrypt = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Отмечаем все поля как затронутые при попытке отправки
+    setTouched({
+      key: true,
+      encryptedText: true
+    });
+    
+    // Проверяем валидацию формы
+    if (!validateForm()) {
+      return;
+    }
+    
+    // Очищаем предыдущие результаты и ошибки
+    setError("");
+    setDecryptedText("");
     
     try {
-      setError("");
-      
       // Простой XOR с Base64
       function simpleXorDecrypt(encryptedText: string, key: string) {
         try {
-          // Декодируем из Base64
-          const textToDecrypt = atob(encryptedText);
+          // Проверяем, что строка не пустая
+          if (!encryptedText.trim()) {
+            throw new Error("Encrypted text cannot be empty");
+          }
+          
+          // Пробуем декодировать из Base64
+          let textToDecrypt;
+          try {
+            textToDecrypt = atob(encryptedText);
+          } catch (e) {
+            throw new Error("Invalid Base64 format");
+          }
           
           // XOR дешифрование
           let result = "";
@@ -34,12 +78,18 @@ export default function CipherPage() {
           return result;
         } catch (e) {
           console.error("Ошибка в simpleXorDecrypt:", e);
-          return "";
+          throw e;
         }
       }
       
       // Получаем результат
       const result = simpleXorDecrypt(encryptedText, key);
+      
+      // Проверяем, что результат не пустой
+      if (!result) {
+        setError("Failed to decrypt text");
+        return;
+      }
       
       // Жестко заменяем результат на правильный, если он соответствует ожидаемому
       if (result.includes("world of shadows") && result.includes("light I would walk")) {
@@ -55,9 +105,38 @@ export default function CipherPage() {
       processed = processed.replace(/â/g, "—");
       
       setDecryptedText(processed);
-    } catch (err) {
-      setError("Ошибка при дешифровании. Проверьте формат зашифрованного текста.");
+    } catch (err: any) {
+      // Обрабатываем конкретные ошибки
+      if (err.message === "Invalid Base64 format") {
+        setError("Invalid encrypted text format");
+      } else if (err.message === "Encrypted text cannot be empty") {
+        setError("Encrypted text cannot be empty");
+      } else if (err.message?.includes("Failed to execute 'atob'")) {
+        setError("Encrypted text is not a valid Base64 string");
+      } else {
+        setError("Failed to decrypt text. Check the encrypted text format.");
+      }
       console.error(err);
+    }
+  };
+
+  const handleInputChange = (field: 'key' | 'encryptedText', value: string) => {
+    if (field === 'key') {
+      setKey(value);
+    } else {
+      setEncryptedText(value);
+    }
+    
+    // Отмечаем поле как затронутое
+    setTouched(prev => ({
+      ...prev,
+      [field]: true
+    }));
+    
+    // Очищаем ошибку, если оба поля заполнены
+    if ((field === 'key' && value && encryptedText) || 
+        (field === 'encryptedText' && value && key)) {
+      setError("");
     }
   };
 
@@ -78,11 +157,9 @@ export default function CipherPage() {
           <div className="w-full px-4 sm:px-0 flex flex-col items-center">
             <form
               id="cipher-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleDecrypt();
-              }}
+              onSubmit={handleDecrypt}
               className="flex flex-col gap-4 w-full items-center"
+              noValidate
             >
               <div className="flex flex-col gap-5 sm:gap-6 max-w-xs sm:max-w-sm md:max-w-md w-full">
                 <div className="flex flex-col gap-2">
@@ -95,8 +172,7 @@ export default function CipherPage() {
                         type="text"
                         placeholder="Enter key"
                         value={key}
-                        onChange={(e) => setKey(e.target.value)}
-                        required
+                        onChange={(e) => handleInputChange('key', e.target.value)}
                       />
                     </Input.Wrapper>
                   </Input.Root>
@@ -114,24 +190,23 @@ export default function CipherPage() {
                         type="text"
                         placeholder="Enter crypted text"
                         value={encryptedText}
-                        onChange={(e) => setEncryptedText(e.target.value)}
-                        required
+                        onChange={(e) => handleInputChange('encryptedText', e.target.value)}
                       />
                     </Input.Wrapper>
                   </Input.Root>
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 p-4 rounded-8 text-red-500 text-paragraph-sm font-styrene text-center">
+                  <Hint.Root hasError>
                     {error}
-                  </div>
+                  </Hint.Root>
                 )}
 
               </div>
 
               {decryptedText && (
                 <div className="flex flex-col gap-2 mt-8 md:max-w-xl w-full">
-                  <div className="text-label-md font-nyghtserif text-center">
+                  <div className="text-label-sm md:text-label-md font-nyghtserif text-center">
                     {decryptedText}
                   </div>
                 </div>

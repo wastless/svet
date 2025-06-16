@@ -99,7 +99,10 @@ export function PolaroidPhoto({
   const translateZ = '0px';
   const glossMaxDistance = 1.2; // чуть больше, чтобы глянец не исчезал резко
   const distanceToCenter = Math.sqrt(mousePosition.x * mousePosition.x + mousePosition.y * mousePosition.y);
-  const glossOpacity = isHovered ? Math.min(distanceToCenter / glossMaxDistance, 0.6) : 0;
+  
+  // Для открытых подарков - нормальный глянец, для закрытых - минимальный
+  const maxOpacity = isRevealed ? 0.4 : 0.15;
+  const glossOpacity = isHovered ? Math.min(distanceToCenter / glossMaxDistance, maxOpacity) : 0;
   const glossTranslateX = isHovered ? -mousePosition.x * 25 : 0;
   const glossTranslateY = isHovered ? -mousePosition.y * 25 : 0;
 
@@ -133,7 +136,7 @@ export function PolaroidPhoto({
         >
           {/* Глянцевый слой поверх фото */}
           <div
-            className={`polaroid-gloss polaroid-gloss--animatable`}
+            className="polaroid-gloss polaroid-gloss--animatable"
             style={{
               opacity: glossOpacity,
               transform: `translate(${glossTranslateX}%, ${glossTranslateY}%) scale(1.2)`

@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     // filename теперь это ID подарка
-    const { filename } = params;
+    const { filename } = await params;
     const giftId = filename;
     
     // Получаем подарок из базы данных, чтобы проверить contentUrl

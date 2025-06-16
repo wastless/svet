@@ -14,6 +14,7 @@ import { DiceTransition } from "~/components/dice/DiceTransition";
 import { useGiftData } from "@/utils/hooks/useGiftQueries";
 import { useAuth } from "~/components/providers/auth-provider";
 import { FullScreenLoader } from "~/components/ui/spinner";
+import { COUNTDOWN_CONFIG } from "@/utils/data/constants";
 
 // Расширяем тип Gift для совместимости с данными из БД
 interface DBGift extends Omit<Gift, "codeText"> {
@@ -372,6 +373,23 @@ export default function GiftPage() {
               >
                 {gift.code}
               </div>
+              
+              {/* Проверяем, является ли текущий подарок целевым (target day) */}
+              {(() => {
+                // Преобразуем дату подарка в формат YYYY-MM-DD
+                const giftDateStr = new Date(gift.openDate).toISOString().split('T')[0];
+                // Показываем кнопку только если дата подарка совпадает с целевой датой
+                return giftDateStr === COUNTDOWN_CONFIG.TARGET_DATE;
+              })() && (
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <p className="font-styrene text-paragraph-sm font-bold uppercase md:text-paragraph-md">
+                    Solve the main cipher
+                  </p>
+                  <Button.Root asChild>
+                    <Link href="/cipher">Open</Link>
+                  </Button.Root>
+                </div>
+              )}
             </div>
           )}
 
@@ -390,6 +408,23 @@ export default function GiftPage() {
               >
                 SECRET CODE
               </div>
+              
+              {/* Проверяем, является ли текущий подарок целевым (target day) */}
+              {(() => {
+                // Преобразуем дату подарка в формат YYYY-MM-DD
+                const giftDateStr = new Date(gift.openDate).toISOString().split('T')[0];
+                // Показываем кнопку только если дата подарка совпадает с целевой датой
+                return giftDateStr === COUNTDOWN_CONFIG.TARGET_DATE;
+              })() && (
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <p className="font-styrene text-paragraph-sm font-bold uppercase md:text-paragraph-md">
+                    Solve the main cipher
+                  </p>
+                  <Button.Root asChild>
+                    <Link href="/cipher">Open</Link>
+                  </Button.Root>
+                </div>
+              )}
             </div>
           )}
 

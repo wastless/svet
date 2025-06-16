@@ -71,6 +71,9 @@ export function GLImage({
   
   // Инициализация WebGL
   useEffect(() => {
+    // Если imageUrl пустой, не инициализируем WebGL
+    if (!imageUrl || imageUrl.trim() === "") return;
+    
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
@@ -290,6 +293,11 @@ export function GLImage({
     };
   }, [imageUrl, imageCover]);
   
+  // Если imageUrl пустой, не рендерим ничего
+  if (!imageUrl || imageUrl.trim() === "") {
+    return null;
+  }
+  
   // Обработчики наведения
   const handleMouseEnter = () => {
     targetHoverRef.current = 1.0;
@@ -359,15 +367,17 @@ export function GLImage({
         }}
       />
       {/* Скрытое изображение для предзагрузки */}
-      <div className="hidden">
-        <Image
-          src={imageUrl}
-          alt={alt}
-          width={1000}
-          height={1000}
-          unoptimized
-        />
-      </div>
+      {imageUrl && imageUrl.trim() !== "" && (
+        <div className="hidden">
+          <Image
+            src={imageUrl}
+            alt={alt}
+            width={1000}
+            height={1000}
+            unoptimized
+          />
+        </div>
+      )}
     </div>
   );
 }
