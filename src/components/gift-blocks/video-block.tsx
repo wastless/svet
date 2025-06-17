@@ -3,6 +3,7 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { VideoBlock as VideoBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -40,22 +41,22 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {/* Заголовок */}
         {block.title && (
           <div className="text-center text-adaptive">
-            <p className="font-nyghtserif text-label-sm md:text-label-md italic">
-              ({block.title})
-            </p>
+            <div className="font-nyghtserif text-label-sm md:text-label-md italic">
+              ({processText(block.title)})
+            </div>
           </div>
         )}
 
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <p className={`font-euclid ${
+            <div className={`font-euclid ${
               block.textSize === "medium" 
               ? "text-paragraph-lg md:text-paragraph-xl"
               : "text-paragraph-md md:text-paragraph-lg" 
             }`}>
-              {block.text}
-            </p>
+              {processText(block.text)}
+            </div>
           </div>
         )}
       </div>
@@ -71,7 +72,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
           )}
 
           <ReactPlayer
-            url={block.url}
+            url={block.url && block.url.trim() !== "" ? block.url : undefined}
             width="100%"
             height="100%"
             controls={true} // Включаем стандартные контролы
@@ -105,9 +106,9 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
       {/* Подпись под видео */}
       {block.caption && (
         <div className="text-center">
-          <p className="font-euclid text-paragraph-md text-text-soft-400">
-            {block.caption}
-          </p>
+          <div className="font-euclid text-paragraph-md text-text-soft-400">
+            {processText(block.caption)}
+          </div>
         </div>
       )}
     </div>

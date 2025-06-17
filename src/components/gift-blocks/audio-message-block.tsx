@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import type { AudioMessageBlock as AudioMessageBlockType } from "@/utils/types/gift";
 import { PlayIcon, PauseIcon, LoadingSpinner } from "~/components/ui/icons";
+import { processText } from "./base-block";
 
 interface AudioMessageBlockProps {
   block: AudioMessageBlockType;
@@ -40,7 +41,9 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
           mediaControls: false,
         });
 
-        wavesurferRef.current.load(block.url);
+        if (block.url && block.url.trim() !== "") {
+          wavesurferRef.current.load(block.url);
+        }
 
         wavesurferRef.current.on('ready', () => {
           if (isMounted) {
@@ -107,22 +110,22 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
         {/* Заголовок */}
         {block.title && (
           <div className="text-center text-adaptive">
-            <p className="font-nyghtserif text-label-sm md:text-label-md italic">
-              ({block.title})
-            </p>
+            <div className="font-nyghtserif text-label-sm md:text-label-md italic">
+              ({processText(block.title)})
+            </div>
           </div>
         )}
 
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <p className={`font-euclid ${
+            <div className={`font-euclid ${
               block.textSize === "medium" 
                 ? "text-paragraph-lg md:text-paragraph-xl"
                 : "text-paragraph-md md:text-paragraph-lg" 
             }`}>
-              {block.text}
-            </p>
+              {processText(block.text)}
+            </div>
           </div>
         )}
       </div>

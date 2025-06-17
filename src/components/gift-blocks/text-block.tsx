@@ -1,6 +1,7 @@
 "use client";
 
 import type { TextBlock as TextBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 interface TextBlockProps {
   block: TextBlockType;
@@ -27,11 +28,14 @@ export function TextBlock({ block, className = "" }: TextBlockProps) {
     return block.content;
   };
 
+  // Получаем текстовый контент
+  const textContent = getTextContent();
+
   return (
     <div className={`text-adaptive ${className}`}>
-      <p className={getTextStyles(block.style)}>
-        {getTextContent()}
-      </p>
+      <div className={getTextStyles(block.style)}>
+        {processText(textContent)}
+      </div>
     </div>
   );
 } 

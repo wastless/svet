@@ -1,6 +1,7 @@
 "use client";
 
 import type { TwoImagesBlock as TwoImagesBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 interface TwoImagesBlockProps {
   block: TwoImagesBlockType;
@@ -32,9 +33,9 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     if (!title) return null;
     return (
       <div className="text-adaptive">
-        <p className="text-label-sm md:text-label-md font-nyghtserif italic">
-          ({title})
-        </p>
+        <div className="text-label-sm md:text-label-md font-nyghtserif italic">
+          ({processText(title)})
+        </div>
       </div>
     );
   };
@@ -44,9 +45,9 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     if (!text) return null;
     return (
       <div className="text-adaptive">
-        <p className="md:text-paragraph-xl text-paragraph-lg font-euclid">
-          {text}
-        </p>
+        <div className="md:text-paragraph-xl text-paragraph-lg font-euclid">
+          {processText(text)}
+        </div>
       </div>
     );
   };
@@ -90,9 +91,9 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
           {/* Подпись под фото (если есть) */}
           {image.caption && (
             <div className="text-center">
-              <p className="text-paragraph-sm font-euclid text-text-soft-400">
-                {image.caption}
-              </p>
+              <div className="text-paragraph-sm font-euclid text-text-soft-400">
+                {processText(image.caption)}
+              </div>
             </div>
           )}
           
@@ -119,9 +120,9 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
         {/* Подпись под фото (если есть) */}
         {image.caption && (
           <div className="text-center">
-            <p className="text-paragraph-sm font-euclid text-text-soft-400">
-              {image.caption}
-            </p>
+            <div className="text-paragraph-sm font-euclid text-text-soft-400">
+              {processText(image.caption)}
+            </div>
           </div>
         )}
       </div>

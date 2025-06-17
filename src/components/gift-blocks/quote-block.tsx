@@ -1,6 +1,7 @@
 "use client";
 
 import type { QuoteBlock as QuoteBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 interface QuoteBlockProps {
   block: QuoteBlockType;
@@ -29,7 +30,7 @@ export function QuoteBlock({ block, className = "" }: QuoteBlockProps) {
       <div className="pl-6">
         {/* Текст цитаты */}
         <blockquote className={`text-adaptive ${quoteStyles}`}>
-          {block.content}
+          {processText(block.content)}
         </blockquote>
       </div>
     </div>

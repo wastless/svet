@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 interface BaseBlockProps {
   name: string; 
   nickname?: string;
@@ -65,6 +67,38 @@ function declineName(name: string): string {
   // Если не подошло ни одно правило, возвращаем исходное имя
   return name;
 }
+
+// Утилита для обработки текста с переносами строк и списками
+export const processText = (text: string) => {
+  if (!text) return null;
+  
+  // Разбиваем текст на строки
+  const lines = text.split('\n');
+  
+  // Проходим по каждой строке и определяем, является ли она элементом списка
+  return lines.map((line, index) => {
+    // Проверяем, начинается ли строка с маркера списка (- или *)
+    if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
+      // Удаляем маркер и начальные пробелы
+      const listItemContent = line.trim().substring(1).trim();
+      
+      // Возвращаем элемент списка
+      return (
+        <li key={index} className="ml-5 list-disc">
+          {listItemContent}
+        </li>
+      );
+    }
+    
+    // Если это обычная строка, возвращаем ее с переносом строки
+    return (
+      <React.Fragment key={index}>
+        {line}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    );
+  });
+};
 
 export function BaseBlock({
   name,

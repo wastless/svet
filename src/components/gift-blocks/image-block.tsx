@@ -1,6 +1,7 @@
 "use client";
 
 import type { ImageBlock as ImageBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 interface ImageBlockProps {
   block: ImageBlockType;
@@ -34,20 +35,10 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
       }
     }
 
-    // Ориентация
-    switch (orientation) {
-      case "vertical":
-        aspectClasses = "aspect-[3/4]";
-        break;
-      case "horizontal":
-        aspectClasses = "aspect-[4/3]";
-        break;
-      default:
-        aspectClasses = "";
-        break;
-    }
+    // Ориентация - убираем фиксированные пропорции, чтобы показать изображение полностью
+    aspectClasses = "";
 
-    return `${sizeClasses} ${aspectClasses} h-auto rounded-2xl object-cover`;
+    return `${sizeClasses} ${aspectClasses} h-auto rounded-2xl object-contain`;
   };
 
   const getGridColumns = (size?: string, orientation?: string, isImageRight?: boolean) => {
@@ -143,9 +134,9 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     if (!block.title) return null;
     return (
       <div className={`text-adaptive ${centered ? 'text-center' : ''}`}>
-        <p className="text-label-sm md:text-label-md font-nyghtserif italic">
-          ({block.title})
-        </p>
+        <div className="text-label-sm md:text-label-md font-nyghtserif italic">
+          ({processText(block.title)})
+        </div>
       </div>
     );
   };
@@ -155,9 +146,9 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     if (!block.text) return null;
     return (
       <div className={`text-adaptive ${centered ? 'text-center' : ''}`}>
-        <p className="text-paragraph-lg md:text-paragraph-xl font-euclid">
-          {block.text}
-        </p>
+        <div className="text-paragraph-lg md:text-paragraph-xl font-euclid">
+          {processText(block.text)}
+        </div>
       </div>
     );
   };
@@ -189,9 +180,9 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
         {/* Подпись под фото (если есть) */}
         {block.caption && (
           <div className="text-center mt-4">
-            <p className="text-paragraph-md font-euclid text-text-soft-400">
-              {block.caption}
-            </p>
+            <div className="text-paragraph-md font-euclid text-text-soft-400">
+              {processText(block.caption)}
+            </div>
           </div>
         )}
       </div>
@@ -284,14 +275,14 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
           <img
             src={block.url}
             alt={block.caption || "Фотография"}
-            className={`w-full ${imageWidth} aspect-[3/4] h-auto rounded-2xl object-cover`}
+            className={`w-full ${imageWidth} h-auto rounded-2xl object-contain`}
           />
           {/* Подпись под фото (если есть) */}
           {block.caption && (
             <div className="text-center mt-4">
-              <p className="text-paragraph-md font-euclid text-text-soft-400">
-                {block.caption}
-              </p>
+              <div className="text-paragraph-md font-euclid text-text-soft-400">
+                {processText(block.caption)}
+              </div>
             </div>
           )}
         </div>

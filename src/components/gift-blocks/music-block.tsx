@@ -11,6 +11,7 @@ import {
   VolumeOnIcon, 
   VolumeOffIcon
 } from "~/components/ui/icons";
+import { processText } from "./base-block";
 
 interface MusicBlockProps {
   block: MusicBlockType;
@@ -220,22 +221,22 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
           {/* Заголовок */}
           {block.title && (
             <div className="text-center text-adaptive">
-              <p className="font-nyghtserif text-label-sm md:text-label-md italic">
-                ({block.title})
-              </p>
+              <div className="font-nyghtserif text-label-sm md:text-label-md italic">
+                ({processText(block.title)})
+              </div>
             </div>
           )}
 
           {/* Текст */}
           {block.text && (
             <div className="text-center text-adaptive">
-              <p className={`font-euclid ${
+              <div className={`font-euclid ${
               block.textSize === "medium" 
               ? "text-paragraph-lg md:text-paragraph-xl"
               : "text-paragraph-md md:text-paragraph-lg" 
               }`}>
-                {block.text}
-              </p>
+                {processText(block.text)}
+              </div>
             </div>
           )}
         </div>
@@ -310,7 +311,7 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
             {/* Скрытый аудио элемент */}
             <audio
               ref={audioRef}
-              src={block.url}
+              src={block.url && block.url.trim() !== "" ? block.url : undefined}
               preload="metadata"
               crossOrigin="anonymous"
             />
