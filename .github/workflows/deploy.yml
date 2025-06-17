@@ -36,6 +36,7 @@ jobs:
           mkdir -p deploy-package/src
           cp src/env.js deploy-package/src/
           cp Dockerfile.production deploy-package/Dockerfile
+          cp Dockerfile.production deploy-package/Dockerfile.production
           cp docker-compose.yml deploy-package/
           cp deploy.sh deploy-package/
           chmod +x deploy-package/deploy.sh

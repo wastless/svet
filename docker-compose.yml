@@ -5,7 +5,7 @@ services:
     container_name: app
     build:
       context: .
-      dockerfile: Dockerfile.production
+      dockerfile: Dockerfile
     restart: always
     environment:
       - DATABASE_URL=${DATABASE_URL}
