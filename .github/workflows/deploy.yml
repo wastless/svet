@@ -2,30 +2,31 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build application
-        run: |
-          export SKIP_ENV_VALIDATION=1
-          npm run build
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: 1
 
-      - name: Prepare deployment package
+      - name: Prepare deploy package
         run: |
           mkdir -p deploy-package
           cp -r .next deploy-package/
@@ -34,74 +35,65 @@ jobs:
           cp package.json package-lock.json next.config.js deploy-package/
           mkdir -p deploy-package/src
           cp src/env.js deploy-package/src/
-          cp Dockerfile.production deploy-package/
+          cp Dockerfile.production deploy-package/Dockerfile
           cp docker-compose.yml deploy-package/
           cp deploy.sh deploy-package/
-
-      - name: Create .env.production template
+          chmod +x deploy-package/deploy.sh
+          
+      - name: Create .env.production file
         run: |
           cat > deploy-package/.env.production << EOF
           # Next Auth
-          AUTH_SECRET=\${{ secrets.AUTH_SECRET }}
+          AUTH_SECRET="${{ secrets.AUTH_SECRET }}"
           
-          # Prisma
-          DATABASE_URL=\${{ secrets.DATABASE_URL }}
-          DIRECT_URL=\${{ secrets.DIRECT_URL }}
+          # Prisma и Supabase
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          DIRECT_URL="${{ secrets.DIRECT_URL }}"
           
           # Yandex Object Storage
-          YANDEX_ACCESS_KEY_ID=\${{ secrets.YANDEX_ACCESS_KEY_ID }}
-          YANDEX_SECRET_ACCESS_KEY=\${{ secrets.YANDEX_SECRET_ACCESS_KEY }}
-          YANDEX_BUCKET_NAME=\${{ secrets.YANDEX_BUCKET_NAME }}
+          YANDEX_ACCESS_KEY_ID="${{ secrets.YANDEX_ACCESS_KEY_ID }}"
+          YANDEX_SECRET_ACCESS_KEY="${{ secrets.YANDEX_SECRET_ACCESS_KEY }}"
+          YANDEX_BUCKET_NAME="${{ secrets.YANDEX_BUCKET_NAME }}"
           EOF
 
-      - name: Archive deployment package
+      - name: Create deploy archive
         run: tar -czvf deploy-package.tar.gz deploy-package
 
-      - name: Upload deployment package
-        uses: actions/upload-artifact@v3
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
         with:
-          name: deploy-package
-          path: deploy-package.tar.gz
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download deployment package
-        uses: actions/download-artifact@v3
-        with:
-          name: deploy-package
-
-      - name: Deploy to VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
-          script: |
-            mkdir -p ${{ secrets.PROJECT_PATH }}
-            rm -rf ${{ secrets.PROJECT_PATH }}/*
+          known_hosts: unnecessary
+          if_key_exists: replace
 
-      - name: Copy package to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "deploy-package.tar.gz"
-          target: "${{ secrets.PROJECT_PATH }}"
+      - name: Adding Known Hosts
+        run: ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Extract and deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script_stop: true
-          script: |
-            cd ${{ secrets.PROJECT_PATH }}
-            tar -xzvf deploy-package.tar.gz
-            cd deploy-package
-            chmod +x deploy.sh
-            ./deploy.sh ${{ secrets.DOMAIN }} 
+      - name: Upload deploy package to VPS
+        run: scp -P ${{ secrets.SSH_PORT }} deploy-package.tar.gz ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:~/
+
+      - name: Deploy on VPS
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            rm -rf ~/deploy-package
+            mkdir -p ~/deploy-package
+            tar -xzvf ~/deploy-package.tar.gz -C ~/
+            cd ~/deploy-package
+            
+            # Создаем директории для Nginx
+            mkdir -p nginx/ssl
+            mkdir -p nginx/logs
+            mkdir -p nginx/conf.d
+            
+            # Проверяем наличие SSL-сертификатов или копируем из текущего размещения
+            if [ ! -f "nginx/ssl/certificate.crt" ] || [ ! -f "nginx/ssl/certificate.key" ]; then
+              # Попытка скопировать существующие сертификаты, если они есть
+              if [ -f "/etc/ssl/certs/${{ secrets.DOMAIN_NAME }}.crt" ]; then
+                cp /etc/ssl/certs/${{ secrets.DOMAIN_NAME }}.crt nginx/ssl/certificate.crt
+                cp /etc/ssl/private/${{ secrets.DOMAIN_NAME }}.key nginx/ssl/certificate.key
+              fi
+            fi
+            
+            # Запуск деплоя
+            ./deploy.sh ${{ secrets.DOMAIN_NAME }}
+          ENDSSH 

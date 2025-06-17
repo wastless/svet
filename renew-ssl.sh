@@ -1,21 +1,21 @@
 #!/bin/bash
 
-# Проверка наличия домена в аргументах
-if [ $# -eq 0 ]; then
-    echo "Использование: $0 yourdomain.ru"
-    exit 1
-fi
-
-DOMAIN=$1
-
-# Обновление сертификатов с помощью Certbot
+# Обновление сертификатов
 certbot renew --quiet
 
-# Копирование обновленных сертификатов в директорию Nginx
-cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem nginx/ssl/
-cp /etc/letsencrypt/live/$DOMAIN/privkey.pem nginx/ssl/
+# Получаем домен из аргумента или используем значение по умолчанию
+DOMAIN=${1:-"lesyasvet.ru"}
 
-# Перезапуск Nginx для применения новых сертификатов
+# Копирование обновленных сертификатов в нужные директории
+cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem /etc/ssl/certs/$DOMAIN.crt
+cp /etc/letsencrypt/live/$DOMAIN/privkey.pem /etc/ssl/private/$DOMAIN.key
+
+# Копирование обновленных сертификатов для Docker контейнеров
+cp /etc/ssl/certs/$DOMAIN.crt ~/deploy-package/nginx/ssl/certificate.crt
+cp /etc/ssl/private/$DOMAIN.key ~/deploy-package/nginx/ssl/certificate.key
+
+# Перезапуск Nginx чтобы применить новые сертификаты
+cd ~/deploy-package
 docker-compose restart nginx
 
-echo "SSL-сертификаты успешно обновлены для домена $DOMAIN" 
+echo "SSL сертификаты обновлены и применены для $DOMAIN" 
