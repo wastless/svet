@@ -30,7 +30,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const gift = await db.gift.findUnique({
       where: { id },
       include: {
@@ -64,7 +64,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json() as UpdateGiftRequest;
     const { 
       title,
@@ -218,7 +218,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     // Проверяем существование подарка
     const existingGift = await db.gift.findUnique({
       where: { id },
