@@ -3,18 +3,105 @@ name: Deploy to VPS
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: |
+          export SKIP_ENV_VALIDATION=1
+          npm run build
+
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy-package
+          cp -r .next deploy-package/
+          cp -r public deploy-package/
+          cp -r prisma deploy-package/
+          cp package.json package-lock.json next.config.js deploy-package/
+          mkdir -p deploy-package/src
+          cp src/env.js deploy-package/src/
+          cp Dockerfile.production deploy-package/
+          cp docker-compose.yml deploy-package/
+          cp deploy.sh deploy-package/
+
+      - name: Create .env.production template
+        run: |
+          cat > deploy-package/.env.production << EOF
+          # Next Auth
+          AUTH_SECRET=\${{ secrets.AUTH_SECRET }}
+          
+          # Prisma
+          DATABASE_URL=\${{ secrets.DATABASE_URL }}
+          DIRECT_URL=\${{ secrets.DIRECT_URL }}
+          
+          # Yandex Object Storage
+          YANDEX_ACCESS_KEY_ID=\${{ secrets.YANDEX_ACCESS_KEY_ID }}
+          YANDEX_SECRET_ACCESS_KEY=\${{ secrets.YANDEX_SECRET_ACCESS_KEY }}
+          YANDEX_BUCKET_NAME=\${{ secrets.YANDEX_BUCKET_NAME }}
+          EOF
+
+      - name: Archive deployment package
+        run: tar -czvf deploy-package.tar.gz deploy-package
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v3
+        with:
+          name: deploy-package
+          path: deploy-package.tar.gz
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download deployment package
+        uses: actions/download-artifact@v3
+        with:
+          name: deploy-package
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            mkdir -p ${{ secrets.PROJECT_PATH }}
+            rm -rf ${{ secrets.PROJECT_PATH }}/*
+
+      - name: Copy package to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "deploy-package.tar.gz"
+          target: "${{ secrets.PROJECT_PATH }}"
+
+      - name: Extract and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
           script: |
             cd ${{ secrets.PROJECT_PATH }}
-            git pull
+            tar -xzvf deploy-package.tar.gz
+            cd deploy-package
+            chmod +x deploy.sh
             ./deploy.sh ${{ secrets.DOMAIN }} 

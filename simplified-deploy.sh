@@ -2,7 +2,7 @@
 
 # Проверка наличия домена в аргументах
 if [ $# -eq 0 ]; then
-    echo "Использование: $0 yourdomain.ru"
+    echo "Использование: $0 lesyasvet.ru"
     exit 1
 fi
 
@@ -52,10 +52,5 @@ npm run build
 # Сборка и запуск Docker контейнеров
 docker-compose down
 docker-compose up -d
-
-# Применение миграций Prisma после запуска контейнеров
-echo "Ожидание запуска контейнеров..."
-sleep 10
-docker-compose exec -T app npx prisma migrate deploy
 
 echo "Приложение успешно развернуто и доступно по адресу https://$DOMAIN" 
