@@ -15,6 +15,8 @@ import { useGiftData } from "@/utils/hooks/useGiftQueries";
 import { useAuth } from "~/components/providers/auth-provider";
 import { FullScreenLoader } from "~/components/ui/spinner";
 import { COUNTDOWN_CONFIG } from "@/utils/data/constants";
+import { useGifts } from "@/utils/hooks/useDateContext";
+import { Countdown } from "~/components/home/countdown";
 
 // Расширяем тип Gift для совместимости с данными из БД
 interface DBGift extends Omit<Gift, "codeText"> {
@@ -48,6 +50,9 @@ function useMediaQuery(query: string) {
 export default function GiftPage() {
   // Определяем размер экрана
   const isMobile = useMediaQuery("(max-width: 640px)");
+  
+  // Получаем текущую дату из контекста для проверки доступности подарка
+  const { giftsDate } = useGifts();
 
   // Получаем ID подарка из параметров URL
   const params = useParams();
@@ -89,6 +94,13 @@ export default function GiftPage() {
   const memoryHeaderRef = useRef(null);
   const memoryPhotoRef = useRef(null);
   const buttonRef = useRef(null);
+  const cipherSectionRef = useRef(null);
+
+  // Проверяем, открыт ли подарок на текущую дату
+  const isGiftAvailable = (openDate: Date): boolean => {
+    if (!giftsDate) return false;
+    return giftsDate >= new Date(openDate);
+  };
 
   // Обработчик завершения анимации кубика
   const handleDiceTransitionComplete = () => {
@@ -98,7 +110,8 @@ export default function GiftPage() {
 
   // Эффект для запуска анимации после загрузки данных
   useEffect(() => {
-    if (!giftData || isGiftLoading || !showContent) return;
+    // Если подарок недоступен или данные не загружены, не запускаем анимацию
+    if (!giftData || isGiftLoading || !showContent || !isAvailable) return;
 
     // Создаем главный таймлайн
     const tl = gsap.timeline({
@@ -117,12 +130,13 @@ export default function GiftPage() {
         hintTextRef.current,
         codeTextRef.current,
         codeRef.current,
+        cipherSectionRef.current,
         dividerRef.current,
         contentRef.current,
         memoryHeaderRef.current,
         memoryPhotoRef.current,
         buttonRef.current,
-      ],
+      ].filter(Boolean), // Фильтруем только существующие элементы
       { opacity: 0 },
     );
 
@@ -131,56 +145,68 @@ export default function GiftPage() {
       // Полная анимация для перехода с главной страницы
 
       // 1. Анимация всей страницы и большого заголовка по центру
-      tl.to(pageRef.current, { opacity: 1, duration: 0.1 })
-        .fromTo(
-          headerRef.current,
-          {
-            opacity: 0,
-            scale: isMobile ? 1.5 : 3.5,
-            y: "30vh",
-          },
-          {
-            opacity: 1,
-            scale: isMobile ? 1.5 : 3.5,
-            y: "30vh",
-            duration: 0.5,
-          },
-        )
-        // Пауза для отображения увеличенного заголовка
-        .to(headerRef.current, { scale: isMobile ? 1.5 : 3.5, duration: 0.2 })
+      if (pageRef.current && headerRef.current) {
+        tl.to(pageRef.current, { opacity: 1, duration: 0.1 })
+          .fromTo(
+            headerRef.current,
+            {
+              opacity: 0,
+              scale: isMobile ? 1.5 : 3.5,
+              y: "30vh",
+            },
+            {
+              opacity: 1,
+              scale: isMobile ? 1.5 : 3.5,
+              y: "30vh",
+              duration: 0.5,
+            },
+          )
+          // Пауза для отображения увеличенного заголовка
+          .to(headerRef.current, { scale: isMobile ? 1.5 : 3.5, duration: 0.2 })
 
-        // 2. Заголовок уменьшается и перемещается на свое место, появляется номер и описание
-        .to(headerRef.current, {
-          scale: 1,
-          y: 0,
-          duration: 0.6,
-        });
+          // 2. Заголовок уменьшается и перемещается на свое место, появляется номер и описание
+          .to(headerRef.current, {
+            scale: 1,
+            y: 0,
+            duration: 0.6,
+          });
+      }
     } else {
       // Упрощенная анимация для обычного перехода
 
       // Сразу показываем заголовок на его месте
-      gsap.set(headerRef.current, { opacity: 1 });
+      if (headerRef.current) {
+        gsap.set(headerRef.current, { opacity: 1 });
+      }
 
       // Только анимируем появление страницы
-      tl.to(pageRef.current, { opacity: 1, duration: 0.2 });
+      if (pageRef.current) {
+        tl.to(pageRef.current, { opacity: 1, duration: 0.2 });
+      }
     }
 
     // Общая анимация для всех элементов, независимо от источника перехода
-    tl.fromTo(
-      numberRef.current,
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.2 },
-      "-=0.1",
-    )
-      .fromTo(
+    if (numberRef.current) {
+      tl.fromTo(
+        numberRef.current,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.2 },
+        "-=0.1",
+      );
+    }
+
+    if (quoteRef.current) {
+      tl.fromTo(
         quoteRef.current,
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.4 },
         "=0.1",
-      )
+      );
+    }
 
-      // 3. Появление остального контента
-      .fromTo(
+    // 3. Появление остального контента
+    if (imageContainerRef.current) {
+      tl.fromTo(
         imageContainerRef.current,
         {
           y: 50,
@@ -193,13 +219,17 @@ export default function GiftPage() {
           scale: 1,
           duration: 0.4,
         },
-      )
-      .fromTo(
+      );
+    }
+
+    if (hintTextRef.current) {
+      tl.fromTo(
         hintTextRef.current,
         { y: 20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.3 },
         "-=0.2",
       );
+    }
 
     // Пауза перед показом кода (если есть)
     tl.to({}, { duration: 0.1 });
@@ -219,26 +249,42 @@ export default function GiftPage() {
         { y: 0, opacity: 1, scale: 1 },
         "-=0.2",
       );
+      
+      // Анимация секции с кнопкой решения шифра (если она есть)
+      if (cipherSectionRef.current) {
+        tl.fromTo(
+          cipherSectionRef.current,
+          { y: 30, opacity: 0, scale: 0.95 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.5 },
+          "+=0.3"
+        );
+      }
     }
 
     // Анимация разделителя (всегда показываем)
-    tl.fromTo(
-      dividerRef.current,
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.3 },
-      "-=0.2",
-    );
+    if (dividerRef.current) {
+      tl.fromTo(
+        dividerRef.current,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.3 },
+        "-=0.2",
+      );
+    }
 
     // Сразу отображаем остальные элементы без анимации
-    gsap.set(
-      [
-        contentRef.current,
-        memoryHeaderRef.current,
-        memoryPhotoRef.current,
-        buttonRef.current,
-      ],
-      { opacity: 1, y: 0 },
-    );
+    const remainingElements = [
+      contentRef.current,
+      memoryHeaderRef.current,
+      memoryPhotoRef.current,
+      buttonRef.current,
+    ].filter(Boolean); // Фильтруем только существующие элементы
+    
+    if (remainingElements.length > 0) {
+      gsap.set(
+        remainingElements,
+        { opacity: 1, y: 0 },
+      );
+    }
 
     return () => {
       // Очищаем анимации при размонтировании
@@ -307,6 +353,9 @@ export default function GiftPage() {
 
   // Получаем memoryPhoto из giftData, может быть undefined
   const memoryPhoto = giftData.memoryPhoto;
+  
+  // Проверяем доступность подарка
+  const isAvailable = isGiftAvailable(gift.openDate);
 
   return (
     <div className="relative bg-bg-white-0">
@@ -315,8 +364,25 @@ export default function GiftPage() {
         <DiceTransition onComplete={handleDiceTransitionComplete} />
       )}
 
+      {/* Заглушка для недоступного подарка */}
+      {!isAvailable && (
+        <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-bg-strong-950 text-adaptive dark-container">
+          <NoiseBackground opacity={30} />
+          
+          <div className="z-20 px-4 py-16 flex flex-col items-center justify-center text-center">
+            <h1 className="font-founders text-title-h3 md:text-title-h2 uppercase mb-4 text-adaptive">
+              Shhh..
+            </h1>
+
+              <p className="font-styrene text-paragraph-md font-bold uppercase mb-8 text-adaptive">
+                I open at midnight sharp
+              </p>
+          </div>
+        </main>
+      )}
+
       {/* Основной контент подарка */}
-      {showContent && (
+      {isAvailable && showContent && (
         <main
           ref={pageRef}
           className="relative min-h-screen bg-bg-white-0 opacity-0"
@@ -376,13 +442,19 @@ export default function GiftPage() {
               
               {/* Проверяем, является ли текущий подарок целевым (target day) */}
               {(() => {
-                // Преобразуем дату подарка в формат YYYY-MM-DD
-                const giftDateStr = new Date(gift.openDate).toISOString().split('T')[0];
-                // Показываем кнопку только если дата подарка совпадает с целевой датой
-                return giftDateStr === COUNTDOWN_CONFIG.TARGET_DATE;
+                // Преобразуем дату подарка в формат YYYY-MM-DD, игнорируя время
+                const giftDate = new Date(gift.openDate);
+                const targetDate = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
+                
+                // Сравниваем только год, месяц и день
+                return (
+                  giftDate.getFullYear() === targetDate.getFullYear() &&
+                  giftDate.getMonth() === targetDate.getMonth() &&
+                  giftDate.getDate() === targetDate.getDate()
+                );
               })() && (
-                <div className="mt-6 flex flex-col items-center gap-3">
-                  <p className="font-styrene text-paragraph-sm font-bold uppercase md:text-paragraph-md">
+                <div ref={cipherSectionRef} className="mt-6 flex flex-col items-center gap-3">
+                  <p className="font-styrene text-paragraph-sm font-bold uppercase md:text-paragraph-md md:font-bold">
                     Solve the main cipher
                   </p>
                   <Button.Root asChild>
@@ -411,13 +483,19 @@ export default function GiftPage() {
               
               {/* Проверяем, является ли текущий подарок целевым (target day) */}
               {(() => {
-                // Преобразуем дату подарка в формат YYYY-MM-DD
-                const giftDateStr = new Date(gift.openDate).toISOString().split('T')[0];
-                // Показываем кнопку только если дата подарка совпадает с целевой датой
-                return giftDateStr === COUNTDOWN_CONFIG.TARGET_DATE;
+                // Преобразуем дату подарка в формат YYYY-MM-DD, игнорируя время
+                const giftDate = new Date(gift.openDate);
+                const targetDate = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
+                
+                // Сравниваем только год, месяц и день
+                return (
+                  giftDate.getFullYear() === targetDate.getFullYear() &&
+                  giftDate.getMonth() === targetDate.getMonth() &&
+                  giftDate.getDate() === targetDate.getDate()
+                );
               })() && (
-                <div className="mt-6 flex flex-col items-center gap-3">
-                  <p className="font-styrene text-paragraph-sm font-bold uppercase md:text-paragraph-md">
+                <div ref={cipherSectionRef} className="mt-6 flex flex-col items-center gap-3">
+                  <p className="font-styrene text-paragraph-sm font-bold uppercase md:text-paragraph-md md:font-bold">
                     Solve the main cipher
                   </p>
                   <Button.Root asChild>

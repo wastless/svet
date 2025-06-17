@@ -121,7 +121,11 @@ function RoadmapItemComponent({
   
   // Мемоизируем состояние открытия подарка, чтобы избежать лишних перерисовок
   const isOpen = useMemo(() => {
-    return isGiftOpen(openDate, giftsDate);
+    if (!giftsDate || !openDate) return false;
+    
+    // Используем полное сравнение дат с учетом времени, а не только дату
+    const dateObj = new Date(openDate);
+    return giftsDate >= dateObj;
   }, [openDate, giftsDate]);
   
   // Обработчик клика на открытый подарок

@@ -30,7 +30,7 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
     author: gift?.author || "",
     nickname: gift?.nickname || "",
     number: gift?.number || 0,
-    openDate: gift?.openDate ? new Date(gift.openDate).toISOString().slice(0, 16) : "",
+    openDate: gift?.openDate ? formatDateForDateTimeLocal(new Date(gift.openDate)) : "",
     englishDescription: gift?.englishDescription || "",
     hintText: gift?.hintText || "look for a gift with this sticker",
     codeText: gift?.codeText || "This is the part of your cipher. Collect them all to reveal the last secret",
@@ -64,13 +64,27 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
     }
   }, [giftContent]);
 
+  // Функция для преобразования даты в формат для поля datetime-local с учетом локального часового пояса
+  function formatDateForDateTimeLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Используем время, которое выбрал пользователь
+      const openDate = new Date(basicData.openDate);
+      
       // Подготавливаем данные для сохранения
       const giftData = {
         ...basicData,
-        openDate: new Date(basicData.openDate).toISOString(),
+        openDate: openDate.toISOString(),
         number: Number(basicData.number),
         content: localGiftContent,
         hintImageUrl: giftPhotos.hintImageUrl,

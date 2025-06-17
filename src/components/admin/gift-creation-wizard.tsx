@@ -182,7 +182,10 @@ export function GiftCreationWizard({
       // Убедимся, что дата правильно преобразована
       let openDateIso;
       try {
-        openDateIso = new Date(basicData.openDate).toISOString();
+        // Используем точное время, которое выбрал пользователь
+        const openDate = new Date(basicData.openDate);
+        // Convert to ISO string
+        openDateIso = openDate.toISOString();
       } catch (e) {
         console.error("Ошибка преобразования даты:", e);
         setError("Некорректный формат даты открытия");
@@ -282,9 +285,12 @@ export function GiftCreationWizard({
     setIsSaving(true);
     try {
       // Подготавливаем полные данные для обновления
+      // Используем точное время, которое выбрал пользователь
+      const openDate = new Date(basicData.openDate);
+      
       const updateData = {
         ...basicData,
-        openDate: new Date(basicData.openDate).toISOString(),
+        openDate: openDate.toISOString(),
         number: Number(basicData.number),
         hintImageUrl: photos.hintImageUrl,
         hintText: photos.hintText,

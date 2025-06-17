@@ -34,14 +34,8 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
   const memoizedCurrentDate = useMemo(() => {
     if (!giftsDate) return null;
     
-    // Создаем новую дату только с годом, месяцем и днем (без времени)
-    const dateWithoutTime = new Date(
-      giftsDate.getFullYear(),
-      giftsDate.getMonth(),
-      giftsDate.getDate()
-    );
-    
-    return dateWithoutTime;
+    // Сохраняем полную дату с временем
+    return giftsDate;
   }, [giftsDate]);
   
   // Мемоизируем сортированные подарки, чтобы они не пересоздавались при каждом рендере
@@ -56,6 +50,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     // Находим последний открытый подарок (с самой поздней датой, но которая <= текущей даты)
     const lastOpenedGift = [...sortedGifts].reverse().find(gift => {
       const openDate = new Date(gift.openDate);
+      // Используем полное сравнение дат с учетом времени
       return memoizedCurrentDate ? openDate <= memoizedCurrentDate : openDate <= new Date();
     });
 
@@ -72,6 +67,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
   const nextGiftToOpen = useMemo(() => {
     return sortedGifts.find(gift => {
       const openDate = new Date(gift.openDate);
+      // Используем полное сравнение дат с учетом времени
       return memoizedCurrentDate ? openDate > memoizedCurrentDate : openDate > new Date();
     }) || sortedGifts[0]; // Если все подарки уже открыты, показываем первый
   }, [sortedGifts, memoizedCurrentDate]);
@@ -89,15 +85,52 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
   
   // Мемоизируем подарок, ближайший к дате дня рождения
   const targetDateGift = useMemo(() => {
-    return sortedGifts.reduce<Gift | null>((closest, gift) => {
+    // Получаем целевую дату (день рождения)
+    const targetDateObj = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
+    
+    // Создаем дату без времени для сравнения
+    const targetDateWithoutTime = new Date(
+      targetDateObj.getFullYear(),
+      targetDateObj.getMonth(),
+      targetDateObj.getDate()
+    );
+    
+    // Сначала ищем точное совпадение по дате (без учета времени)
+    const exactMatch = sortedGifts.find(gift => {
       const giftDate = new Date(gift.openDate);
-      const targetDate = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
+      return (
+        giftDate.getFullYear() === targetDateWithoutTime.getFullYear() &&
+        giftDate.getMonth() === targetDateWithoutTime.getMonth() &&
+        giftDate.getDate() === targetDateWithoutTime.getDate()
+      );
+    });
+    
+    // Если нашли точное совпадение, возвращаем его
+    if (exactMatch) return exactMatch;
+    
+    // Иначе ищем ближайший подарок по дате
+    return sortedGifts.reduce<Gift | null>((closest, gift) => {
+      // Создаем дату подарка без времени
+      const giftDate = new Date(gift.openDate);
+      const giftDateWithoutTime = new Date(
+        giftDate.getFullYear(),
+        giftDate.getMonth(),
+        giftDate.getDate()
+      );
       
-      // Если closest еще не установлен или текущий подарок ближе к целевой дате
+      // Если closest еще не установлен, возвращаем текущий подарок
       if (!closest) return gift;
       
-      const currentDiff = Math.abs(giftDate.getTime() - targetDate.getTime());
-      const closestDiff = Math.abs(new Date(closest.openDate).getTime() - targetDate.getTime());
+      // Вычисляем разницу в миллисекундах между датами (без времени)
+      const closestDate = new Date(closest.openDate);
+      const closestDateWithoutTime = new Date(
+        closestDate.getFullYear(),
+        closestDate.getMonth(),
+        closestDate.getDate()
+      );
+      
+      const currentDiff = Math.abs(giftDateWithoutTime.getTime() - targetDateWithoutTime.getTime());
+      const closestDiff = Math.abs(closestDateWithoutTime.getTime() - targetDateWithoutTime.getTime());
       
       return currentDiff < closestDiff ? gift : closest;
     }, null);

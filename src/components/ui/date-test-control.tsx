@@ -8,15 +8,17 @@ export function DateTestControl() {
   const { currentDate, setCurrentDate, isTestMode, setIsTestMode } = useDate();
   const [dateInput, setDateInput] = useState('');
 
-  // Format date to YYYY-MM-DD for input value
+  // Format date to YYYY-MM-DDThh:mm for input value
   const formatDateForInput = (date: Date | null): string => {
     if (!date) return '';
     
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
     
-    return `${year}-${month}-${day}`;
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   // Handle date input change
@@ -67,10 +69,10 @@ export function DateTestControl() {
         
         <div className="flex flex-col gap-2">
           <span className="font-styrene text-paragraph-sm">
-            Current: {currentDate?.toLocaleDateString()}
+            Current: {currentDate?.toLocaleString()}
           </span>
           <input
-            type="date"
+            type="datetime-local"
             value={dateInput}
             onChange={handleDateChange}
             className="border p-2 rounded text-sm dark:bg-bg-strong-800 dark:border-bg-strong-700"

@@ -41,14 +41,37 @@ export function GiftBasicInfo({ data, onChange, giftId }: GiftBasicInfoProps) {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (field: keyof GiftBasicInfoData, value: any) => {
-    const newData = { ...localData, [field]: value };
+    let finalValue = value;
     
     // Особая обработка для даты открытия
     if (field === "openDate" && value) {
       try {
-        // Проверяем, что дата валидна
+        // Получаем новую дату из значения
         const date = new Date(value);
-        if (isNaN(date.getTime())) {
+        
+        if (!isNaN(date.getTime())) {
+          // Проверяем, было ли поле пустым до этого или была ли изменена сама дата (день/месяц/год)
+          const prevDate = localData.openDate ? new Date(localData.openDate) : null;
+          
+          // Если поле было пустым ИЛИ изменилась дата (день/месяц/год), то устанавливаем время 00:00
+          // В других случаях (когда пользователь изменяет только время), оставляем как есть
+          if (!localData.openDate || 
+             (prevDate && 
+               (prevDate.getDate() !== date.getDate() || 
+                prevDate.getMonth() !== date.getMonth() || 
+                prevDate.getFullYear() !== date.getFullYear()))) {
+            
+            // Только в случае первичного выбора даты устанавливаем время 00:00
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            finalValue = `${year}-${month}-${day}T00:00`;
+            console.log("Дата изменилась, устанавливаем время 00:00:", finalValue);
+          } else {
+            // Если пользователь изменяет только время, оставляем как есть
+            console.log("Пользователь изменяет время:", value);
+          }
+        } else {
           console.warn("Указана некорректная дата:", value);
         }
       } catch (e) {
@@ -56,6 +79,7 @@ export function GiftBasicInfo({ data, onChange, giftId }: GiftBasicInfoProps) {
       }
     }
 
+    const newData = { ...localData, [field]: finalValue };
     setLocalData(newData);
     onChange(newData);
   };

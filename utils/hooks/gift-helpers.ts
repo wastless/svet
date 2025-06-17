@@ -7,20 +7,9 @@
 export function isGiftOpen(openDate: Date, currentDate?: Date | null): boolean {
   if (!currentDate) return false; // Если дата не инициализирована, считаем подарок закрытым
   
-  // Сравниваем только даты без времени
-  const openDateOnly = new Date(
-    new Date(openDate).getFullYear(),
-    new Date(openDate).getMonth(),
-    new Date(openDate).getDate()
-  );
-  
-  const nowDateOnly = new Date(
-    currentDate.getFullYear(),
-    currentDate.getMonth(),
-    currentDate.getDate()
-  );
-  
-  return openDateOnly <= nowDateOnly;
+  // Сравниваем полные даты с учетом времени
+  const dateObj = new Date(openDate);
+  return currentDate >= dateObj;
 }
 
 /**

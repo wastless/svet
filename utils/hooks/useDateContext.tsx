@@ -57,6 +57,7 @@ export function DateProvider({ children }: { children: ReactNode }) {
   // Синхронизация giftsDate с currentDate в тестовом режиме
   useEffect(() => {
     if (isTestMode && currentDate) {
+      // В тестовом режиме полностью синхронизируем даты с временем
       setGiftsDate(currentDate);
     }
   }, [isTestMode, currentDate]);
