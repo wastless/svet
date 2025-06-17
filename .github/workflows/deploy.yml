@@ -88,9 +88,9 @@ jobs:
             # Проверяем наличие SSL-сертификатов или копируем из текущего размещения
             if [ ! -f "nginx/ssl/certificate.crt" ] || [ ! -f "nginx/ssl/certificate.key" ]; then
               # Попытка скопировать существующие сертификаты, если они есть
-              if [ -f "/etc/ssl/certs/${{ secrets.DOMAIN_NAME }}.crt" ]; then
-                cp /etc/ssl/certs/${{ secrets.DOMAIN_NAME }}.crt nginx/ssl/certificate.crt
-                cp /etc/ssl/private/${{ secrets.DOMAIN_NAME }}.key nginx/ssl/certificate.key
+              if [ -f "/etc/ssl/certs/certificate.crt" ]; then
+                cp /etc/ssl/certs/certificate.crt nginx/ssl/certificate.crt
+                cp /etc/ssl/private/certificate.key nginx/ssl/certificate.key
               fi
             fi
             
