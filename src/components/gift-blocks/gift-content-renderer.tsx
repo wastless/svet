@@ -11,6 +11,8 @@ import { VideoBlock } from "./video-block";
 import { AudioMessageBlock } from "./audio-message-block";
 import { MusicBlock } from "./music-block";
 import { GalleryBlock } from "./gallery-block";
+import { DividerBlock } from "./divider-block";
+import { InfoGraphicBlock } from "./infographic-block";
 
 interface GiftContentRendererProps {
   content: GiftContent;
@@ -102,6 +104,22 @@ export function GiftContentRenderer({
             className={blockClassName}
           />
         );
+      case "divider":
+        return (
+          <DividerBlock 
+            key={blockKey}
+            block={block}
+            className={blockClassName}
+          />
+        );
+      case "infographic":
+        return (
+          <InfoGraphicBlock 
+            key={blockKey}
+            block={block}
+            className={blockClassName}
+          />
+        );
       default:
         return null;
     }
@@ -114,7 +132,7 @@ export function GiftContentRenderer({
   const baseText = content.metadata?.description || "С днем рождения!";
 
   return (
-    <div className={`space-y-20 ${className}`}>
+    <div className={`space-y-16 ${className}`}>
       {/* Базовый блок поздравления (если указано имя отправителя) */}
       {senderName && (
         <BaseBlock

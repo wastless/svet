@@ -35,7 +35,9 @@ export interface Gift {
 export interface TextBlock {
   type: "text";
   content: string;
+  heading?: string; // заголовок текстового блока
   style?: "title" | "subtitle" | "normal";
+  alignment?: "left" | "center" | "right"; // выравнивание текста
 }
 
 // Цитата
@@ -43,6 +45,22 @@ export interface QuoteBlock {
   type: "quote";
   content: string;
   style?: "small" | "big";
+}
+
+// Блок-разделитель
+export interface DividerBlock {
+  type: "divider";
+}
+
+// Блок инфографики (большие цифры с текстом)
+export interface InfoGraphicBlock {
+  type: "infographic";
+  items: Array<{
+    number: string; // большая цифра
+    text: string; // текст под цифрой
+  }>;
+  count: 1 | 2 | 3; // количество цифр (1, 2 или 3)
+  alignment?: "left" | "center" | "right"; // выравнивание блока
 }
 
 // Блок с фотографией и текстом
@@ -137,7 +155,7 @@ export interface MusicBlock {
 }
 
 // Объединенный тип блоков
-export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | AudioMessageBlock | MusicBlock | GalleryBlock;
+export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | AudioMessageBlock | MusicBlock | GalleryBlock | DividerBlock | InfoGraphicBlock;
 
 // Основная структура контента подарка
 export interface GiftContent {

@@ -75,29 +75,96 @@ export const processText = (text: string) => {
   // Разбиваем текст на строки
   const lines = text.split('\n');
   
-  // Проходим по каждой строке и определяем, является ли она элементом списка
-  return lines.map((line, index) => {
-    // Проверяем, начинается ли строка с маркера списка (- или *)
-    if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
-      // Удаляем маркер и начальные пробелы
-      const listItemContent = line.trim().substring(1).trim();
-      
-      // Возвращаем элемент списка
-      return (
-        <li key={index} className="ml-5 list-disc">
-          {listItemContent}
-        </li>
+  // Результат рендеринга
+  const result: React.ReactNode[] = [];
+  
+  // Временные массивы для хранения элементов списков
+  let bulletListItems: string[] = [];
+  let numberedListItems: string[] = [];
+  
+  // Функция для добавления маркированного списка в результат
+  const addBulletList = () => {
+    if (bulletListItems.length > 0) {
+      result.push(
+        <ul key={`ul-${result.length}`} className="list-disc ml-5 space-y-1">
+          {bulletListItems.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ul>
       );
+      bulletListItems = [];
     }
+  };
+  
+  // Функция для добавления нумерованного списка в результат
+  const addNumberedList = () => {
+    if (numberedListItems.length > 0) {
+      result.push(
+        <ol key={`ol-${result.length}`} className="list-decimal ml-5 space-y-1">
+          {numberedListItems.map((item, i) => (
+            <li key={i}>{item}</li>
+          ))}
+        </ol>
+      );
+      numberedListItems = [];
+    }
+  };
+  
+  // Проходим по каждой строке
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line) continue; // Skip undefined lines
     
-    // Если это обычная строка, возвращаем ее с переносом строки
-    return (
-      <React.Fragment key={index}>
-        {line}
-        {index < lines.length - 1 && <br />}
-      </React.Fragment>
-    );
-  });
+    const trimmedLine = line.trim();
+    
+    // Проверяем, является ли строка элементом маркированного списка
+    if (trimmedLine.startsWith('-') || trimmedLine.startsWith('*')) {
+      // Если у нас есть активный нумерованный список, добавляем его в результат
+      addNumberedList();
+      
+      // Удаляем маркер и начальные пробелы
+      const listItemContent = trimmedLine.substring(1).trim();
+      
+      // Добавляем элемент в маркированный список
+      bulletListItems.push(listItemContent);
+    }
+    // Проверяем, является ли строка элементом нумерованного списка
+    else if (/^\d+\.\s/.test(trimmedLine)) {
+      // Если у нас есть активный маркированный список, добавляем его в результат
+      addBulletList();
+      
+      // Удаляем номер и точку
+      const listItemContent = trimmedLine.replace(/^\d+\.\s/, '');
+      
+      // Добавляем элемент в нумерованный список
+      numberedListItems.push(listItemContent);
+    }
+    // Если это обычная строка
+    else {
+      // Если у нас есть активные списки, добавляем их в результат
+      addBulletList();
+      addNumberedList();
+      
+      // Добавляем обычную строку в результат
+      if (trimmedLine) {
+        result.push(
+          <React.Fragment key={`text-${result.length}`}>
+            {trimmedLine}
+            {i < lines.length - 1 && <br />}
+          </React.Fragment>
+        );
+      } else if (i < lines.length - 1) {
+        // Пустая строка - просто добавляем перенос
+        result.push(<br key={`br-${result.length}`} />);
+      }
+    }
+  }
+  
+  // Добавляем оставшиеся списки в результат
+  addBulletList();
+  addNumberedList();
+  
+  return result;
 };
 
 export function BaseBlock({
@@ -123,7 +190,7 @@ export function BaseBlock({
 
       {/* Основной текст поздравления */}
       <div className="text-paragraph-lg text-adaptive font-euclid md:text-paragraph-xl">
-        {text}
+        {processText(text)}
       </div>
     </div>
   );

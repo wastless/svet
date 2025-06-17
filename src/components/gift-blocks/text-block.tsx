@@ -21,18 +21,44 @@ export function TextBlock({ block, className = "" }: TextBlockProps) {
     }
   };
 
-  const getTextContent = () => {
-    if (block.style === "title" || block.style === "subtitle") {
-      return `(${block.content})`;
+  const getTextContent = (content: string, style?: string) => {
+    if (style === "title" || style === "subtitle") {
+      return `(${content})`;
     }
-    return block.content;
+    return content;
+  };
+  
+  const getAlignmentClass = (alignment?: string) => {
+    switch (alignment) {
+      case "center":
+        return "text-center";
+      case "right":
+        return "text-right";
+      case "left":
+      default:
+        return "text-left";
+    }
   };
 
   // Получаем текстовый контент
-  const textContent = getTextContent();
+  const textContent = getTextContent(block.content, block.style);
+  
+  // Получаем заголовок, если он есть
+  const hasHeading = block.heading !== undefined && block.heading.trim() !== '';
+  
+  // Получаем класс выравнивания
+  const alignmentClass = getAlignmentClass(block.alignment);
 
   return (
-    <div className={`text-adaptive ${className}`}>
+    <div className={`text-adaptive ${className} ${alignmentClass}`}>
+      {/* Отображаем заголовок, если он есть */}
+      {hasHeading && (
+        <div className="text-label-sm md:text-label-md font-nyghtserif mb-2 italic md:italic">
+          ({block.heading && processText(block.heading)})
+        </div>
+      )}
+      
+      {/* Отображаем основной текст */}
       <div className={getTextStyles(block.style)}>
         {processText(textContent)}
       </div>

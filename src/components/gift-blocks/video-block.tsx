@@ -36,7 +36,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
   };
 
   return (
-    <div className={`space-y-8 ${className}`}>
+    <div className={`space-y-6 ${className}`}>
       <div className="flex flex-col gap-1">
         {/* Заголовок */}
         {block.title && (

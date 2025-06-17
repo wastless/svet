@@ -92,6 +92,7 @@ export const texts = {
   ],
 
   // Label styles
+  "label-2xl": ["5rem", { lineHeight: "6rem", fontWeight: "400" }],
   "label-xl": ["3.5rem", { lineHeight: "4.5rem", fontWeight: "400" }],
   "label-lg": ["2.5rem", { lineHeight: "3.5rem", fontWeight: "400" }],
   "label-md": ["2rem", { lineHeight: "2.75rem", fontWeight: "400" }],

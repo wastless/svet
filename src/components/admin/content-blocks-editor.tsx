@@ -5,9 +5,9 @@ import type { GiftContent, GiftBlock } from "@/utils/types/gift";
 import { BlockEditor } from "./block-editor";
 import * as Label from "~/components/ui/label";
 import * as Textarea from "~/components/ui/textarea";
-import { RiText, RiImageLine, RiGalleryLine, RiMultiImageLine, RiCircleLine, RiVideoLine, RiMusic2Line, RiMicLine, RiQuillPenLine } from "@remixicon/react";
+import { RiText, RiImageLine, RiGalleryLine, RiMultiImageLine, RiCircleLine, RiVideoLine, RiMusic2Line, RiMicLine, RiQuillPenLine, RiSeparator, RiPieChart2Line } from "@remixicon/react";
 import { BlockIcon, EmptyBlocksIcon, RemoveBlockIcon } from "~/components/ui/icons";
-import { RiArrowDownSLine, RiArrowUpSLine } from "@remixicon/react";
+import { RiArrowDownSLine, RiArrowUpSLine, RiEyeOffLine, RiEyeLine } from "@remixicon/react";
 
 interface ContentBlocksEditorProps {
   content: GiftContent;
@@ -23,6 +23,7 @@ export function ContentBlocksEditor({
   const [localContent, setLocalContent] = useState(content);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [collapsedBlocks, setCollapsedBlocks] = useState<number[]>([]);
+  const [allCollapsed, setAllCollapsed] = useState(false);
 
   useEffect(() => {
     setLocalContent(content);
@@ -115,6 +116,17 @@ export function ContentBlocksEditor({
           trackName: "",
         };
         break;
+      case "divider":
+        newBlock = { type: "divider" };
+        break;
+      case "infographic":
+        newBlock = { 
+          type: "infographic", 
+          count: 1,
+          items: [{ number: "0", text: "Текст под цифрой" }],
+          alignment: "center"
+        };
+        break;
       default:
         return;
     }
@@ -185,6 +197,19 @@ export function ContentBlocksEditor({
     });
   };
 
+  const toggleCollapseAll = () => {
+    if (allCollapsed) {
+      // Expand all blocks
+      setCollapsedBlocks([]);
+      setAllCollapsed(false);
+    } else {
+      // Collapse all blocks
+      const allIndexes = localContent.blocks.map((_, index) => index);
+      setCollapsedBlocks(allIndexes);
+      setAllCollapsed(true);
+    }
+  };
+
   const blockTypes = [
     {
       type: "text",
@@ -226,6 +251,16 @@ export function ContentBlocksEditor({
       type: "music",
       name: "Музыка",
       icon: <RiMusic2Line />,
+    },
+    {
+      type: "divider",
+      name: "Разделитель",
+      icon: <RiSeparator />,
+    },
+    {
+      type: "infographic",
+      name: "Инфографика",
+      icon: <RiPieChart2Line />,
     },
   ] as const;
 
@@ -272,6 +307,25 @@ export function ContentBlocksEditor({
           <Label.Root htmlFor="description">
             Блоки контента ({localContent.blocks.length})
           </Label.Root>
+          {localContent.blocks.length > 0 && (
+            <button
+              onClick={toggleCollapseAll}
+              className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-1 text-sm text-neutral-600 hover:bg-gray-50 transition-colors"
+              title={allCollapsed ? "Показать все блоки" : "Скрыть все блоки"}
+            >
+              {allCollapsed ? (
+                <>
+                  <RiEyeLine className="text-neutral-500" />
+                  <span>Показать все</span>
+                </>
+              ) : (
+                <>
+                  <RiEyeOffLine className="text-neutral-500" />
+                  <span>Скрыть все</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {localContent.blocks.length === 0 ? (

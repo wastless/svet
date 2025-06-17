@@ -7,6 +7,7 @@ import { GiftCreationWizard } from "~/components/admin/gift-creation-wizard";
 import type { Gift } from "@/utils/types/gift";
 import { useGifts, useDeleteGift, useCreateGift, useUpdateGift } from "@/utils/hooks/useGiftQueries";
 import { FullScreenLoader } from "~/components/ui/spinner";
+import * as Button from "~/components/ui/button";
 
 export default function AdminPage() {
   const [selectedGift, setSelectedGift] = useState<Gift | null>(null);
@@ -104,6 +105,26 @@ export default function AdminPage() {
     setIsCreating(false);
   };
 
+  // Функция для очистки неиспользуемых файлов
+  async function cleanupUnusedFiles() {
+    try {
+      const response = await fetch('/api/upload/cleanup', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        alert(`Очистка завершена!\n\nВсего файлов: ${result.totalFiles}\nНеиспользуемых файлов: ${result.unusedFiles}\nУдалено файлов: ${result.deletedFiles}`);
+      } else {
+        const error = await response.json();
+        alert(`Ошибка очистки: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Ошибка при очистке файлов:', error);
+      alert('Произошла ошибка при очистке файлов. Проверьте консоль для деталей.');
+    }
+  }
+
   // Показываем лоадер, пока загружаются данные
   if (isLoading) {
     return <FullScreenLoader />;
@@ -117,6 +138,16 @@ export default function AdminPage() {
           <h4 className="text-center font-founders text-title-h4 text-text-strong-950">
             ADMIN <br /> PANEL
           </h4>
+        </div>
+
+        <div className="mb-6 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Управление подарками</h1>
+          <div className="flex gap-4">
+            <Button.Root onClick={cleanupUnusedFiles}>
+              Очистить неиспользуемые медиа
+            </Button.Root>
+            {/* Другие кнопки */}
+          </div>
         </div>
 
         {isCreating ? (

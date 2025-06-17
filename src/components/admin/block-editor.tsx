@@ -67,44 +67,88 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
     }
   };
 
-  const renderTextEditor = () => (
-    <div className="space-y-4">
-      <div>
-        <Label.Root className="mb-2 block text-paragraph-sm">
-          Текст <Label.Asterisk />
-        </Label.Root>
-        <Textarea.Root
-          value={(localBlock as any).content || ""}
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-            handleChange({ content: e.target.value })
-          }
-          placeholder="Введите текст..."
-        />
+  const renderTextEditor = () => {
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label.Root className="mb-2 block text-paragraph-sm">
+            Заголовок
+          </Label.Root>
+          <Input.Root>
+            <Input.Wrapper>
+              <Input.Input
+                type="text"
+                value={(localBlock as any).heading || ""}
+                onChange={(e) => handleChange({ heading: e.target.value })}
+                placeholder="Заголовок блока (опционально)"
+              />
+            </Input.Wrapper>
+          </Input.Root>
+        </div>
+        
+        <div>
+          <Label.Root className="mb-2 block text-paragraph-sm">
+            Текст <Label.Asterisk />
+          </Label.Root>
+          <Textarea.Root
+            value={(localBlock as any).content || ""}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+              handleChange({ content: e.target.value })
+            }
+            placeholder="Введите текст..."
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2">
+          <div>
+            <Label.Root className="mb-2 block text-paragraph-sm">Стиль</Label.Root>
+            <Select.Root
+              value={(localBlock as any).style || "normal"}
+              onValueChange={(value) => handleChange({ style: value as any })}
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="Выберите стиль" />
+              </Select.Trigger>
+              <Select.Content>
+                {[
+                  { label: "Обычный текст", value: "normal" },
+                  { label: "Заголовок", value: "title" },
+                  { label: "Подзаголовок", value: "subtitle" },
+                ].map(({ label, value }) => (
+                  <Select.Item key={value} value={value}>
+                    {label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </div>
+          
+          <div>
+            <Label.Root className="mb-2 block text-paragraph-sm">Выравнивание</Label.Root>
+            <Select.Root
+              value={(localBlock as any).alignment || "left"}
+              onValueChange={(value) => handleChange({ alignment: value as any })}
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="Выберите выравнивание" />
+              </Select.Trigger>
+              <Select.Content>
+                {[
+                  { label: "По левому краю", value: "left" },
+                  { label: "По центру", value: "center" },
+                  { label: "По правому краю", value: "right" },
+                ].map(({ label, value }) => (
+                  <Select.Item key={value} value={value}>
+                    {label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </div>
+        </div>
       </div>
-      <div>
-        <Label.Root className="mb-2 block text-paragraph-sm">Стиль</Label.Root>
-        <Select.Root
-          value={(localBlock as any).style || "normal"}
-          onValueChange={(value) => handleChange({ style: value as any })}
-        >
-          <Select.Trigger>
-            <Select.Value placeholder="Выберите стиль" />
-          </Select.Trigger>
-          <Select.Content>
-            {[
-              { label: "Обычный текст", value: "normal" },
-              { label: "Заголовок", value: "title" },
-              { label: "Подзаголовок", value: "subtitle" },
-            ].map(({ label, value }) => (
-              <Select.Item key={value} value={value}>
-                {label}
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select.Root>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderQuoteEditor = () => (
     <div className="space-y-4">
@@ -1620,6 +1664,141 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
     );
   };
 
+  const renderDividerEditor = () => (
+    <div className="space-y-4 flex flex-col items-center">
+            <span className="font-nyghtserif text-adaptive sm:text-label-lg md:text-label-xl">
+              ***
+            </span>
+    </div>
+  );
+
+  const renderInfoGraphicEditor = () => {
+    // Обеспечиваем, что у нас есть правильное количество элементов в массиве
+    const ensureItemsCount = (count: number) => {
+      const currentItems = [...((localBlock as any).items || [])];
+      
+      // Если элементов меньше, чем нужно, добавляем новые
+      while (currentItems.length < count) {
+        currentItems.push({ number: "0", text: "Текст под цифрой" });
+      }
+      
+      // Если элементов больше, чем нужно, удаляем лишние
+      if (currentItems.length > count) {
+        currentItems.splice(count);
+      }
+      
+      return currentItems;
+    };
+    
+    // Обработчик изменения количества цифр
+    const handleCountChange = (count: number) => {
+      const items = ensureItemsCount(count);
+      handleChange({ count, items });
+    };
+    
+    // Обработчик изменения элемента
+    const handleItemChange = (index: number, field: string, value: string) => {
+      const items = [...((localBlock as any).items || [])];
+      if (items[index]) {
+        items[index] = { ...items[index], [field]: value };
+        handleChange({ items });
+      }
+    };
+    
+    return (
+      <div className="space-y-6">
+        <div>
+          <Label.Root className="mb-2 block text-paragraph-sm">
+            Количество цифр
+          </Label.Root>
+          <Select.Root
+            value={String((localBlock as any).count || 1)}
+            onValueChange={(value) => handleCountChange(Number(value) as 1 | 2 | 3)}
+          >
+            <Select.Trigger>
+              <Select.Value placeholder="Выберите количество цифр" />
+            </Select.Trigger>
+            <Select.Content>
+              {[
+                { label: "1 цифра", value: "1" },
+                { label: "2 цифры", value: "2" },
+                { label: "3 цифры", value: "3" },
+              ].map(({ label, value }) => (
+                <Select.Item key={value} value={value}>
+                  {label}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </div>
+        
+        <div>
+          <Label.Root className="mb-2 block text-paragraph-sm">Выравнивание</Label.Root>
+          <Select.Root
+            value={(localBlock as any).alignment || "center"}
+            onValueChange={(value) => handleChange({ alignment: value as any })}
+          >
+            <Select.Trigger>
+              <Select.Value placeholder="Выберите выравнивание" />
+            </Select.Trigger>
+            <Select.Content>
+              {[
+                { label: "По левому краю", value: "left" },
+                { label: "По центру", value: "center" },
+                { label: "По правому краю", value: "right" },
+              ].map(({ label, value }) => (
+                <Select.Item key={value} value={value}>
+                  {label}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </div>
+        
+        {/* Редактирование каждого элемента */}
+        {((localBlock as any).items || []).map((item: any, index: number) => (
+          <div key={index} className="space-y-4 border p-4 rounded-md">
+            <Label.Root className="block text-paragraph-md font-styrene">
+              Элемент {index + 1}
+            </Label.Root>
+            
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Цифра
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={item.number || ""}
+                    onChange={(e) => handleItemChange(index, "number", e.target.value)}
+                    placeholder="Цифра или число"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+            
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Текст под цифрой
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={item.text || ""}
+                    onChange={(e) => handleItemChange(index, "text", e.target.value)}
+                    placeholder="Текст под цифрой"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // Упрощенный рендер для других типов блоков
   const renderGenericEditor = () => (
     <div className="space-y-4">
@@ -1690,6 +1869,10 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
       return renderVideoEditor();
     case "audio-message":
       return renderAudioMessageEditor();
+    case "divider":
+      return renderDividerEditor();
+    case "infographic":
+      return renderInfoGraphicEditor();
     default:
       return renderGenericEditor();
   }
