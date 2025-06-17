@@ -341,10 +341,18 @@ export function invalidateSessionCache() {
     console.error('Error removing session from localStorage:', e);
   }
   
-  // Удаляем все cookie связанные с авторизацией
+  // Удаляем все cookie связанные с авторизацией для обновления сессии
   if (typeof document !== 'undefined') {
+    // Стандартный токен для режима разработки
     document.cookie = 'next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = '__Host-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
+    
+    // Безопасный токен для продакшн
     document.cookie = '__Secure-next-auth.session-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
+    
+    // Вспомогательные куки NextAuth
+    document.cookie = '__Secure-next-auth.callback-url=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
+    document.cookie = '__Host-next-auth.csrf-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; secure;';
   }
 }
 
