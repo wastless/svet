@@ -75,7 +75,7 @@ jobs:
 
       - name: Deploy on VPS
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << EOF
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} << 'EOF'
             rm -rf ~/deploy-package
             mkdir -p ~/deploy-package
             tar -xzvf ~/deploy-package.tar.gz -C ~/
@@ -97,4 +97,4 @@ jobs:
             
             # Запуск деплоя
             ./deploy.sh ${{ secrets.DOMAIN_NAME }}
-EOF
+          EOF
