@@ -4,6 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { VideoBlock as VideoBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import { Spinner } from "~/components/ui/spinner";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -67,7 +68,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         <div className={getVideoClasses(block.size) + " relative"}>
           {!isReady && (
             <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-gray-200">
-              <div className="border-blue-500 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+              <Spinner />
             </div>
           )}
 
