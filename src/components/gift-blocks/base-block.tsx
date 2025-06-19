@@ -88,7 +88,7 @@ export const processText = (text: string) => {
       result.push(
         <ul key={`ul-${result.length}`} className="list-disc ml-5 space-y-1">
           {bulletListItems.map((item, i) => (
-            <li key={i}>{item}</li>
+            <li key={i}>{formatText(item)}</li>
           ))}
         </ul>
       );
@@ -102,12 +102,123 @@ export const processText = (text: string) => {
       result.push(
         <ol key={`ol-${result.length}`} className="list-decimal ml-5 space-y-1">
           {numberedListItems.map((item, i) => (
-            <li key={i}>{item}</li>
+            <li key={i}>{formatText(item)}</li>
           ))}
         </ol>
       );
       numberedListItems = [];
     }
+  };
+
+  // Функция для форматирования текста (жирный, курсив, зачеркнутый, подчеркнутый)
+  const formatText = (text: string): React.ReactNode[] => {
+    if (!text) return [];
+
+    const segments: React.ReactNode[] = [];
+    let currentText = '';
+    let i = 0;
+
+    // Функция для добавления накопленного текста в сегменты
+    const addCurrentText = () => {
+      if (currentText) {
+        segments.push(currentText);
+        currentText = '';
+      }
+    };
+
+    while (i < text.length) {
+      // Жирный текст **bold**
+      if (text.substring(i, i + 2) === '**' && i + 2 < text.length) {
+        addCurrentText();
+        i += 2; // Пропускаем открывающие **
+        
+        const startPos = i;
+        while (i < text.length && text.substring(i, i + 2) !== '**') {
+          i++;
+        }
+        
+        if (i < text.length) {
+          const boldText = text.substring(startPos, i);
+          segments.push(<strong key={segments.length}>{formatText(boldText)}</strong>);
+          i += 2; // Пропускаем закрывающие **
+        } else {
+          // Если не найдено закрывающих **, откатываемся
+          currentText += '**';
+          i = startPos;
+        }
+      }
+      // Курсив *italic* (не внутри слова)
+      else if (text.charAt(i) === '*' && 
+               (i === 0 || /\s/.test(text.charAt(i - 1))) && 
+               i + 1 < text.length &&
+               text.charAt(i + 1) !== '*') {
+        addCurrentText();
+        i++; // Пропускаем открывающую *
+        
+        const startPos = i;
+        while (i < text.length && text.charAt(i) !== '*') {
+          i++;
+        }
+        
+        if (i < text.length) {
+          const italicText = text.substring(startPos, i);
+          segments.push(<em key={segments.length}>{formatText(italicText)}</em>);
+          i++; // Пропускаем закрывающую *
+        } else {
+          // Если не найдено закрывающей *, откатываемся
+          currentText += '*';
+          i = startPos;
+        }
+      }
+      // Зачеркнутый текст ~~strikethrough~~
+      else if (text.substring(i, i + 2) === '~~' && i + 2 < text.length) {
+        addCurrentText();
+        i += 2; // Пропускаем открывающие ~~
+        
+        const startPos = i;
+        while (i < text.length && text.substring(i, i + 2) !== '~~') {
+          i++;
+        }
+        
+        if (i < text.length) {
+          const strikeText = text.substring(startPos, i);
+          segments.push(<span key={segments.length} className="line-through">{formatText(strikeText)}</span>);
+          i += 2; // Пропускаем закрывающие ~~
+        } else {
+          // Если не найдено закрывающих ~~, откатываемся
+          currentText += '~~';
+          i = startPos;
+        }
+      }
+      // Подчеркнутый текст __underline__
+      else if (text.substring(i, i + 2) === '__' && i + 2 < text.length) {
+        addCurrentText();
+        i += 2; // Пропускаем открывающие __
+        
+        const startPos = i;
+        while (i < text.length && text.substring(i, i + 2) !== '__') {
+          i++;
+        }
+        
+        if (i < text.length) {
+          const underlineText = text.substring(startPos, i);
+          segments.push(<span key={segments.length} className="underline">{formatText(underlineText)}</span>);
+          i += 2; // Пропускаем закрывающие __
+        } else {
+          // Если не найдено закрывающих __, откатываемся
+          currentText += '__';
+          i = startPos;
+        }
+      }
+      // Обычный текст
+      else {
+        currentText += text.charAt(i);
+        i++;
+      }
+    }
+    
+    addCurrentText();
+    return segments;
   };
   
   // Проходим по каждой строке
@@ -145,11 +256,11 @@ export const processText = (text: string) => {
       addBulletList();
       addNumberedList();
       
-      // Добавляем обычную строку в результат
+      // Добавляем обычную строку в результат с форматированием
       if (trimmedLine) {
         result.push(
           <React.Fragment key={`text-${result.length}`}>
-            {trimmedLine}
+            {formatText(trimmedLine)}
             {i < lines.length - 1 && <br />}
           </React.Fragment>
         );

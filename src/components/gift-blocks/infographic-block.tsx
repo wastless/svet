@@ -1,6 +1,7 @@
 "use client";
 
 import type { InfoGraphicBlock as InfoGraphicBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 interface InfoGraphicBlockProps {
   block: InfoGraphicBlockType;
@@ -48,7 +49,7 @@ export function InfoGraphicBlock({ block, className = "" }: InfoGraphicBlockProp
               {item.number}
             </div>
             <div className="md:text-paragraph-xl text-paragraph-lg font-euclid text-white">
-              {item.text}
+              {processText(item.text)}
             </div>
           </div>
         ))}

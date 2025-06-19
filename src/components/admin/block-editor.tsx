@@ -97,6 +97,13 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             }
             placeholder="Введите текст..."
           />
+          <div className="text-sm text-gray-500 mt-1">
+            Доступно форматирование текста: 
+            <span className="font-bold px-1">**жирный**</span>,
+            <span className="italic px-1">*курсив*</span>,
+            <span className="underline px-1">__подчеркнутый__</span>,
+            <span className="line-through px-1">~~зачеркнутый~~</span>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 gap-4 pt-2 sm:grid-cols-2">
@@ -163,6 +170,13 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
           }
           placeholder="Введите цитату..."
         />
+        <div className="text-sm text-gray-500 mt-1">
+          Доступно форматирование текста: 
+          <span className="font-bold px-1">**жирный**</span>,
+          <span className="italic px-1">*курсив*</span>,
+          <span className="underline px-1">__подчеркнутый__</span>,
+          <span className="line-through px-1">~~зачеркнутый~~</span>
+        </div>
       </div>
       <div>
         <Label.Root className="mb-2 block text-paragraph-sm">
@@ -1706,7 +1720,7 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
     };
     
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div>
           <Label.Root className="mb-2 block text-paragraph-sm">
             Количество цифр
@@ -1716,7 +1730,7 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             onValueChange={(value) => handleCountChange(Number(value) as 1 | 2 | 3)}
           >
             <Select.Trigger>
-              <Select.Value placeholder="Выберите количество цифр" />
+              <Select.Value placeholder="Выберите количество" />
             </Select.Trigger>
             <Select.Content>
               {[
@@ -1731,9 +1745,11 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             </Select.Content>
           </Select.Root>
         </div>
-        
+
         <div>
-          <Label.Root className="mb-2 block text-paragraph-sm">Выравнивание</Label.Root>
+          <Label.Root className="mb-2 block text-paragraph-sm">
+            Выравнивание
+          </Label.Root>
           <Select.Root
             value={(localBlock as any).alignment || "center"}
             onValueChange={(value) => handleChange({ alignment: value as any })}
@@ -1754,47 +1770,54 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
             </Select.Content>
           </Select.Root>
         </div>
-        
-        {/* Редактирование каждого элемента */}
-        {((localBlock as any).items || []).map((item: any, index: number) => (
-          <div key={index} className="space-y-4 border p-4 rounded-md">
-            <Label.Root className="block text-paragraph-md font-styrene">
-              Элемент {index + 1}
-            </Label.Root>
-            
-            <div>
-              <Label.Root className="mb-2 block text-paragraph-sm">
-                Цифра
-              </Label.Root>
-              <Input.Root>
-                <Input.Wrapper>
-                  <Input.Input
-                    type="text"
-                    value={item.number || ""}
-                    onChange={(e) => handleItemChange(index, "number", e.target.value)}
-                    placeholder="Цифра или число"
-                  />
-                </Input.Wrapper>
-              </Input.Root>
+
+        <div className="space-y-4 pt-4">
+          {(localBlock as any).items.map((item: any, index: number) => (
+            <div key={index} className="rounded-lg border border-gray-200 p-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <Label.Root className="mb-2 block text-paragraph-sm">
+                    Цифра №{index + 1} <Label.Asterisk />
+                  </Label.Root>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Input
+                        type="text"
+                        value={item.number || ""}
+                        onChange={(e) =>
+                          handleItemChange(index, "number", e.target.value)
+                        }
+                        placeholder="Например: 42"
+                      />
+                    </Input.Wrapper>
+                  </Input.Root>
+                </div>
+                <div>
+                  <Label.Root className="mb-2 block text-paragraph-sm">
+                    Текст <Label.Asterisk />
+                  </Label.Root>
+                  <Input.Root>
+                    <Input.Wrapper>
+                      <Input.Input
+                        type="text"
+                        value={item.text || ""}
+                        onChange={(e) =>
+                          handleItemChange(index, "text", e.target.value)
+                        }
+                        placeholder="Текст под цифрой"
+                      />
+                    </Input.Wrapper>
+                  </Input.Root>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Доступно форматирование: 
+                    <span className="font-bold px-1">**жирный**</span>,
+                    <span className="italic px-1">*курсив*</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            <div>
-              <Label.Root className="mb-2 block text-paragraph-sm">
-                Текст под цифрой
-              </Label.Root>
-              <Input.Root>
-                <Input.Wrapper>
-                  <Input.Input
-                    type="text"
-                    value={item.text || ""}
-                    onChange={(e) => handleItemChange(index, "text", e.target.value)}
-                    placeholder="Текст под цифрой"
-                  />
-                </Input.Wrapper>
-              </Input.Root>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     );
   };

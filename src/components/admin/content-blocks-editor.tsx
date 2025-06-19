@@ -8,6 +8,8 @@ import * as Textarea from "~/components/ui/textarea";
 import { RiText, RiImageLine, RiGalleryLine, RiMultiImageLine, RiCircleLine, RiVideoLine, RiMusic2Line, RiMicLine, RiQuillPenLine, RiSeparator, RiPieChart2Line } from "@remixicon/react";
 import { BlockIcon, EmptyBlocksIcon, RemoveBlockIcon } from "~/components/ui/icons";
 import { RiArrowDownSLine, RiArrowUpSLine, RiEyeOffLine, RiEyeLine } from "@remixicon/react";
+import * as Input from "~/components/ui/input";
+import * as Select from "~/components/ui/select";
 
 interface ContentBlocksEditorProps {
   content: GiftContent;

@@ -12,7 +12,7 @@ export function QuoteBlock({ block, className = "" }: QuoteBlockProps) {
   const getQuoteStyles = (style?: string) => {
     switch (style) {
       case "big":
-        return "text-label-sm md:text-label-md font-nyghtserif";
+        return "text-label-sm md:text-label-sm font-nyghtserif";
       case "small":
       default:
         return "text-paragraph-lg md:text-paragraph-xl font-euclid";
