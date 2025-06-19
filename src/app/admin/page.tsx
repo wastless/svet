@@ -114,7 +114,7 @@ export default function AdminPage() {
       
       if (response.ok) {
         const result = await response.json();
-        alert(`Очистка завершена!\n\nВсего файлов: ${result.totalFiles}\nНеиспользуемых файлов: ${result.unusedFiles}\nУдалено файлов: ${result.deletedFiles}`);
+        alert(`Очистка завершена!\n\nВсего файлов в бакете: ${result.totalFiles}\nФайлов для удаления: ${result.filesForDeletion}\nУспешно удалено: ${result.deletedFiles}`);
       } else {
         const error = await response.json();
         alert(`Ошибка очистки: ${error.error}`);

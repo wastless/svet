@@ -79,6 +79,8 @@ export default function GiftPage() {
   // Состояние для управления анимациями
   const [showDiceTransition, setShowDiceTransition] = useState(fromHome);
   const [showContent, setShowContent] = useState(!fromHome);
+  
+
 
   // Рефы для анимации
   const pageRef = useRef(null);
@@ -110,8 +112,15 @@ export default function GiftPage() {
 
   // Эффект для запуска анимации после загрузки данных
   useEffect(() => {
-    // Если подарок недоступен или данные не загружены, не запускаем анимацию
-    if (!giftData || isGiftLoading || !showContent || !isAvailable) return;
+    // Если данные не загружены или контент не должен отображаться, не запускаем анимацию
+    if (!giftData || isGiftLoading || !showContent) return;
+    
+    // Проверяем доступность подарка с учетом статуса админа
+    const isAdmin = user?.username === "admin";
+    const isGiftOpen = giftData.gift && giftsDate ? giftsDate >= new Date(giftData.gift.openDate) : false;
+    
+    // Если пользователь не админ и подарок не доступен, не показываем анимацию
+    if (!isAdmin && !isGiftOpen) return;
 
     // Создаем главный таймлайн
     const tl = gsap.timeline({
@@ -290,7 +299,7 @@ export default function GiftPage() {
       // Очищаем анимации при размонтировании
       tl.kill();
     };
-  }, [giftData, isGiftLoading, showContent, fromHome]);
+  }, [giftData, isGiftLoading, showContent, fromHome, user, giftsDate]);
 
   // Реферешим данные если изменился статус аутентификации
   useEffect(() => {
@@ -382,7 +391,7 @@ export default function GiftPage() {
       )}
 
       {/* Основной контент подарка (доступен всегда для админа) */}
-      {(isAvailable || user?.username === "admin") && showContent && (
+      {((isAvailable || user?.username === "admin") && showContent) && (
         <main
           ref={pageRef}
           className="relative min-h-screen bg-bg-white-0 opacity-0"
