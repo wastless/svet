@@ -273,3 +273,22 @@ chmod +x ~/update-ssl.sh
    worker_connections 512;
    client_max_body_size 10M;
    ``` 
+
+
+
+   # Найдите и остановите все запущенные контейнеры
+docker ps -a
+docker stop $(docker ps -q)
+docker rm $(docker ps -aq)
+
+# Удалите все образы (опционально)
+docker rmi $(docker images -q)
+
+# Проверьте, что все контейнеры остановлены
+docker ps
+
+# Удалите папку deploy-package, если она осталась
+rm -rf ~/deploy-package
+
+# Проверьте, что в GitHub настроены правильные секреты для CI/CD
+# Затем сделайте небольшое изменение в коде и отправьте его в main ветку
