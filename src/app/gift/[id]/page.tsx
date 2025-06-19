@@ -71,7 +71,7 @@ export default function GiftPage() {
   } = useGiftData(giftId);
 
   // Получаем информацию об аутентификации
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
 
   // Отслеживаем изменение статуса аутентификации
   const prevAuthStatus = useRef(isAuthenticated);
@@ -364,8 +364,8 @@ export default function GiftPage() {
         <DiceTransition onComplete={handleDiceTransitionComplete} />
       )}
 
-      {/* Заглушка для недоступного подарка */}
-      {!isAvailable && (
+      {/* Заглушка для недоступного подарка (не показывается для админа) */}
+      {!isAvailable && !(user?.username === "admin") && (
         <main className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-bg-strong-950 text-adaptive dark-container">
           <NoiseBackground opacity={30} />
           
@@ -381,8 +381,8 @@ export default function GiftPage() {
         </main>
       )}
 
-      {/* Основной контент подарка */}
-      {isAvailable && showContent && (
+      {/* Основной контент подарка (доступен всегда для админа) */}
+      {(isAvailable || user?.username === "admin") && showContent && (
         <main
           ref={pageRef}
           className="relative min-h-screen bg-bg-white-0 opacity-0"
