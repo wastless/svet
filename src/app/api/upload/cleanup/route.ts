@@ -107,6 +107,25 @@ function extractAllUrlsFromObject(obj: any): string[] {
   return urls;
 }
 
+// Функция для получения имени файла из URL или пути
+function getFilenameFromUrl(url: string): string {
+  try {
+    // Если это полный URL
+    if (url.startsWith('http')) {
+      const urlObj = new URL(url);
+      const segments = urlObj.pathname.split('/');
+      return segments[segments.length - 1] || url;
+    } else {
+      // Если это путь
+      const segments = url.split('/');
+      return segments[segments.length - 1] || url;
+    }
+  } catch (error) {
+    // В случае ошибки возвращаем исходную строку
+    return url;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Проверяем, настроены ли ключи для Yandex Object Storage
@@ -130,6 +149,70 @@ export async function POST(request: NextRequest) {
     const allFiles = await getAllFilesFromStorage();
     console.log(`Найдено ${allFiles.length} файлов в бакете`);
     
+    // Создаем множество ключей файлов, которые нужно сохранить
+    const keysToKeep = new Set<string>();
+    
+    // Шаг 1: Сначала собираем все URL из базы данных
+    for (const gift of gifts) {
+      // Добавляем URL из основных полей подарка
+      if (gift.hintImageUrl) {
+        const filename = getFilenameFromUrl(gift.hintImageUrl);
+        console.log(`Сохраняем файл из базы данных (hintImageUrl): ${filename}`);
+        
+        // Ищем соответствующий файл в бакете
+        for (const file of allFiles) {
+          if (file.key.includes(filename)) {
+            keysToKeep.add(file.key);
+            console.log(`Найден файл в бакете: ${file.key}`);
+            break;
+          }
+        }
+      }
+      
+      if (gift.imageCover) {
+        const filename = getFilenameFromUrl(gift.imageCover);
+        console.log(`Сохраняем файл из базы данных (imageCover): ${filename}`);
+        
+        // Ищем соответствующий файл в бакете
+        for (const file of allFiles) {
+          if (file.key.includes(filename)) {
+            keysToKeep.add(file.key);
+            console.log(`Найден файл в бакете: ${file.key}`);
+            break;
+          }
+        }
+      }
+      
+      if (gift.contentUrl) {
+        const filename = getFilenameFromUrl(gift.contentUrl);
+        console.log(`Сохраняем файл из базы данных (contentUrl): ${filename}`);
+        
+        // Ищем соответствующий файл в бакете
+        for (const file of allFiles) {
+          if (file.key.includes(filename)) {
+            keysToKeep.add(file.key);
+            console.log(`Найден файл в бакете: ${file.key}`);
+            break;
+          }
+        }
+      }
+      
+      // Добавляем URL фото воспоминания
+      if (gift.memoryPhoto && gift.memoryPhoto.photoUrl) {
+        const filename = getFilenameFromUrl(gift.memoryPhoto.photoUrl);
+        console.log(`Сохраняем файл из базы данных (memoryPhoto): ${filename}`);
+        
+        // Ищем соответствующий файл в бакете
+        for (const file of allFiles) {
+          if (file.key.includes(filename)) {
+            keysToKeep.add(file.key);
+            console.log(`Найден файл в бакете: ${file.key}`);
+            break;
+          }
+        }
+      }
+    }
+    
     // Группируем файлы по ID подарка
     const filesByGiftId: Record<string, Array<{url: string, key: string}>> = {};
     
@@ -152,26 +235,25 @@ export async function POST(request: NextRequest) {
     // Определяем, какие ID подарков существуют в базе данных
     const existingGiftIds = new Set(gifts.map(gift => gift.id));
     
-    // Собираем файлы для удаления (из несуществующих подарков)
-    const filesToDelete: Array<{url: string, key: string}> = [];
-    
-    // Обрабатываем каждую группу файлов
+    // Шаг 2: Обрабатываем JSON-файлы контента для существующих подарков
     for (const [giftId, files] of Object.entries(filesByGiftId)) {
-      // Если подарка нет в базе данных, все его файлы можно удалить
+      // Если подарка нет в базе данных, пропускаем (файлы будут удалены позже)
       if (!existingGiftIds.has(giftId)) {
-        console.log(`Подарок ${giftId} не найден в базе данных, удаляем все его файлы (${files.length})`);
-        filesToDelete.push(...files);
         continue;
       }
       
       // Если подарок существует, ищем его JSON-контент
       const contentJsonFile = files.find(file => file.key.endsWith('_content.json'));
       
-      // Если JSON-контент не найден, пропускаем (это странная ситуация)
+      // Если JSON-контент не найден, пропускаем
       if (!contentJsonFile) {
         console.log(`Для подарка ${giftId} не найден файл контента, пропускаем`);
         continue;
       }
+      
+      // Добавляем сам JSON-файл в список файлов для сохранения
+      keysToKeep.add(contentJsonFile.key);
+      console.log(`Сохраняем JSON-файл контента: ${contentJsonFile.key}`);
       
       // Загружаем контент из JSON-файла
       const content = await loadJsonContent(contentJsonFile.url);
@@ -185,39 +267,31 @@ export async function POST(request: NextRequest) {
       const urlsFromContent = extractAllUrlsFromObject(content);
       console.log(`Извлечено ${urlsFromContent.length} URL из контента подарка ${giftId}`);
       
-      // Создаем множество ключей файлов, которые нужно сохранить
-      const keysToKeep = new Set<string>();
-      
-      // Добавляем ключ самого JSON-файла
-      keysToKeep.add(contentJsonFile.key);
-      
       // Обрабатываем каждый URL из контента
       for (const url of urlsFromContent) {
+        // Извлекаем имя файла из URL
+        const filename = getFilenameFromUrl(url);
+        console.log(`Проверяем URL из контента: ${url}, имя файла: ${filename}`);
+        
         // Находим файл, соответствующий этому URL
         for (const file of files) {
-          // Проверяем, содержит ли URL имя файла
-          const filename = file.key.split('/').pop() || '';
-          
-          if (url.includes(filename)) {
+          // Проверяем, содержит ли имя файла в бакете имя файла из URL
+          if (file.key.includes(filename)) {
             keysToKeep.add(file.key);
             console.log(`Сохраняем файл ${file.key} (найден в контенте)`);
             break;
           }
         }
       }
-      
-      // Находим файлы этого подарка, которые не используются в контенте
-      const unusedFiles = files.filter(file => !keysToKeep.has(file.key));
-      
-      if (unusedFiles.length > 0) {
-        console.log(`Для подарка ${giftId} найдено ${unusedFiles.length} неиспользуемых файлов`);
-        filesToDelete.push(...unusedFiles);
-      }
     }
     
+    // Шаг 3: Определяем файлы для удаления
+    const filesToDelete = allFiles.filter(file => !keysToKeep.has(file.key));
+    
+    console.log(`Всего файлов для сохранения: ${keysToKeep.size}`);
     console.log(`Всего файлов для удаления: ${filesToDelete.length}`);
     
-    // Удаляем неиспользуемые файлы
+    // Шаг 4: Удаляем неиспользуемые файлы
     const deletionResults = [];
     for (const file of filesToDelete) {
       try {
@@ -241,6 +315,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       totalFiles: allFiles.length,
+      filesToKeep: keysToKeep.size,
       filesForDeletion: filesToDelete.length,
       deletedFiles: deletionResults.filter(r => r.deleted).length,
       results: deletionResults,

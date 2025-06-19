@@ -155,7 +155,7 @@ export function GiftPhotosEditor({
         <div className="space-y-6">
           <div>
             <h3 className="mb-2 font-styrene text-paragraph-md font-bold uppercase text-text-strong-950">
-              Фотография-подсказка
+              Изображение (small)
             </h3>
           </div>
 
@@ -235,7 +235,7 @@ export function GiftPhotosEditor({
           {/* Оригинальное изображение для обложки (imageCover) */}
           <div className="mt-6">
             <h3 className="mb-2 font-styrene text-paragraph-md font-bold uppercase text-text-strong-950">
-              Изображение обложки (оригинал)
+              Изображение (large)
             </h3>
             <div className="mb-2 flex items-center space-x-4">
               <input
