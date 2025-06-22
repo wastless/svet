@@ -100,6 +100,9 @@ export default function GiftPage() {
 
   // Проверяем, открыт ли подарок на текущую дату
   const isGiftAvailable = (openDate: Date): boolean => {
+    // Если пользователь админ, всегда возвращаем true
+    if (user?.username === "admin") return true;
+    
     if (!giftsDate) return false;
     return giftsDate >= new Date(openDate);
   };
@@ -117,7 +120,7 @@ export default function GiftPage() {
     
     // Проверяем доступность подарка с учетом статуса админа
     const isAdmin = user?.username === "admin";
-    const isGiftOpen = giftData.gift && giftsDate ? giftsDate >= new Date(giftData.gift.openDate) : false;
+    const isGiftOpen = giftData.gift && giftsDate ? (isAdmin || giftsDate >= new Date(giftData.gift.openDate)) : false;
     
     // Если пользователь не админ и подарок не доступен, не показываем анимацию
     if (!isAdmin && !isGiftOpen) return;
@@ -367,7 +370,7 @@ export default function GiftPage() {
   const isAvailable = isGiftAvailable(gift.openDate);
 
   return (
-    <div className="relative bg-bg-white-0">
+    <div className="relative bg-bg-white-0 overflow-x-hidden">
       {/* Показываем анимацию кубика, если пользователь пришел с главной */}
       {showDiceTransition && (
         <DiceTransition onComplete={handleDiceTransitionComplete} />
@@ -394,7 +397,7 @@ export default function GiftPage() {
       {((isAvailable || user?.username === "admin") && showContent) && (
         <main
           ref={pageRef}
-          className="relative min-h-screen bg-bg-white-0 opacity-0"
+          className="relative min-h-screen bg-bg-white-0 opacity-0 overflow-x-hidden"
         >
           <div className="flex flex-col gap-2 py-24 text-center font-founders">
             <h1 ref={headerRef} className="text-title-h4">

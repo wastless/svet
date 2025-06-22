@@ -72,7 +72,7 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
   }, [isPlaying]);
 
   return (
-    <div className={`space-y-8 ${className}`}>
+    <div className={`space-y-6 ${className}`}>
       <div className="flex flex-col gap-2">
         {/* Заголовок */}
         {block.title && (
@@ -106,39 +106,45 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
         >
           {/* React Player с кастомным стилем для круглой формы */}
           <div className="absolute inset-0 rounded-full overflow-hidden">
-            <ReactPlayer
-              ref={playerRef}
-              url={block.url && block.url.trim() !== "" ? block.url : undefined}
-              playing={isPlaying}
-              muted={isMuted}
-              loop={block.loop}
-              width="100%"
-              height="100%"
-              onReady={() => setIsReady(true)}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onDuration={(duration) => setDuration(duration)}
-              onProgress={({ playedSeconds }) => setCurrentTime(playedSeconds)}
-              config={{
-                file: {
-                  attributes: {
-                    style: {
-                      objectFit: 'cover',
-                      width: '100%',
-                      height: '100%',
+            {block.url && block.url.trim() !== "" ? (
+              <ReactPlayer
+                ref={playerRef}
+                url={block.url}
+                playing={isPlaying}
+                muted={isMuted}
+                loop={block.loop}
+                width="100%"
+                height="100%"
+                onReady={() => setIsReady(true)}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onDuration={(duration) => setDuration(duration)}
+                onProgress={({ playedSeconds }) => setCurrentTime(playedSeconds)}
+                config={{
+                  file: {
+                    attributes: {
+                      style: {
+                        objectFit: 'cover',
+                        width: '100%',
+                        height: '100%',
+                      },
                     },
                   },
-                },
-              }}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                minWidth: '100%',
-                minHeight: '100%',
-              }}
-            />
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full bg-neutral-800">
+                <div className="text-neutral-500">Видео отсутствует</div>
+              </div>
+            )}
           </div>
 
           {/* Круговой прогресс-бар */}

@@ -125,6 +125,7 @@ export interface VideoBlock {
   url: string; // видео
   caption?: string; // подпись под видео
   size?: "small" | "medium" | "large"; // размер видео
+  orientation?: "horizontal" | "vertical"; // ориентация видео
   autoplay?: boolean; // автовоспроизведение
   muted?: boolean; // отключить звук по умолчанию
   loop?: boolean; // зацикливание видео
@@ -143,19 +144,35 @@ export interface AudioMessageBlock {
 // Блок с музыкой
 export interface MusicBlock {
   type: "music";
-  title?: string; // заголовок
-  text?: string; // текст
-  textSize?: "small" | "medium"; // размер текста
-  url: string; // URL аудио файла
-  coverUrl: string; // URL обложки
-  artist: string; // исполнитель
-  trackName: string; // название трека
-  duration?: number; // длительность в секундах (опционально)
-  yandexMusicUrl?: string; // ссылка на Яндекс.Музыку (опционально)
+  id: string;
+  url: string;
+  artist: string;
+  trackName: string;
+  coverUrl?: string;
+  title?: string;
+  text?: string;
+  textSize?: "small" | "medium";
+  duration?: number;
 }
 
+export type MusicGalleryBlock = {
+  type: "musicGallery";
+  id: string;
+  title?: string;
+  text?: string;
+  textSize?: "small" | "medium";
+  tracks: Array<{
+    id: string;
+    url: string;
+    artist: string;
+    trackName: string;
+    coverUrl?: string;
+    duration?: number;
+  }>;
+};
+
 // Объединенный тип блоков
-export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | AudioMessageBlock | MusicBlock | GalleryBlock | DividerBlock | InfoGraphicBlock;
+export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | AudioMessageBlock | MusicBlock | MusicGalleryBlock | GalleryBlock | DividerBlock | InfoGraphicBlock;
 
 // Основная структура контента подарка
 export interface GiftContent {

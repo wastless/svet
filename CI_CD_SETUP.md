@@ -276,7 +276,7 @@ chmod +x ~/update-ssl.sh
 
 
 
-   # Найдите и остановите все запущенные контейнеры
+# Найдите и остановите все запущенные контейнеры
 docker ps -a
 docker stop $(docker ps -q)
 docker rm $(docker ps -aq)
@@ -292,3 +292,26 @@ rm -rf ~/deploy-package
 
 # Проверьте, что в GitHub настроены правильные секреты для CI/CD
 # Затем сделайте небольшое изменение в коде и отправьте его в main ветку
+
+-----------------
+
+
+
+Перейдите в директорию с проектом:
+cd ~/deploy-package
+
+Остановите все контейнеры:
+docker-compose down
+
+Удалите старые образы (чтобы точно пересобрать их с новым кодом):
+docker rmi $(docker images -q 'deploy-package_app')
+
+Проверьте, что в папке deploy-package находится актуальная версия кода:
+ls -la
+
+Пересоберите и запустите контейнеры:
+docker-compose build --no-cache
+docker-compose up -d
+
+Проверьте логи, чтобы убедиться, что всё запустилось корректно:
+docker-compose logs -f app

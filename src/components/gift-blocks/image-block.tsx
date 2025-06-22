@@ -172,11 +172,17 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     
     return (
       <div className="w-full">
-        <img
-          src={block.url}
-          alt={block.caption || "Фотография"}
-          className={`${getImageClasses(block.size, block.orientation, isHorizontalLayout)} ${alignClass}`}
-        />
+        {block.url && block.url.trim() !== "" ? (
+          <img
+            src={block.url}
+            alt={block.caption || "Фотография"}
+            className={`${getImageClasses(block.size, block.orientation, isHorizontalLayout)} ${alignClass}`}
+          />
+        ) : (
+          <div className={`${getImageClasses(block.size, block.orientation, isHorizontalLayout)} ${alignClass} bg-gray-200 flex items-center justify-center`}>
+            <div className="text-gray-500">Изображение отсутствует</div>
+          </div>
+        )}
         {/* Подпись под фото (если есть) */}
         {block.caption && (
           <div className="text-center mt-4">

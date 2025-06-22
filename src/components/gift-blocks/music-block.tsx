@@ -16,9 +16,10 @@ import { processText } from "./base-block";
 interface MusicBlockProps {
   block: MusicBlockType;
   className?: string;
+  audioRef?: (audio: HTMLAudioElement | null) => void;
 }
 
-export function MusicBlock({ block, className = "" }: MusicBlockProps) {
+export function MusicBlock({ block, className = "", audioRef }: MusicBlockProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,10 +29,24 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const internalAudioRef = useRef<HTMLAudioElement>(null);
+
+  // Если предоставлен внешний audioRef, используем его для передачи текущего аудио элемента
+  useEffect(() => {
+    if (audioRef && internalAudioRef.current) {
+      audioRef(internalAudioRef.current);
+    }
+    
+    return () => {
+      // При размонтировании компонента передаем null
+      if (audioRef) {
+        audioRef(null);
+      }
+    };
+  }, [audioRef]);
 
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = internalAudioRef.current;
     if (!audio) return;
 
     console.log('MusicBlock: Инициализация аудио с URL:', block.url);
@@ -128,14 +143,14 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
   }, [block.url]);
 
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = internalAudioRef.current;
     if (audio) {
       audio.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
 
   const handlePlayPause = async () => {
-    const audio = audioRef.current;
+    const audio = internalAudioRef.current;
     if (!audio || (!isReady && !hasError)) return;
 
     try {
@@ -247,13 +262,19 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
             <div className="flex items-center gap-3">
               {/* Обложка с кнопкой плей/пауза */}
               <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 group cursor-pointer" onClick={handlePlayPause}>
-                <Image
-                  src={block.coverUrl}
-                  alt={`${block.trackName} - ${block.artist}`}
-                  fill
-                  className="object-cover"
-                  sizes="48px"
-                />
+                {block.coverUrl && block.coverUrl.trim() !== "" ? (
+                  <Image
+                    src={block.coverUrl}
+                    alt={`${block.trackName} - ${block.artist}`}
+                    fill
+                    className="object-cover"
+                    sizes="48px"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+                    <div className="text-neutral-500 text-xs">No image</div>
+                  </div>
+                )}
                 {/* Overlay с кнопкой */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
                   <div className={`w-8 h-8 rounded-full bg-neutral-900 bg-opacity-60 flex items-center justify-center transition-all duration-200 relative overflow-hidden group/button ${
@@ -290,7 +311,7 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
                   {getVolumeIcon()}
                 </button>
 
-                {/* Слайдер громкости */}
+                {/* Слайдер громкости - скрыт на мобильных */}
                 <input
                   type="range"
                   min="0"
@@ -298,7 +319,7 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
                   step="0.05"
                   value={isMuted ? 0 : volume}
                   onChange={handleVolumeChange}
-                  className="volume-slider w-16"
+                  className="volume-slider w-16 hidden md:block"
                   style={{
                     background: `linear-gradient(to right, #ffffff 0%, #ffffff ${(isMuted ? 0 : volume) * 100}%, #4b5563 ${(isMuted ? 0 : volume) * 100}%, #4b5563 100%)`
                   }}
@@ -310,7 +331,7 @@ export function MusicBlock({ block, className = "" }: MusicBlockProps) {
 
             {/* Скрытый аудио элемент */}
             <audio
-              ref={audioRef}
+              ref={internalAudioRef}
               src={block.url && block.url.trim() !== "" ? block.url : undefined}
               preload="metadata"
               crossOrigin="anonymous"

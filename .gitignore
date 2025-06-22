@@ -64,3 +64,5 @@ nginx/ssl/
 # Added for deployment
 /deploy-package/
 /deploy-package.zip
+
+/gift/

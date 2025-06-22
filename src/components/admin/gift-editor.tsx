@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { Gift, GiftContent, GiftBlock } from "@/utils/types/gift";
 import { GiftBasicInfo } from "./gift-basic-info";
 import { ContentBlocksEditor } from "./content-blocks-editor";
 import { GiftPhotosEditor } from "./gift-photos-editor";
 import * as IconButton from "~/components/ui/icon-button";
 import { useGiftContent, useUpdateGift } from "@/utils/hooks/useGiftQueries";
+import { invalidateGiftCache } from "@/utils/patches/unified-fetch-patch";
 
 // Импортируем интерфейс GiftPhotos из компонента GiftPhotosEditor
 import type { GiftPhotos } from "./gift-photos-editor";
@@ -20,6 +21,9 @@ interface GiftEditorProps {
 export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
   const [activeTab, setActiveTab] = useState<"basic" | "content" | "memory">("basic");
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const changesPendingRef = useRef<boolean>(false);
   
   // Получаем контент подарка с использованием React Query
   const { data: giftContent, isLoading } = useGiftContent(gift?.id || "");
@@ -64,6 +68,81 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
     }
   }, [giftContent]);
 
+  // Настройка автосохранения
+  useEffect(() => {
+    // Устанавливаем флаг, что есть несохраненные изменения
+    changesPendingRef.current = true;
+    
+    // Очищаем предыдущий таймер
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    // Устанавливаем новый таймер только если есть ID подарка
+    if (gift?.id) {
+      autoSaveTimerRef.current = setTimeout(autoSaveGift, 30000); // Автосохранение через 30 секунд
+    }
+    
+    // Очистка таймера при размонтировании
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [basicData, localGiftContent, giftPhotos]);
+
+  // Функция для автоматического сохранения подарка
+  const autoSaveGift = async () => {
+    if (!gift?.id || !changesPendingRef.current) return;
+    
+    try {
+      setIsSaving(true);
+      
+      // Используем время, которое выбрал пользователь
+      const openDate = new Date(basicData.openDate);
+      
+      // Подготавливаем данные для сохранения
+      const giftData = {
+        ...basicData,
+        openDate: openDate.toISOString(),
+        number: Number(basicData.number),
+        content: localGiftContent,
+        hintImageUrl: giftPhotos.hintImageUrl,
+        hintText: giftPhotos.hintText || "look for a gift with this sticker",
+        imageCover: giftPhotos.imageCover || "",
+        memoryPhoto: giftPhotos.memoryPhoto.photoUrl ? {
+          photoUrl: giftPhotos.memoryPhoto.photoUrl,
+          photoDate: giftPhotos.memoryPhoto.photoDate ? new Date(giftPhotos.memoryPhoto.photoDate).toISOString() : null
+        } : null,
+      };
+      
+      const response = await fetch(`/api/gifts/${gift.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(giftData),
+      });
+      
+      if (response.ok) {
+        setLastSaved(new Date());
+        changesPendingRef.current = false;
+        console.log("Подарок автоматически сохранен:", new Date().toLocaleTimeString());
+        
+        // Инвалидируем кеш для этого подарка
+        if (gift.id) {
+          invalidateGiftCache(gift.id);
+        }
+      } else {
+        console.error("Ошибка автосохранения:", await response.text());
+      }
+    } catch (error) {
+      console.error("Ошибка автосохранения:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Функция для преобразования даты в формат для поля datetime-local с учетом локального часового пояса
   function formatDateForDateTimeLocal(date: Date): string {
     const year = date.getFullYear();
@@ -78,6 +157,12 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Если есть активный таймер автосохранения, отменяем его
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+      
       // Используем время, которое выбрал пользователь
       const openDate = new Date(basicData.openDate);
       
@@ -97,6 +182,38 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
       };
 
       await onSave(giftData);
+      
+      // Сбрасываем флаг изменений
+      changesPendingRef.current = false;
+      setLastSaved(new Date());
+      
+      // Инвалидируем кеш для этого подарка
+      if (gift?.id) {
+        // Принудительно очищаем кеш
+        invalidateGiftCache(gift.id);
+        
+        // Принудительно перезагружаем данные через 500мс
+        setTimeout(() => {
+          // Делаем прямой запрос к API для обновления кеша
+          const timestamp = Date.now();
+          fetch(`/api/gifts/${gift.id}?_t=${timestamp}`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          }).catch(console.error);
+          
+          // Также обновляем контент
+          fetch(`/api/gift-content/${gift.id}?_t=${timestamp}`, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          }).catch(console.error);
+        }, 500);
+      }
     } catch (error) {
       console.error("Ошибка сохранения:", error);
     } finally {
@@ -131,7 +248,12 @@ export function GiftEditor({ gift, onSave, onCancel }: GiftEditorProps) {
             </button>
           ))}
         </nav>
-        <div className="flex space-x-6">
+        <div className="flex space-x-6 items-center">
+        {lastSaved && (
+          <span className="text-xs text-gray-500">
+            Сохранено: {lastSaved.toLocaleTimeString()}
+          </span>
+        )}
         <IconButton.Root onClick={onCancel}>
           Назад
         </IconButton.Root>

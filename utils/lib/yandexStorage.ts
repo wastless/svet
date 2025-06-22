@@ -23,7 +23,7 @@ async function initS3() {
     
     return s3;
   } catch (error) {
-    console.error('Ошибка инициализации Yandex Object Storage:', error);
+    console.error('Ошибка инициализации Yandex Object Storage');
     throw error;
   }
 }
@@ -100,8 +100,6 @@ export async function uploadFileToYandexStorage(
     const prefix = subfolder === 'blocks' ? 'block_' : '';
     const storageFileName = `${giftId}_${prefix}${safeFileName}`;
     
-    console.log(`Загрузка файла в Yandex Object Storage: ${storageFileName}`);
-    
     // Определяем тип контента на основе расширения файла
     const ext = path.extname(fileName).toLowerCase();
     let contentType: string | undefined;
@@ -149,7 +147,7 @@ export async function uploadFileToYandexStorage(
     
     return upload.Location as string;
   } catch (error) {
-    console.error(`Ошибка загрузки файла ${fileName} в Yandex Object Storage:`, error);
+    console.error(`Ошибка загрузки файла ${fileName}:`, error);
     throw error;
   }
 }
@@ -177,7 +175,7 @@ export async function deleteFileFromYandexStorage(fileUrl: string): Promise<bool
     const result = await s3.Remove(filePath);
     return result === true;
   } catch (error) {
-    console.error(`Ошибка удаления файла из Yandex Object Storage:`, error);
+    console.error(`Ошибка удаления файла:`, error);
     return false;
   }
 }
@@ -192,17 +190,11 @@ export async function deleteGiftFilesFromYandexStorage(giftId: string): Promise<
   try {
     // Инициализируем S3, если еще не инициализирован
     if (!s3) {
-      console.log(`Инициализация S3 для удаления файлов подарка ${giftId}...`);
       await initS3();
     }
     
-    console.log(`Удаление файлов подарка ${giftId} из Yandex Object Storage...`);
-    
     // Получаем все файлы
-    console.log('Получаем список всех файлов из бакета...');
     const response = await s3.GetList('');
-    
-    console.log('Ответ от API:', response);
     
     // Проверяем структуру ответа
     let files: Array<{ Key: string; Location?: string }> = [];
@@ -210,7 +202,6 @@ export async function deleteGiftFilesFromYandexStorage(giftId: string): Promise<
     if (response && typeof response === 'object') {
       // Проверяем формат ответа AWS SDK v2
       if ('Contents' in response && Array.isArray(response.Contents)) {
-        console.log(`Получен ответ в формате AWS SDK v2 с ${response.Contents.length} файлами`);
         files = response.Contents.map((item: any) => {
           const bucketName = env.YANDEX_BUCKET_NAME || '';
           return {
@@ -221,47 +212,28 @@ export async function deleteGiftFilesFromYandexStorage(giftId: string): Promise<
       } 
       // Если это массив, используем его напрямую
       else if (Array.isArray(response)) {
-        console.log(`Получен массив с ${response.length} файлами`);
         files = response;
       } 
-      // Если другой формат, логируем и возвращаем пустой массив
+      // Если другой формат, возвращаем пустой массив
       else {
-        console.log('Неизвестный формат ответа от GetList:', response);
+        console.error('Неизвестный формат ответа от GetList');
         return 0;
       }
     } else {
-      console.log('Нет файлов для удаления или ошибка получения списка файлов');
+      console.error('Нет файлов для удаления или ошибка получения списка файлов');
       return 0;
     }
-    
-    console.log(`Обработано ${files.length} файлов из бакета`);
-    
-    // Выводим все ключи файлов для отладки
-    console.log('Все файлы в бакете:');
-    files.forEach((file: { Key: string; Location?: string }, index: number) => {
-      console.log(`${index + 1}. ${file.Key}`);
-    });
     
     // Фильтруем файлы по ID подарка
     const giftFiles = files.filter((file: { Key: string; Location?: string }) => {
       const key = file.Key;
       // Проверяем разные варианты префикса
-      const isGiftFile = 
-        key.startsWith(`${giftId}_`) || 
-        key.startsWith(`/${giftId}_`) || 
-        key.includes(`/${giftId}_`);
-      
-      if (isGiftFile) {
-        console.log(`Найден файл подарка: ${key}`);
-      }
-      
-      return isGiftFile;
+      return key.startsWith(`${giftId}_`) || 
+             key.startsWith(`/${giftId}_`) || 
+             key.includes(`/${giftId}_`);
     });
     
-    console.log(`Найдено ${giftFiles.length} файлов для удаления`);
-    
     if (giftFiles.length === 0) {
-      console.log(`Не найдено файлов для подарка ${giftId}`);
       return 0;
     }
     
@@ -271,19 +243,12 @@ export async function deleteGiftFilesFromYandexStorage(giftId: string): Promise<
     for (const file of giftFiles) {
       const key = file.Key;
       try {
-        console.log(`Удаляем файл: ${key}`);
-        
         const result = await s3.Remove(key);
-        console.log(`Результат удаления файла ${key}: ${result}`);
         
         if (result === true) {
           deletedCount++;
-          console.log(`Успешно удален файл: ${key}`);
         } else {
-          console.error(`Не удалось удалить файл: ${key}, результат: ${result}`);
-          
           // Пробуем альтернативный метод удаления
-          console.log(`Пробуем альтернативный метод удаления для ${key}...`);
           try {
             // Некоторые реализации S3 требуют полный URL вместо ключа
             if (file.Location) {
@@ -293,26 +258,21 @@ export async function deleteGiftFilesFromYandexStorage(giftId: string): Promise<
                 ? urlObj.pathname.substring(1) 
                 : urlObj.pathname;
               
-              console.log(`Пытаемся удалить по пути: ${filePath}`);
               const altResult = await s3.Remove(filePath);
               
               if (altResult === true) {
                 deletedCount++;
-                console.log(`Успешно удален файл (альтернативный метод): ${filePath}`);
-              } else {
-                console.error(`Не удалось удалить файл (альтернативный метод): ${filePath}`);
               }
             }
           } catch (altError) {
-            console.error(`Ошибка при альтернативном удалении: ${altError}`);
+            console.error(`Ошибка при альтернативном удалении файла:`, altError);
           }
         }
       } catch (error) {
-        console.error(`Ошибка удаления файла ${key}:`, error);
+        console.error(`Ошибка удаления файла:`, error);
       }
     }
     
-    console.log(`Удалено ${deletedCount} файлов из ${giftFiles.length}`);
     return deletedCount;
   } catch (error) {
     console.error(`Ошибка удаления файлов подарка ${giftId}:`, error);
@@ -338,9 +298,18 @@ export async function listFilesInYandexStorage(
     }
     
     // Получаем все файлы
-    const files = await s3.GetList();
+    const response = await s3.GetList('');
     
+    // Проверяем структуру ответа
+    if (!response || typeof response !== 'object') {
+      console.error('Неверный формат ответа от S3 при получении списка файлов');
+      return [];
+    }
+    
+    // Получаем массив файлов из ответа
+    const files = response.Contents;
     if (!files || !Array.isArray(files)) {
+      console.error('Неверный формат поля Contents в ответе от S3');
       return [];
     }
     
@@ -366,7 +335,7 @@ export async function listFilesInYandexStorage(
       .map(file => file.Location as string)
       .filter(Boolean);
   } catch (error) {
-    console.error(`Ошибка получения списка файлов из Yandex Object Storage:`, error);
+    console.error(`Ошибка получения списка файлов:`, error);
     return [];
   }
 }
@@ -375,7 +344,7 @@ export async function listFilesInYandexStorage(
  * Загружает JSON-контент в Yandex Object Storage
  * @param giftId - ID подарка
  * @param content - Контент для загрузки
- * @returns URL загруженного файла
+ * @returns URL загруженного контента
  */
 export async function uploadContentToYandexStorage(
   giftId: string,
@@ -388,29 +357,65 @@ export async function uploadContentToYandexStorage(
       await initS3();
     }
     
-    // Преобразуем контент в строку JSON
-    const contentJson = JSON.stringify(content, null, 2);
-    const buffer = Buffer.from(contentJson, 'utf-8');
-    
     // Формируем имя файла
-    const storageFileName = `${giftId}_content.json`;
+    const contentFileName = `${giftId}_content.json`;
     
-    console.log(`Загрузка контента в Yandex Object Storage: ${storageFileName}`);
+    // Преобразуем контент в JSON
+    const contentJson = JSON.stringify(content);
+    const buffer = Buffer.from(contentJson);
     
-    // Загружаем файл в хранилище
-    const upload = await s3.Upload({
-      buffer,
-      name: storageFileName,
-      ContentType: 'application/json'
-    }, '');
+    // Загружаем контент в хранилище с несколькими попытками
+    let uploadResult: any = null;
+    let attempts = 0;
+    const maxAttempts = 3;
     
-    if (!upload || typeof upload === 'boolean' || !('Location' in upload)) {
-      throw new Error('Не удалось загрузить контент в Yandex Object Storage');
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        // Загружаем контент в хранилище
+        uploadResult = await s3.Upload({
+          buffer,
+          name: contentFileName,
+          ContentType: 'application/json',
+          // Устанавливаем кеширование на 5 минут для обновлений
+          CacheControl: 'max-age=300'
+        }, '');
+        
+        // Проверяем результат загрузки
+        if (!uploadResult || typeof uploadResult === 'boolean' || !('Location' in uploadResult)) {
+          console.error(`Неверный формат ответа от S3 при загрузке контента`);
+          throw new Error('Неверный формат ответа от S3');
+        }
+        
+        // Если дошли сюда, значит загрузка успешна
+        break;
+      } catch (error) {
+        console.error(`Ошибка при попытке ${attempts}/${maxAttempts} загрузки контента:`, error);
+        
+        // Если это последняя попытка, пробрасываем ошибку дальше
+        if (attempts >= maxAttempts) {
+          throw error;
+        }
+        
+        // Иначе делаем паузу перед следующей попыткой
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
     
-    return upload.Location as string;
+    if (!uploadResult || !('Location' in uploadResult)) {
+      throw new Error('Не удалось загрузить контент после нескольких попыток');
+    }
+    
+    // Проверяем, что контент действительно сохранился
+    const exists = await contentExistsInYandexStorage(giftId);
+    if (!exists) {
+      console.error(`Контент был загружен, но проверка существования не удалась для ${giftId}`);
+      throw new Error('Контент был загружен, но проверка существования не удалась');
+    }
+    
+    return uploadResult.Location as string;
   } catch (error) {
-    console.error(`Ошибка загрузки контента для подарка ${giftId} в Yandex Object Storage:`, error);
+    console.error(`Ошибка загрузки контента для подарка ${giftId}:`, error);
     throw error;
   }
 }
@@ -423,30 +428,69 @@ export async function uploadContentToYandexStorage(
 export async function loadContentFromYandexStorage(giftId: string): Promise<any | null> {
   'use server';
   try {
-    // Инициализируем S3, если еще не инициализирован
-    if (!s3) {
-      await initS3();
-    }
-    
-    // Формируем имя файла
-    const storageFileName = `${giftId}_content.json`;
-    
-    console.log(`Загрузка контента из Yandex Object Storage: ${storageFileName}`);
-    
-    // Получаем файл из хранилища
-    const download = await s3.GetObject(storageFileName);
-    
-    if (!download || typeof download !== 'object' || !('Body' in download)) {
+    // Проверяем, существует ли контент
+    const exists = await contentExistsInYandexStorage(giftId);
+    if (!exists) {
       return null;
     }
     
-    // Преобразуем содержимое в строку
-    const contentJson = download.Body.toString('utf-8');
+    // Формируем URL для загрузки
+    const bucketName = env.YANDEX_BUCKET_NAME || '';
+    // Добавляем случайный параметр для обхода кеша сразу в URL
+    const timestamp = Date.now();
+    const contentUrl = `https://${bucketName}.storage.yandexcloud.net/${giftId}_content.json?_t=${timestamp}`;
     
-    // Преобразуем JSON в объект
-    return JSON.parse(contentJson);
+    // Выполняем загрузку с несколькими попытками
+    let attempts = 0;
+    const maxAttempts = 3;
+    let lastError: Error | null = null;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        // Добавляем дополнительный случайный параметр для обхода кеша
+        const additionalTimestamp = Date.now();
+        const urlWithNoCache = `${contentUrl}&_r=${additionalTimestamp}`;
+        
+        // Устанавливаем таймаут 10 секунд
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(urlWithNoCache, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          signal: controller.signal
+        });
+        
+        // Очищаем таймаут
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Ошибка загрузки контента: ${response.status} ${response.statusText}`);
+        }
+        
+        const contentData = await response.json();
+        return contentData;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Неизвестная ошибка');
+        console.error(`Ошибка при попытке ${attempts}/${maxAttempts} загрузки контента:`, error);
+        
+        // Если это не последняя попытка, делаем паузу перед следующей
+        if (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+    
+    // Если дошли сюда, значит все попытки не удались
+    console.error(`Не удалось загрузить контент после ${maxAttempts} попыток`);
+    return null;
   } catch (error) {
-    console.error(`Ошибка загрузки контента для подарка ${giftId} из Yandex Object Storage:`, error);
+    console.error(`Ошибка загрузки контента для подарка ${giftId}:`, error);
     return null;
   }
 }
@@ -465,13 +509,51 @@ export async function contentExistsInYandexStorage(giftId: string): Promise<bool
     }
     
     // Формируем имя файла
-    const storageFileName = `${giftId}_content.json`;
+    const contentFileName = `${giftId}_content.json`;
     
-    // Проверяем существование файла
-    const exists = await s3.FileExists(storageFileName);
-    return exists === true;
+    // Выполняем проверку с несколькими попытками
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      try {
+        // Проверяем существование файла через получение списка файлов
+        const response = await s3.GetList('');
+        
+        // Проверяем структуру ответа
+        if (!response || typeof response !== 'object') {
+          console.error('Неверный формат ответа от S3 при получении списка файлов');
+          throw new Error('Неверный формат ответа от S3');
+        }
+        
+        // Получаем массив файлов из ответа
+        const files = response.Contents;
+        if (!files || !Array.isArray(files)) {
+          console.error('Неверный формат поля Contents в ответе от S3');
+          throw new Error('Неверный формат ответа от S3');
+        }
+        
+        // Ищем наш файл в списке
+        const exists = files.some(file => file && typeof file === 'object' && 'Key' in file && file.Key === contentFileName);
+        
+        return exists;
+      } catch (error) {
+        console.error(`Ошибка при попытке ${attempts}/${maxAttempts} проверки существования контента:`, error);
+        
+        // Если это последняя попытка, возвращаем false
+        if (attempts >= maxAttempts) {
+          return false;
+        }
+        
+        // Иначе делаем паузу перед следующей попыткой
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    return false;
   } catch (error) {
-    console.error(`Ошибка проверки существования контента для подарка ${giftId} в Yandex Object Storage:`, error);
+    console.error(`Ошибка проверки существования контента для подарка ${giftId}:`, error);
     return false;
   }
 } 

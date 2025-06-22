@@ -294,6 +294,27 @@
       transform: rotate(360deg);
     }
   }
+
+  /* Week tabs navigation styling */
+  .week-tab {
+    position: relative;
+    transition: opacity 300ms ease-out !important;
+  }
+  
+  .week-tab.active-tab {
+    opacity: 1 !important;
+  }
+  
+  /* When active, show underlines without hover */
+  .week-tab.active-tab span[class*="underline"] {
+    width: 50% !important;
+    transform: translateY(0) !important;
+  }
+  
+  /* Ensure underlines are hidden for non-active tabs */
+  .week-tab:not(.active-tab) span[class*="underline"] {
+    width: 0 !important;
+  }
 }
 
 @keyframes fade-in {

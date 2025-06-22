@@ -2,6 +2,7 @@
 
 import type { TextBlock as TextBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import React from "react";
 
 interface TextBlockProps {
   block: TextBlockType;
@@ -49,6 +50,19 @@ export function TextBlock({ block, className = "" }: TextBlockProps) {
   // Получаем класс выравнивания
   const alignmentClass = getAlignmentClass(block.alignment);
 
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   return (
     <div className={`text-adaptive ${className} ${alignmentClass}`}>
       {/* Отображаем заголовок, если он есть */}
@@ -58,9 +72,9 @@ export function TextBlock({ block, className = "" }: TextBlockProps) {
         </div>
       )}
       
-      {/* Отображаем основной текст */}
+      {/* Отображаем основной текст с поддержкой переносов строк */}
       <div className={getTextStyles(block.style)}>
-        {processText(textContent)}
+        {renderTextWithLineBreaks(textContent)}
       </div>
     </div>
   );

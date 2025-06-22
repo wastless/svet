@@ -32,8 +32,8 @@ const saveSession = (data: any) => {
   if (typeof window === 'undefined') return;
   
   try {
-    // Устанавливаем срок жизни кеша - 30 минут
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+    // Устанавливаем срок жизни кеша - 7 дней
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     localStorage.setItem('auth_session_cache', JSON.stringify({
       data,
       expiresAt: expiresAt.toISOString(),
@@ -71,8 +71,8 @@ export function useAuthSession() {
     queryFn: fetchSession,
     // Используем начальные данные из localStorage, если они есть
     initialData: getSavedSession,
-    staleTime: 30 * 60 * 1000, // Кешируем на 30 минут
-    gcTime: 60 * 60 * 1000, // Хранить в кеше 1 час
+    staleTime: 7 * 24 * 60 * 60 * 1000, // Кешируем на 7 дней
+    gcTime: 14 * 24 * 60 * 60 * 1000, // Хранить в кеше 14 дней
     refetchOnWindowFocus: false, // Не обновляем при фокусе окна
     refetchOnMount: false, // Не обновляем при монтировании компонента
     refetchOnReconnect: false, // Не обновляем при переподключении

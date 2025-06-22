@@ -9,6 +9,16 @@ import { WORD_SYSTEM, COUNTDOWN_CONFIG } from "@/utils/data/constants";
 import { useGifts } from "@/utils/hooks/useDateContext";
 import { EmblaCarousel } from "./EmblaCarousel";
 import type { EmblaCarouselType } from "embla-carousel";
+import { useAuth } from "~/components/providers/auth-provider";
+
+// Константы для дат недель
+const WEEK_DATES = {
+  WEEK_1: '2025-07-01', // 1 июля
+  WEEK_2: '2025-07-07', // 7 июля
+  WEEK_3: '2025-07-14', // 14 июля
+  WEEK_4: '2025-07-21', // 21 июля
+  WEEK_5: '2025-07-28', // 28 июля
+};
 
 interface RoadmapGridProps {
   gifts: Gift[];
@@ -17,9 +27,12 @@ interface RoadmapGridProps {
 export function RoadmapGrid({ gifts }: RoadmapGridProps) {
   // Получаем дату подарков из контекста
   const { giftsDate } = useGifts();
+  // Получаем информацию о пользователе
+  const { user } = useAuth();
+  const isAdmin = user?.username === "admin";
   
   // Используем useRef вместо useState для активной недели, чтобы избежать перерисовки
-  const activeWeekRef = useRef<number | null | 'target'>(null);
+  const activeWeekRef = useRef<number | 'target'>(0);
   // Реф для Embla API
   const emblaApiRef = useRef<EmblaCarouselType | null>(null);
   // Реф для кнопок навигации, чтобы обновлять их визуальное состояние без перерисовки
@@ -54,23 +67,28 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
       return memoizedCurrentDate ? openDate <= memoizedCurrentDate : openDate <= new Date();
     });
 
-    // Если есть открытый подарок, возвращаем его
-    if (lastOpenedGift) {
-      return lastOpenedGift;
+    // Если есть открытый подарок или пользователь админ, возвращаем его
+    if (lastOpenedGift || isAdmin) {
+      return lastOpenedGift || sortedGifts[0];
     }
     
     // Если нет открытых подарков, возвращаем первый
     return sortedGifts[0];
-  }, [sortedGifts, memoizedCurrentDate]);
+  }, [sortedGifts, memoizedCurrentDate, isAdmin]);
   
   // Мемоизируем следующий подарок для открытия
   const nextGiftToOpen = useMemo(() => {
+    // Если пользователь админ, все подарки уже открыты
+    if (isAdmin) {
+      return sortedGifts[0]; // Возвращаем первый подарок
+    }
+    
     return sortedGifts.find(gift => {
       const openDate = new Date(gift.openDate);
       // Используем полное сравнение дат с учетом времени
       return memoizedCurrentDate ? openDate > memoizedCurrentDate : openDate > new Date();
     }) || sortedGifts[0]; // Если все подарки уже открыты, показываем первый
-  }, [sortedGifts, memoizedCurrentDate]);
+  }, [sortedGifts, memoizedCurrentDate, isAdmin]);
   
   // Мемоизируем карту первых подарков для каждой недели
   const firstGiftByWeek = useMemo(() => {
@@ -84,7 +102,9 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
   }, [sortedGifts]);
   
   // Мемоизируем подарок, ближайший к дате дня рождения
-  const targetDateGift = useMemo(() => {
+  const targetDateGift = useMemo((): Gift | undefined => {
+    if (!sortedGifts.length) return undefined;
+    
     // Получаем целевую дату (день рождения)
     const targetDateObj = new Date(COUNTDOWN_CONFIG.TARGET_DATE);
     
@@ -109,7 +129,9 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     if (exactMatch) return exactMatch;
     
     // Иначе ищем ближайший подарок по дате
-    return sortedGifts.reduce<Gift | null>((closest, gift) => {
+    if (sortedGifts.length === 0) return undefined;
+    
+    return sortedGifts.reduce<Gift>((closest, gift) => {
       // Создаем дату подарка без времени
       const giftDate = new Date(gift.openDate);
       const giftDateWithoutTime = new Date(
@@ -133,55 +155,106 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
       const closestDiff = Math.abs(closestDateWithoutTime.getTime() - targetDateWithoutTime.getTime());
       
       return currentDiff < closestDiff ? gift : closest;
-    }, null);
+    }, sortedGifts[0]!);
   }, [sortedGifts]);
   
   // Обновление визуального состояния кнопок недель без перерисовки
-  const updateButtonsAppearance = useCallback((activeWeek: number | null | 'target') => {
+  const updateButtonsAppearance = useCallback((activeWeek: number | 'target') => {
     const weekButtons = weekButtonsRef.current?.children;
     if (!weekButtons) return;
     
-    // Используем requestAnimationFrame для оптимизации обновлений DOM
-    requestAnimationFrame(() => {
-      // Проходим по всем кнопкам и обновляем их прозрачность
-      for (let i = 0; i < weekButtons.length; i++) {
-        const button = weekButtons[i] as HTMLElement;
-        // Значение недели: null для ALL, 'target' для Day X, или номер недели
-        let weekValue: number | null | 'target';
-        if (i === 0) weekValue = null; // ALL
-        else if (i === weekButtons.length - 1) weekValue = 'target'; // Day X
-        else weekValue = i; // Номер недели
+    // Сначала деактивируем все кнопки
+    for (let i = 0; i < weekButtons.length; i++) {
+      const button = weekButtons[i] as HTMLElement;
+      
+      // Сбрасываем стили для всех кнопок
+      button.style.setProperty('opacity', '0.5', '');
+      button.classList.remove('active-tab');
+      
+      // Сбрасываем подчеркивания
+      const underlines = button.querySelectorAll('span[class*="underline"]');
+      underlines.forEach((underline) => {
+        const elem = underline as HTMLElement;
+        elem.style.removeProperty('width');
+      });
+    }
+    
+    // Затем активируем только нужную кнопку
+    for (let i = 0; i < weekButtons.length; i++) {
+      const button = weekButtons[i] as HTMLElement;
+      
+      // Значение недели: 0-4 для недель 1-5, 'target' для Day X
+      let weekValue: number | 'target';
+      if (i === weekButtons.length - 1) weekValue = 'target'; // Day X
+      else weekValue = i; // Номер недели (0-4)
+      
+      if (weekValue === activeWeek) {
+        // Активная кнопка
+        button.style.setProperty('opacity', '1', 'important');
+        button.classList.add('active-tab');
         
-        if (weekValue === activeWeek) {
-          button.style.opacity = '1';
-        } else {
-          button.style.opacity = '0.5';
-        }
+        // Находим все подчеркивания и делаем их видимыми
+        const underlines = button.querySelectorAll('span[class*="underline"]');
+        underlines.forEach((underline) => {
+          const elem = underline as HTMLElement;
+          elem.style.setProperty('width', '50%', 'important');
+        });
+        
+        // Прерываем цикл, так как нашли нужную кнопку
+        break;
       }
-    });
+    }
+  }, []);
+  
+  // Сбрасывает активное состояние всех вкладок
+  const deactivateAllTabs = useCallback(() => {
+    const weekButtons = weekButtonsRef.current?.children;
+    if (!weekButtons) return;
+    
+    // Проходим по всем кнопкам и сбрасываем их состояние
+    for (let i = 0; i < weekButtons.length; i++) {
+      const button = weekButtons[i] as HTMLElement;
+      
+      // Делаем кнопку неактивной
+      button.style.setProperty('opacity', '0.5', '');
+      button.classList.remove('active-tab');
+      
+      // Сбрасываем стили для подчеркиваний
+      const underlines = button.querySelectorAll('span[class*="underline"]');
+      underlines.forEach((underline) => {
+        const elem = underline as HTMLElement;
+        elem.style.removeProperty('width');
+      });
+    }
+    
+    // Сбрасываем активную неделю в реф
+    activeWeekRef.current = 0;
   }, []);
   
   // Определяет, какая неделя сейчас находится в центре видимой области
   const determineVisibleWeek = useCallback(() => {
     // Если Embla API не инициализировано, не можем определить видимую неделю
-    if (!emblaApiRef.current) return null;
+    if (!emblaApiRef.current) return 0; // По умолчанию первая неделя
     
     // Получаем текущий индекс слайда
     const currentIndex = emblaApiRef.current.selectedScrollSnap();
-    // Если не удалось получить индекс, возвращаем null
-    if (currentIndex === undefined || currentIndex < 0) return null;
+    // Если не удалось получить индекс, возвращаем 0 (первая неделя)
+    if (currentIndex === undefined || currentIndex < 0) return 0;
     
     // Получаем текущий подарок
     const currentGift = sortedGifts[currentIndex];
-    if (!currentGift) return null;
+    if (!currentGift) return 0; // По умолчанию первая неделя
     
     // Проверяем, это целевой подарок для Day X?
     if (targetDateGift && currentGift.id === targetDateGift.id) {
       return 'target';
     }
     
-    // Иначе определяем неделю
-    return getGiftWeek(currentGift.openDate, WORD_SYSTEM.START_DATE);
+    // Определяем неделю текущего подарка
+    const week = getGiftWeek(currentGift.openDate, WORD_SYSTEM.START_DATE);
+    
+    // Возвращаем номер недели (0-4) или 0, если неделя не определена
+    return week !== null ? week : 0;
   }, [sortedGifts, targetDateGift]);
   
   // Функция для плавной анимации скролла к указанному индексу
@@ -240,15 +313,51 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     requestAnimationFrame(animationStep);
   }, []);
   
-  // Прокрутка к подаркам выбранной недели с плавной анимацией
-  const scrollToWeek = useCallback((week: number | null | 'target') => {
-    // Если API Embla не инициализировано, не выполняем скролл
-    if (!emblaApiRef.current) return;
+  // Функция для нахождения подарка, ближайшего к указанной дате
+  const findGiftByDate = useCallback((targetDateStr: string): Gift => {
+    if (!sortedGifts.length) {
+      throw new Error("Нет доступных подарков для поиска");
+    }
     
-    // Сохраняем активную неделю в реф, но не вызываем setState
+    const targetDate = new Date(targetDateStr);
+    
+    // Сначала ищем точное совпадение по дате
+    const exactMatch = sortedGifts.find(gift => {
+      const giftDate = new Date(gift.openDate);
+      return (
+        giftDate.getFullYear() === targetDate.getFullYear() &&
+        giftDate.getMonth() === targetDate.getMonth() &&
+        giftDate.getDate() === targetDate.getDate()
+      );
+    });
+    
+    // Если нашли точное совпадение, возвращаем его
+    if (exactMatch) return exactMatch;
+    
+    // Иначе ищем ближайший подарок по дате (не раньше указанной даты)
+    const futureGifts = sortedGifts.filter(gift => {
+      const giftDate = new Date(gift.openDate);
+      return giftDate >= targetDate;
+    });
+    
+    if (futureGifts.length > 0) {
+      // Возвращаем первый подарок после указанной даты
+      return futureGifts[0]!;
+    }
+    
+    // Если нет подарков после указанной даты, возвращаем последний доступный
+    return sortedGifts[sortedGifts.length - 1]!;
+  }, [sortedGifts]);
+  
+  // Прокрутка к подаркам выбранной недели с плавной анимацией
+  const scrollToWeek = useCallback((week: number | 'target') => {
+    // Если API Embla не инициализировано или нет подарков, не выполняем скролл
+    if (!emblaApiRef.current || sortedGifts.length === 0) return;
+    
+    // Сохраняем активную неделю в реф
     activeWeekRef.current = week;
     
-    // Обновляем внешний вид кнопок
+    // Обновляем внешний вид кнопок - вызываем немедленно для мгновенного отклика UI
     updateButtonsAppearance(week);
     
     // Устанавливаем флаг программного скролла
@@ -257,27 +366,49 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     // Находим индекс слайда для плавной прокрутки
     let targetIndex = 0;
     
-    if (week === null) {
-      // Если выбрано "ALL", скроллим к первому подарку
-      targetIndex = 0;
-    }
-    else if (week === 'target' && targetDateGift) {
-      // Если выбран Day X, скроллим к ближайшему к целевой дате подарку
-      const targetGiftIndex = sortedGifts.findIndex(gift => gift.id === targetDateGift.id);
-      if (targetGiftIndex !== -1) {
-        targetIndex = targetGiftIndex;
+    try {
+      if (week === 0) {
+        // Если выбрана неделя 1, скроллим к подарку от 1 июля
+        const firstWeekGift = findGiftByDate(WEEK_DATES.WEEK_1);
+        targetIndex = sortedGifts.findIndex(gift => gift.id === firstWeekGift.id);
       }
-    }
-    else {
-      // Находим первый подарок нужной недели
-      const firstGift = firstGiftByWeek[week as number];
-      if (firstGift) {
-        const giftIndex = sortedGifts.findIndex(gift => gift.id === firstGift.id);
-        if (giftIndex !== -1) {
-          targetIndex = giftIndex;
+      else if (week === 'target') {
+        // Если выбран Day X, скроллим к ближайшему к целевой дате подарку
+        if (targetDateGift) {
+          targetIndex = sortedGifts.findIndex(gift => gift.id === targetDateGift.id);
+        } else {
+          // Если targetDateGift не определен, используем дату из констант
+          const targetGift = findGiftByDate(COUNTDOWN_CONFIG.TARGET_DATE);
+          targetIndex = sortedGifts.findIndex(gift => gift.id === targetGift.id);
         }
       }
+      else if (week === 1) {
+        // Неделя 2: с 7 по 13 июля
+        const secondWeekGift = findGiftByDate(WEEK_DATES.WEEK_2);
+        targetIndex = sortedGifts.findIndex(gift => gift.id === secondWeekGift.id);
+      }
+      else if (week === 2) {
+        // Неделя 3: с 14 по 20 июля
+        const thirdWeekGift = findGiftByDate(WEEK_DATES.WEEK_3);
+        targetIndex = sortedGifts.findIndex(gift => gift.id === thirdWeekGift.id);
+      }
+      else if (week === 3) {
+        // Неделя 4: с 21 по 27 июля
+        const fourthWeekGift = findGiftByDate(WEEK_DATES.WEEK_4);
+        targetIndex = sortedGifts.findIndex(gift => gift.id === fourthWeekGift.id);
+      }
+      else if (week === 4) {
+        // Неделя 5: с 28 по 31 июля
+        const fifthWeekGift = findGiftByDate(WEEK_DATES.WEEK_5);
+        targetIndex = sortedGifts.findIndex(gift => gift.id === fifthWeekGift.id);
+      }
+    } catch (error) {
+      console.error("Ошибка при поиске подарка по дате:", error);
+      targetIndex = 0; // В случае ошибки скроллим к первому подарку
     }
+    
+    // Если индекс не найден, используем первый подарок
+    if (targetIndex === -1) targetIndex = 0;
     
     // Выполняем плавную анимацию скролла
     animateScrollToIndex(targetIndex);
@@ -286,7 +417,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     setTimeout(() => {
       isProgrammaticScrollRef.current = false;
     }, 800); // Увеличенное время для полного завершения анимации
-  }, [updateButtonsAppearance, firstGiftByWeek, sortedGifts, targetDateGift, animateScrollToIndex]);
+  }, [updateButtonsAppearance, sortedGifts, targetDateGift, animateScrollToIndex, findGiftByDate]);
 
   // Прокрутка к определенному подарку по его ID
   const scrollToGift = useCallback((gift: Gift) => {
@@ -359,16 +490,6 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
             giftElement.classList.add('embla-current-gift');
           }
           
-          // Обновляем активную неделю
-          const week = getGiftWeek(currentActiveGift.openDate, WORD_SYSTEM.START_DATE);
-          if (currentActiveGift.id === targetDateGift?.id) {
-            activeWeekRef.current = 'target';
-            updateButtonsAppearance('target');
-          } else if (week !== null) {
-            activeWeekRef.current = week;
-            updateButtonsAppearance(week);
-          }
-          
           // Сбрасываем флаг программного скролла
           isProgrammaticScrollRef.current = false;
         });
@@ -378,10 +499,10 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     // Если Embla API уже доступен, сразу выполняем скролл
     if (emblaApiRef.current) {
       scrollToActiveGift();
+    } else {
+      // Если API еще не доступно, сбрасываем все табы
+      deactivateAllTabs();
     }
-    
-    // Запускаем резервную попытку скролла через короткий промежуток времени
-    const fallbackTimer = setTimeout(scrollToActiveGift, 300);
     
     // Глобальный обработчик колесика мыши, работающий независимо от положения курсора
     function handleGlobalWheel(event: WheelEvent) {
@@ -435,10 +556,23 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     // Очищаем обработчик при размонтировании
     return () => {
       document.removeEventListener('wheel', handleGlobalWheel, { capture: true });
-      // Очищаем таймер
-      clearTimeout(fallbackTimer);
     };
   }, [emblaApiRef.current, currentActiveGift, sortedGifts, targetDateGift, updateButtonsAppearance]);
+
+  // Сбрасываем активное состояние всех табов при монтировании компонента
+  useEffect(() => {
+    // Сбрасываем табы сразу
+    deactivateAllTabs();
+    
+    // И еще раз через небольшую задержку для надежности
+    const timer = setTimeout(() => {
+      deactivateAllTabs();
+    }, 500);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [deactivateAllTabs]);
 
   // Форматируем дату для кнопки Day X
   const formatDate = (dateStr: string) => {
@@ -452,38 +586,44 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
       {/* Кнопки для навигации по неделям */}
       <div ref={weekButtonsRef} className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-6 mb-6 md:mb-8 px-2">
         <IconButton.Root 
-          onClick={() => scrollToWeek(null)}
-          className="opacity-50"
-        >
-          ALL
-        </IconButton.Root>
-        <IconButton.Root 
-          onClick={() => scrollToWeek(1)}
-          className="opacity-50"
+          onClick={() => scrollToWeek(0)}
+          className="week-tab opacity-50"
+          data-week="1"
         >
           1 WEEK
         </IconButton.Root>
         <IconButton.Root 
-          onClick={() => scrollToWeek(2)}
-          className="opacity-50"
+          onClick={() => scrollToWeek(1)}
+          className="week-tab opacity-50"
+          data-week="2"
         >
           2 WEEK
         </IconButton.Root>
         <IconButton.Root 
-          onClick={() => scrollToWeek(3)}
-          className="opacity-50"
+          onClick={() => scrollToWeek(2)}
+          className="week-tab opacity-50"
+          data-week="3"
         >
           3 WEEK
         </IconButton.Root>
         <IconButton.Root 
-          onClick={() => scrollToWeek(4)}
-          className="opacity-50"
+          onClick={() => scrollToWeek(3)}
+          className="week-tab opacity-50"
+          data-week="4"
         >
           4 WEEK
         </IconButton.Root>
         <IconButton.Root 
+          onClick={() => scrollToWeek(4)}
+          className="week-tab opacity-50"
+          data-week="5"
+        >
+          5 WEEK
+        </IconButton.Root>
+        <IconButton.Root 
           onClick={() => scrollToWeek('target')}
-          className="opacity-50"
+          className="week-tab opacity-50"
+          data-week="target"
         >
           DAY X
         </IconButton.Root>
@@ -499,31 +639,24 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
             loop: false,
             inViewThreshold: 0.5,
             skipSnaps: false,
+            // Настройки для разных экранов теперь обрабатываются в компоненте EmblaCarousel
             breakpoints: {
               '(max-width: 768px)': { 
-                dragFree: false,
                 align: 'center',
               }
             }
           }}
           emblaApiRef={emblaApiRef}
+          onDragStart={() => {
+            // При начале перетаскивания сбрасываем активные вкладки
+            deactivateAllTabs();
+          }}
           onScroll={(progress: number) => {
             // Если программный скролл, не обновляем навигацию
             if (isProgrammaticScrollRef.current) return;
             
-            // Очищаем предыдущий таймер, если он был
-            if (scrollTimeoutRef.current) {
-              clearTimeout(scrollTimeoutRef.current);
-            }
-            
-            // Устанавливаем таймер для обновления навигации
-            scrollTimeoutRef.current = setTimeout(() => {
-              const visibleWeek = determineVisibleWeek();
-              if (visibleWeek !== activeWeekRef.current) {
-                activeWeekRef.current = visibleWeek;
-                updateButtonsAppearance(visibleWeek);
-              }
-            }, 50);
+            // Сбрасываем активное состояние всех вкладок при ручном скролле
+            deactivateAllTabs();
           }}
           className="pb-4 px-2 sm:px-4 md:px-8 h-full"
         >
@@ -550,6 +683,7 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
                   openDate={gift.openDate}
                   title={gift.title || undefined}
                   isTargetDay={isTargetGift}
+                  isAdmin={isAdmin}
                 />
               </div>
             );
@@ -561,3 +695,4 @@ export function RoadmapGrid({ gifts }: RoadmapGridProps) {
     </div>
   );
 } 
+

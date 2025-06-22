@@ -117,7 +117,7 @@ export async function POST(request: Request) {
         blocks: [],
         metadata: {
           senderName: "",
-          description: "С днем рождения!",
+          description: "",
         },
       };
       await saveGiftContent(gift.id, defaultContent);

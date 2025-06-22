@@ -117,40 +117,63 @@ export async function PUT(
 
     // Сохраняем контент, если он передан
     if (content) {
-      const success = await saveGiftContent(id, content);
-      if (!success) {
+      console.log(`Сохранение контента для подарка ${id}...`);
+      try {
+        const success = await saveGiftContent(id, content);
+        if (!success) {
+          console.error(`Ошибка сохранения контента для подарка ${id}`);
+          return NextResponse.json(
+            { error: "Failed to save gift content" },
+            { status: 500 }
+          );
+        }
+        console.log(`Контент для подарка ${id} успешно сохранен`);
+        
+        // Если используется Yandex Object Storage, обновляем contentUrl
+        if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
+          const contentUrl = `https://${env.YANDEX_BUCKET_NAME}.storage.yandexcloud.net/${id}_content.json`;
+          // Добавляем contentUrl к данным для обновления
+          body.contentUrl = contentUrl;
+        }
+      } catch (error) {
+        console.error(`Ошибка при сохранении контента для подарка ${id}:`, error);
         return NextResponse.json(
-          { error: "Failed to save gift content" },
+          { error: `Failed to save gift content: ${error instanceof Error ? error.message : 'Unknown error'}` },
           { status: 500 }
         );
       }
-      
-      // Если используется Yandex Object Storage, обновляем contentUrl
-      if (env.YANDEX_ACCESS_KEY_ID && env.YANDEX_SECRET_ACCESS_KEY && env.YANDEX_BUCKET_NAME) {
-        const contentUrl = `https://${env.YANDEX_BUCKET_NAME}.storage.yandexcloud.net/${id}_content.json`;
-        // Добавляем contentUrl к данным для обновления
-        body.contentUrl = contentUrl;
-      }
+    }
+
+    // Подготавливаем данные для обновления
+    const updateData: any = {};
+    
+    // Добавляем только те поля, которые были переданы в запросе
+    if (title !== undefined) updateData.title = title;
+    if (author !== undefined) updateData.author = author;
+    if (nickname !== undefined) updateData.nickname = nickname;
+    if (openDate !== undefined) updateData.openDate = new Date(openDate);
+    if (number !== undefined) updateData.number = number;
+    if (englishDescription !== undefined) updateData.englishDescription = englishDescription;
+    if (hintImageUrl !== undefined) updateData.hintImageUrl = hintImageUrl;
+    if (imageCover !== undefined) updateData.imageCover = imageCover;
+    if (hintText !== undefined) updateData.hintText = hintText;
+    if (codeText !== undefined) updateData.codeText = codeText;
+    if (code !== undefined) updateData.code = code;
+    if (isSecret !== undefined) updateData.isSecret = isSecret;
+    if (body.contentUrl) updateData.contentUrl = body.contentUrl;
+    
+    // Если нет данных для обновления и нет контента, возвращаем ошибку
+    if (Object.keys(updateData).length === 0 && !content && memoryPhoto === undefined) {
+      return NextResponse.json(
+        { error: "No data provided for update" },
+        { status: 400 }
+      );
     }
 
     // Обновляем основные данные подарка
     const updatedGift = await db.gift.update({
       where: { id },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(author && { author }),
-        ...(nickname && { nickname }),
-        ...(openDate && { openDate: new Date(openDate) }),
-        ...(number !== undefined && { number }),
-        ...(englishDescription && { englishDescription }),
-        ...(hintImageUrl && { hintImageUrl }),
-        ...(imageCover !== undefined && { imageCover }),
-        ...(hintText && { hintText }),
-        ...(codeText && { codeText }),
-        ...(code !== undefined && { code }),
-        ...(isSecret !== undefined && { isSecret }),
-        ...(body.contentUrl && { contentUrl: body.contentUrl }),
-      },
+      data: updateData,
       include: {
         memoryPhoto: true,
       },
@@ -203,11 +226,15 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(finalGift);
+    // Добавляем информацию о сохранении контента в ответ
+    return NextResponse.json({
+      ...finalGift,
+      contentSaved: content ? true : undefined
+    });
   } catch (error) {
     console.error("Error updating gift:", error);
     return NextResponse.json(
-      { error: "Failed to update gift" },
+      { error: `Failed to update gift: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
@@ -248,8 +275,13 @@ export async function DELETE(
       }
     }
 
-    // Удаляем локальную папку с файлами подарка
-    await deleteGiftDir(id);
+    // Удаляем локальные файлы подарка
+    try {
+      await deleteGiftDir(id);
+    } catch (error) {
+      console.error(`Ошибка удаления локальных файлов подарка ${id}:`, error);
+      // Продолжаем выполнение, даже если не удалось удалить локальные файлы
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

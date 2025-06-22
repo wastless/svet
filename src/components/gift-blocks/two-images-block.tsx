@@ -9,6 +9,26 @@ interface TwoImagesBlockProps {
 }
 
 export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
+  const getContainerClasses = (size?: string, orientation?: string) => {
+    let sizeClasses = "";
+
+    // Размер
+    switch (size) {
+      case "small":
+        sizeClasses = "w-full md:w-2/3 mx-auto";
+        break;
+      case "medium":
+        sizeClasses = "w-full md:w-4/5 mx-auto";
+        break;
+      case "large":
+      default:
+        sizeClasses = "w-full mx-auto";
+        break;
+    }
+
+    return `${sizeClasses}`;
+  };
+
   const getImageClasses = (size?: string, orientation?: string) => {
     let aspectClasses = "";
 
@@ -140,7 +160,9 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
 
   return (
     <div className={`${className}`}>
-      <ImagesComponent />
+      <div className={getContainerClasses(block.size, block.orientation)}>
+        <ImagesComponent />
+      </div>
     </div>
   );
 } 

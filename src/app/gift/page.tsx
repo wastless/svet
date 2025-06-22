@@ -6,10 +6,13 @@ import { RoadmapGrid } from "~/components/roadmap/RoadmapGrid";
 import type { Gift } from "@prisma/client";
 import { useState, useEffect } from "react";
 import { Spinner } from "~/components/ui/spinner";
+import { useAuth } from "~/components/providers/auth-provider";
 
 export default function GiftPage() {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const isAdmin = user?.username === "admin";
 
   // Загружаем данные о подарках
   useEffect(() => {

@@ -28,7 +28,8 @@ interface GiftData {
 }
 
 export default function HomePage() {
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+  const isAdmin = user?.username === "admin";
   const router = useRouter();
   const { currentDate, isTestMode } = useTimer();
   const { giftsDate } = useDateGifts(); // Переименовываем чтобы избежать конфликта имен
@@ -59,11 +60,11 @@ export default function HomePage() {
     
     // Находим последний доступный подарок
     const availableGifts = gifts
-      .filter((gift) => isGiftOpen(new Date(gift.openDate), giftsDate))
+      .filter((gift) => isGiftOpen(new Date(gift.openDate), giftsDate, isAdmin))
       .sort((a, b) => new Date(b.openDate).getTime() - new Date(a.openDate).getTime());
     
     return availableGifts.length > 0 && availableGifts[0] ? availableGifts[0].id : null;
-  }, [gifts, giftsDate]);
+  }, [gifts, giftsDate, isAdmin]);
   
   // Проверка, является ли текущая дата днем рождения
   const isBirthdayToday = useMemo(() => {

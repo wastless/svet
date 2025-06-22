@@ -10,6 +10,7 @@ import { VideoCircleBlock } from "./video-circle-block";
 import { VideoBlock } from "./video-block";
 import { AudioMessageBlock } from "./audio-message-block";
 import { MusicBlock } from "./music-block";
+import { MusicGalleryBlock } from "./music-gallery-block";
 import { GalleryBlock } from "./gallery-block";
 import { DividerBlock } from "./divider-block";
 import { InfoGraphicBlock } from "./infographic-block";
@@ -96,6 +97,14 @@ export function GiftContentRenderer({
             className={blockClassName}
           />
         );
+      case "musicGallery":
+        return (
+          <MusicGalleryBlock 
+            key={blockKey}
+            block={block}
+            className={blockClassName}
+          />
+        );
       case "gallery":
         return (
           <GalleryBlock 
@@ -129,7 +138,7 @@ export function GiftContentRenderer({
   const senderName = gift?.author || content.metadata?.senderName;
   // Гарантируем, что nickname будет строкой или undefined, но не null
   const nickname = gift?.nickname ? gift.nickname : undefined;
-  const baseText = content.metadata?.description || "С днем рождения!";
+  const baseText = content.metadata?.description || undefined;
 
   return (
     <div className={`space-y-16 ${className}`}>

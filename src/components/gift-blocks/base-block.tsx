@@ -5,7 +5,7 @@ import React from "react";
 interface BaseBlockProps {
   name: string; 
   nickname?: string;
-  text: string;
+  text?: string;
   className?: string;
 }
 
@@ -299,10 +299,12 @@ export function BaseBlock({
         </div>
       </div>
 
-      {/* Основной текст поздравления */}
-      <div className="text-paragraph-lg text-adaptive font-euclid md:text-paragraph-xl">
-        {processText(text)}
-      </div>
+      {/* Основной текст поздравления - отображаем только если он есть */}
+      {text && (
+        <div className="text-paragraph-lg text-adaptive font-euclid md:text-paragraph-xl">
+          {processText(text)}
+        </div>
+      )}
     </div>
   );
 } 

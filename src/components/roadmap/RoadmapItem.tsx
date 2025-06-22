@@ -6,6 +6,8 @@ import { GLImage } from "~/components/roadmap/GLImage";
 import { useRouter } from "next/navigation";
 import { useGifts } from "@/utils/hooks/useDateContext";
 import { TargetDayIcon } from "~/components/ui/icons";
+import { useAuth } from "~/components/providers/auth-provider";
+import { preloadImage } from "./GLImage";
 
 // Типы пропсов компонента
 interface RoadmapItemProps {
@@ -16,6 +18,7 @@ interface RoadmapItemProps {
   openDate: Date;
   title?: string;
   isTargetDay?: boolean; // Флаг для выделения targetDay
+  isAdmin?: boolean; // Флаг, указывающий что пользователь - администратор
 }
 
 // Внутренний компонент для отображения содержимого подарка
@@ -110,10 +113,12 @@ function RoadmapItemComponent({
   imageCover,
   openDate,
   title,
-  isTargetDay = false
+  isTargetDay = false,
+  isAdmin = false
 }: RoadmapItemProps) {
   const router = useRouter();
   const { giftsDate } = useGifts();
+  const { user } = useAuth();
   
   // Используем imageCover если он предоставлен и не пустой, иначе используем hintImageUrl
   // Для закрытых подарков изображение не будет использоваться
@@ -121,12 +126,15 @@ function RoadmapItemComponent({
   
   // Мемоизируем состояние открытия подарка, чтобы избежать лишних перерисовок
   const isOpen = useMemo(() => {
+    // Если пользователь админ, всегда показываем подарки как открытые
+    if (isAdmin) return true;
+    
     if (!giftsDate || !openDate) return false;
     
     // Используем полное сравнение дат с учетом времени, а не только дату
     const dateObj = new Date(openDate);
     return giftsDate >= dateObj;
-  }, [openDate, giftsDate]);
+  }, [openDate, giftsDate, isAdmin]);
   
   // Обработчик клика на открытый подарок
   const handleItemClick = (e: React.MouseEvent) => {
@@ -135,6 +143,15 @@ function RoadmapItemComponent({
       router.push(`/gift/${id}`);
     }
   };
+  
+  // Предварительно устанавливаем пропорции для изображений
+  useEffect(() => {
+    if (coverImage && typeof coverImage === 'string' && coverImage.trim() !== '') {
+      // Предзагружаем основное изображение
+      preloadImage(coverImage)
+        .catch((error: Error) => console.error("Failed to preload cover image:", error));
+    }
+  }, [coverImage]);
   
   // Рендерим мемоизированный компонент содержимого
   return (

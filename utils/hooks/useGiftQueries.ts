@@ -63,7 +63,14 @@ export function useGiftContent(id: string) {
     queryFn: async () => {
       // Добавляем случайный параметр к URL, чтобы обойти кеш браузера
       const timestamp = Date.now();
-      const response = await fetch(`/api/gift-content/${id}?_t=${timestamp}`);
+      const response = await fetch(`/api/gift-content/${id}?_t=${timestamp}`, {
+        // Добавляем заголовки для предотвращения кеширования
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
       
       if (!response.ok) {
         throw new Error(`Ошибка загрузки контента подарка ${id}`);
@@ -71,7 +78,19 @@ export function useGiftContent(id: string) {
       
       // Если это редирект на contentUrl, следуем за ним
       if (response.redirected) {
-        const contentResponse = await fetch(response.url);
+        // Добавляем случайный параметр к URL редиректа для обхода кеша
+        const redirectUrl = new URL(response.url);
+        redirectUrl.searchParams.set('_t', Date.now().toString());
+        
+        const contentResponse = await fetch(redirectUrl.toString(), {
+          // Добавляем заголовки для предотвращения кеширования
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
         if (!contentResponse.ok) {
           throw new Error(`Ошибка загрузки контента подарка ${id} из облачного хранилища`);
         }

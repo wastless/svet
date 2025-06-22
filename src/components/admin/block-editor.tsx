@@ -522,6 +522,333 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
     );
   };
 
+  const renderMusicGalleryEditor = () => {
+    // Инициализация массива треков, если отсутствует
+    const tracks = (localBlock as any).tracks || [];
+    
+    // Генерация уникального ID для нового трека
+    const generateTrackId = () => {
+      return `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    };
+    
+    // Обновление массива треков
+    const handleTracksChange = (updatedTracks: any[]) => {
+      handleChange({ tracks: updatedTracks });
+    };
+    
+    // Обновление конкретного поля трека
+    const handleTrackFieldChange = (
+      index: number, 
+      field: string, 
+      value: any
+    ) => {
+      const newTracks = [...tracks];
+      newTracks[index] = { ...newTracks[index], [field]: value };
+      handleTracksChange(newTracks);
+    };
+    
+    // Загрузка файла (аудио или обложки) для трека
+    const handleTrackFileUpload = async (file: File, index: number, field: string) => {
+      if (!giftId) {
+        alert(
+          "Сначала сохраните подарок с основными данными, затем вы сможете загружать файлы"
+        );
+        return;
+      }
+      
+      setUploadingImageIndexes((prev) => [...prev, index]);
+      
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("giftId", giftId);
+        formData.append("fileType", "block");
+        
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (response.ok) {
+          const { url } = await response.json();
+          handleTrackFieldChange(index, field, url);
+        } else {
+          alert("Ошибка загрузки файла");
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки:", error);
+        alert("Ошибка загрузки файла");
+      } finally {
+        setUploadingImageIndexes((prev) => 
+          prev.filter((idx) => idx !== index)
+        );
+      }
+    };
+    
+    // Добавление нового трека
+    const handleAddTrack = () => {
+      const newTrack = {
+        id: generateTrackId(),
+        url: "",
+        artist: "",
+        trackName: "",
+        coverUrl: "",
+        duration: undefined,
+      };
+      
+      handleTracksChange([...tracks, newTrack]);
+    };
+    
+    // Удаление трека
+    const handleRemoveTrack = (index: number) => {
+      const newTracks = [...tracks];
+      newTracks.splice(index, 1);
+      handleTracksChange(newTracks);
+    };
+    
+    return (
+      <div className="space-y-6">
+        {/* Заголовок и текст для всей галереи */}
+        <div>
+          <Label.Root className="mb-3 block text-paragraph-sm">
+            Заголовок галереи
+          </Label.Root>
+          <Input.Root>
+            <Input.Wrapper>
+              <Input.Input
+                type="text"
+                value={(localBlock as any).title || ""}
+                onChange={(e) => handleChange({ title: e.target.value })}
+                placeholder="Заголовок галереи"
+              />
+            </Input.Wrapper>
+          </Input.Root>
+        </div>
+        
+        <div>
+          <Label.Root className="mb-3 block text-paragraph-sm">
+            Текст галереи
+          </Label.Root>
+          <Textarea.Root
+            value={(localBlock as any).text || ""}
+            onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+              handleChange({ text: e.target.value })
+            }
+            placeholder="Текст для галереи"
+          />
+          <div className="text-sm text-gray-500 mt-1">
+            Доступно форматирование текста: 
+            <span className="font-bold px-1">**жирный**</span>,
+            <span className="italic px-1">*курсив*</span>
+          </div>
+        </div>
+        
+        <div>
+          <Label.Root className="mb-2 block text-paragraph-sm">
+            Размер текста
+          </Label.Root>
+          <Select.Root
+            value={(localBlock as any).textSize || "medium"}
+            onValueChange={(value) => handleChange({ textSize: value as any })}
+          >
+            <Select.Trigger>
+              <Select.Value placeholder="Выберите размер текста" />
+            </Select.Trigger>
+            <Select.Content>
+              {[
+                { label: "Средний", value: "medium" },
+                { label: "Малый", value: "small" },
+              ].map(({ label, value }) => (
+                <Select.Item key={value} value={value}>
+                  {label}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </div>
+        
+        <div className="border-t border-gray-200 pt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-styrene text-paragraph-md">Список треков</h3>
+            <button
+              type="button"
+              onClick={handleAddTrack}
+              className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
+              disabled={tracks.length >= 10}
+            >
+              + Добавить трек
+            </button>
+          </div>
+          
+          {tracks.length === 0 && (
+            <div className="text-center py-6 text-gray-500">
+              Нет добавленных треков. Добавьте трек, используя кнопку выше.
+            </div>
+          )}
+          
+          <div className="space-y-6">
+            {tracks.map((track: any, index: number) => (
+              <div key={track.id || index} className="border border-gray-200 rounded-lg p-4 relative">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTrack(index)}
+                  className="absolute top-2 right-2 rounded-full bg-red-50 p-1.5 text-red-500 hover:bg-red-100"
+                  title="Удалить трек"
+                >
+                  <RiCloseLine className="h-4 w-4" />
+                </button>
+                
+                {/* Детали трека */}
+                <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2">
+                  <div>
+                    <Label.Root className="mb-3 block text-paragraph-sm">
+                      Исполнитель <Label.Asterisk />
+                    </Label.Root>
+                    <Input.Root>
+                      <Input.Wrapper>
+                        <Input.Input
+                          type="text"
+                          value={track.artist || ""}
+                          onChange={(e) => handleTrackFieldChange(index, "artist", e.target.value)}
+                          placeholder="Исполнитель"
+                        />
+                      </Input.Wrapper>
+                    </Input.Root>
+                  </div>
+                  
+                  <div>
+                    <Label.Root className="mb-3 block text-paragraph-sm">
+                      Название трека <Label.Asterisk />
+                    </Label.Root>
+                    <Input.Root>
+                      <Input.Wrapper>
+                        <Input.Input
+                          type="text"
+                          value={track.trackName || ""}
+                          onChange={(e) => handleTrackFieldChange(index, "trackName", e.target.value)}
+                          placeholder="Название трека"
+                        />
+                      </Input.Wrapper>
+                    </Input.Root>
+                  </div>
+                </div>
+                
+                {/* Аудиофайл */}
+                <div className="mt-4">
+                  <Label.Root className="mb-3 block text-paragraph-sm">
+                    Аудио файл <Label.Asterisk />
+                  </Label.Root>
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleTrackFileUpload(file, index, "url");
+                      }}
+                      className="block w-full font-styrene text-paragraph-sm font-medium uppercase text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:font-styrene file:text-paragraph-sm file:font-medium file:uppercase"
+                      disabled={uploadingImageIndexes.includes(index)}
+                    />
+                    {uploadingImageIndexes.includes(index) && (
+                      <div className="text-blue-500 mt-1 text-xs">
+                        Загрузка аудио...
+                      </div>
+                    )}
+                    <Input.Root>
+                      <Input.Wrapper>
+                        <Input.Input
+                          type="url"
+                          value={track.url || ""}
+                          onChange={(e) => handleTrackFieldChange(index, "url", e.target.value)}
+                          placeholder="Или введите URL аудио файла"
+                        />
+                        {track.url && (
+                          <button
+                            type="button"
+                            onClick={() => handleTrackFieldChange(index, "url", "")}
+                            className="p-1"
+                          >
+                            <Input.Icon as={RiCloseLine} />
+                          </button>
+                        )}
+                      </Input.Wrapper>
+                    </Input.Root>
+                  </div>
+                </div>
+                
+                {/* Обложка */}
+                <div className="mt-4">
+                  <Label.Root className="mb-3 block text-paragraph-sm">
+                    Обложка
+                  </Label.Root>
+                  {track.coverUrl && (
+                    <div className="mb-4">
+                      <img
+                        src={track.coverUrl}
+                        alt="Обложка"
+                        className="h-20 w-20 rounded-lg border border-gray-300 object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleTrackFileUpload(file, index, "coverUrl");
+                      }}
+                      className="block w-full font-styrene text-paragraph-sm font-medium uppercase text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:font-styrene file:text-paragraph-sm file:font-medium file:uppercase"
+                      disabled={uploadingImageIndexes.includes(index)}
+                    />
+                    <Input.Root>
+                      <Input.Wrapper>
+                        <Input.Input
+                          type="url"
+                          value={track.coverUrl || ""}
+                          onChange={(e) => handleTrackFieldChange(index, "coverUrl", e.target.value)}
+                          placeholder="URL обложки"
+                        />
+                        {track.coverUrl && (
+                          <button
+                            type="button"
+                            onClick={() => handleTrackFieldChange(index, "coverUrl", "")}
+                            className="p-1"
+                          >
+                            <Input.Icon as={RiCloseLine} />
+                          </button>
+                        )}
+                      </Input.Wrapper>
+                    </Input.Root>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {tracks.length > 0 && tracks.length < 10 && (
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={handleAddTrack}
+                className="rounded-md bg-bg-strong-950 px-4 py-2 text-sm text-white"
+                disabled={tracks.length >= 10}
+              >
+                + Добавить трек ({tracks.length}/10)
+              </button>
+            </div>
+          )}
+          
+          {tracks.length >= 10 && (
+            <div className="mt-4 text-center text-red-500">
+              Достигнут максимум треков (10)
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderTwoImagesEditor = () => {
     // Если images массив не существует или пустой, инициализируем его с двумя элементами
     const images = (localBlock as any).images || [
@@ -1316,10 +1643,10 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
         </Input.Root>
       </div>
 
-      {/* Размер видеокружка */}
+      {/* Размер видео */}
       <div className="pt-2">
         <Label.Root className="mb-2 block text-paragraph-sm">
-          Размер видеокружка
+          Размер видео
         </Label.Root>
         <Select.Root
           value={(localBlock as any).size || "medium"}
@@ -1330,9 +1657,34 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
           </Select.Trigger>
           <Select.Content>
             {[
-              { label: "Маленький", value: "small" },
-              { label: "Средний", value: "medium" },
-              { label: "Большой", value: "large" },
+              { label: "Маленький (1/2 ширины)", value: "small" },
+              { label: "Средний (2/3 ширины)", value: "medium" },
+              { label: "Большой (полная ширина)", value: "large" },
+            ].map(({ label, value }) => (
+              <Select.Item key={value} value={value}>
+                {label}
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+      </div>
+
+      {/* Ориентация видео */}
+      <div className="pt-2">
+        <Label.Root className="mb-2 block text-paragraph-sm">
+          Ориентация видео
+        </Label.Root>
+        <Select.Root
+          value={(localBlock as any).orientation || "horizontal"}
+          onValueChange={(value) => handleChange({ orientation: value as any })}
+        >
+          <Select.Trigger>
+            <Select.Value placeholder="Выберите ориентацию" />
+          </Select.Trigger>
+          <Select.Content>
+            {[
+              { label: "Горизонтальное (16:9)", value: "horizontal" },
+              { label: "Вертикальное (9:16)", value: "vertical" },
             ].map(({ label, value }) => (
               <Select.Item key={value} value={value}>
                 {label}
@@ -1343,7 +1695,6 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
       </div>
 
       {/* Дополнительные настройки видео */}
-
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Checkbox.Root
@@ -1521,6 +1872,31 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
                 { label: "Маленький (1/2 ширины)", value: "small" },
                 { label: "Средний (2/3 ширины)", value: "medium" },
                 { label: "Большой (полная ширина)", value: "large" },
+              ].map(({ label, value }) => (
+                <Select.Item key={value} value={value}>
+                  {label}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </div>
+
+        {/* Ориентация видео */}
+        <div className="pt-2">
+          <Label.Root className="mb-2 block text-paragraph-sm">
+            Ориентация видео
+          </Label.Root>
+          <Select.Root
+            value={(localBlock as any).orientation || "horizontal"}
+            onValueChange={(value) => handleChange({ orientation: value as any })}
+          >
+            <Select.Trigger>
+              <Select.Value placeholder="Выберите ориентацию" />
+            </Select.Trigger>
+            <Select.Content>
+              {[
+                { label: "Горизонтальное (16:9)", value: "horizontal" },
+                { label: "Вертикальное (9:16)", value: "vertical" },
               ].map(({ label, value }) => (
                 <Select.Item key={value} value={value}>
                   {label}
@@ -1882,6 +2258,8 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
       return renderImageEditor();
     case "music":
       return renderMusicEditor();
+    case "musicGallery":
+      return renderMusicGalleryEditor();
     case "two-images":
       return renderTwoImagesEditor();
     case "gallery":

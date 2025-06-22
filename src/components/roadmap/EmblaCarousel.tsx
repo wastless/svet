@@ -3,13 +3,15 @@
 import React, { useCallback, useEffect, useState, useRef, memo } from 'react';
 import type { ReactNode, MutableRefObject } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import type { EmblaOptionsType, EmblaCarouselType } from 'embla-carousel';
+import type { EmblaOptionsType, EmblaCarouselType, EmblaEventType } from 'embla-carousel';
 
 interface EmblaCarouselProps {
   children: ReactNode;
   className?: string;
   options?: EmblaOptionsType;
   onScroll?: (progress: number) => void;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
   emblaApiRef?: MutableRefObject<EmblaCarouselType | null>;
 }
 
@@ -24,9 +26,37 @@ export const EmblaCarousel = memo(function EmblaCarousel({
     loop: false 
   }, 
   onScroll,
+  onDragStart,
+  onDragEnd,
   emblaApiRef
 }: EmblaCarouselProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel(options);
+  // Определяем, является ли устройство мобильным
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Проверяем тип устройства при монтировании
+  useEffect(() => {
+    const checkMobile = () => {
+      const isTouchDevice = 'ontouchstart' in window || 
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia('(max-width: 768px)').matches;
+      setIsMobile(isTouchDevice);
+    };
+    
+    // Проверяем при загрузке
+    checkMobile();
+    
+    // Проверяем при изменении размера окна
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Применяем настройки в зависимости от типа устройства
+  const mergedOptions = {
+    ...options,
+    draggable: isMobile // Включаем drag только на мобильных
+  };
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel(mergedOptions);
   const [scrollProgress, setScrollProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +70,20 @@ export const EmblaCarousel = memo(function EmblaCarousel({
       onScroll(progress);
     }
   }, [emblaApi, onScroll]);
+
+  // Обработчик начала перетаскивания
+  const onEmblaDragStart = useCallback(() => {
+    if (onDragStart) {
+      onDragStart();
+    }
+  }, [onDragStart]);
+
+  // Обработчик окончания перетаскивания
+  const onEmblaDragEnd = useCallback(() => {
+    if (onDragEnd) {
+      onDragEnd();
+    }
+  }, [onDragEnd]);
 
   // Обновляем внешний ref с API, если он предоставлен
   useEffect(() => {
@@ -56,13 +100,29 @@ export const EmblaCarousel = memo(function EmblaCarousel({
       emblaApi.on('scroll', onEmblaScroll);
       emblaApi.on('reInit', onEmblaScroll);
       
+      // Добавляем обработчики для перетаскивания только на мобильных
+      if (isMobile && onDragStart) {
+        emblaApi.on('pointerDown', onEmblaDragStart as any);
+      }
+      if (isMobile && onDragEnd) {
+        emblaApi.on('pointerUp', onEmblaDragEnd as any);
+      }
+      
       // Возвращаем функцию очистки
       return () => {
         emblaApi.off('scroll', onEmblaScroll);
         emblaApi.off('reInit', onEmblaScroll);
+        
+        // Удаляем обработчики для перетаскивания
+        if (isMobile && onDragStart) {
+          emblaApi.off('pointerDown', onEmblaDragStart as any);
+        }
+        if (isMobile && onDragEnd) {
+          emblaApi.off('pointerUp', onEmblaDragEnd as any);
+        }
       };
     }
-  }, [emblaApi, emblaApiRef, onScroll, onEmblaScroll]);
+  }, [emblaApi, emblaApiRef, onScroll, onEmblaScroll, onEmblaDragStart, onEmblaDragEnd, isMobile]);
 
   // Обработчик клавиатурных событий
   useEffect(() => {
@@ -113,7 +173,7 @@ export const EmblaCarousel = memo(function EmblaCarousel({
           emblaRef(node);
         }
       }}
-      className={`overflow-hidden ${className} cursor-grab active:cursor-grabbing`}
+      className={`overflow-hidden ${className} ${isMobile ? 'cursor-grab active:cursor-grabbing' : ''}`}
       data-testid="embla-carousel" 
       role="region" 
       aria-roledescription="carousel"
@@ -121,8 +181,6 @@ export const EmblaCarousel = memo(function EmblaCarousel({
       <div className="flex flex-row">
         {children}
       </div>
-      
-
     </div>
   );
 }); 

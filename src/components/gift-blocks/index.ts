@@ -10,6 +10,7 @@ export { VideoCircleBlock } from './video-circle-block';
 export { VideoBlock } from './video-block';
 export { AudioMessageBlock } from './audio-message-block';
 export { MusicBlock } from './music-block';
+export { MusicGalleryBlock } from './music-gallery-block';
 export { GalleryBlock } from './gallery-block';
 export { DividerBlock } from './divider-block';
 export { InfoGraphicBlock } from './infographic-block'; 

@@ -25,8 +25,12 @@ export async function GET(
     
     // Если есть contentUrl, перенаправляем на него
     if (gift.contentUrl) {
-      // Возвращаем редирект на contentUrl
-      return NextResponse.redirect(gift.contentUrl);
+      // Добавляем случайный параметр для обхода кеша
+      const timestamp = Date.now();
+      const contentUrlWithNoCache = `${gift.contentUrl}?_t=${timestamp}`;
+      
+      // Возвращаем редирект на contentUrl с параметром для обхода кеша
+      return NextResponse.redirect(contentUrlWithNoCache);
     }
     
     // Иначе загружаем контент из локального хранилища
@@ -39,7 +43,13 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(content);
+    // Создаем ответ с заголовками для предотвращения кеширования
+    const response = NextResponse.json(content);
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error) {
     console.error("Error loading gift content:", error);
     return NextResponse.json(

@@ -24,10 +24,10 @@ const pendingRequests: Record<string, Promise<Response>> = {};
 
 // Настройки кеширования для разных типов запросов (в мс)
 const CACHE_TTL = {
-  SESSION: 30 * 60 * 1000, // 30 минут для сессии
-  GIFT: 10 * 60 * 1000, // 10 минут для данных подарка
-  GIFT_CONTENT: 30 * 60 * 1000, // 30 минут для контента подарка
-  DEFAULT: 5 * 60 * 1000, // 5 минут по умолчанию
+  SESSION: 7 * 24 * 60 * 60 * 1000, // 7 дней для сессии
+  GIFT: 60 * 60 * 1000, // 60 минут для данных подарка
+  GIFT_CONTENT: 60 * 60 * 1000, // 60 минут для контента подарка
+  DEFAULT: 30 * 60 * 1000, // 30 минут по умолчанию
 };
 
 // Получаем кеш ключ для URL
@@ -360,73 +360,144 @@ export function invalidateSessionCache() {
  * Очищает кеш для подарков
  */
 export function invalidateGiftCache(giftId?: string) {
-  if (giftId) {
-    // Если указан ID подарка, очищаем только его
-    const keysToDelete = Object.keys(requestCache).filter(key => {
-      const url = getUrlFromCacheKey(key);
-      return url.includes(`/api/gifts/${giftId}`) || url.includes(`/api/gift-content/${giftId}`);
-    });
+  console.log(`🧹 Инвалидация кеша подарков${giftId ? ` для ID: ${giftId}` : ' (все подарки)'}`);
+  
+  // Получаем все ключи кеша
+  const keys = Object.keys(requestCache);
+  
+  // Счетчики для логирования
+  let totalInvalidated = 0;
+  let giftInvalidated = 0;
+  let contentInvalidated = 0;
+  
+  // Проходим по всем ключам и удаляем те, которые относятся к подаркам
+  keys.forEach(key => {
+    const url = getUrlFromCacheKey(key);
     
-    keysToDelete.forEach(key => delete requestCache[key]);
-    console.log(`🗑️ Invalidated cache for gift ${giftId}`);
-    
-    // Принудительно очищаем localStorage для этого подарка
-    try {
-      const savedCache = localStorage.getItem('api_request_cache');
-      if (savedCache) {
-        const parsed = JSON.parse(savedCache);
-        let changed = false;
+    // Если указан конкретный ID подарка
+    if (giftId) {
+      // Проверяем, относится ли ключ к указанному подарку
+      if (
+        (url.includes(`/api/gifts/${giftId}`) || 
+         url.includes(`/api/gift-content/${giftId}`))
+      ) {
+        // Удаляем из кеша
+        delete requestCache[key];
         
-        Object.keys(parsed).forEach(key => {
-          const url = getUrlFromCacheKey(key);
-          if (url.includes(`/api/gifts/${giftId}`) || url.includes(`/api/gift-content/${giftId}`)) {
-            delete parsed[key];
-            changed = true;
-          }
-        });
-        
-        if (changed) {
-          localStorage.setItem('api_request_cache', JSON.stringify(parsed));
-          console.log(`🗑️ LocalStorage cache cleared for gift ${giftId}`);
+        // Увеличиваем счетчик в зависимости от типа запроса
+        if (url.includes('/api/gifts/')) {
+          giftInvalidated++;
+        } else if (url.includes('/api/gift-content/')) {
+          contentInvalidated++;
         }
+        
+        totalInvalidated++;
+        console.log(`🗑️ Удален из кеша: ${url}`);
       }
-    } catch (e) {
-      console.error('Error clearing localStorage cache:', e);
+    } else {
+      // Если ID не указан, удаляем все ключи, связанные с подарками
+      if (
+        url.includes('/api/gifts') || 
+        url.includes('/api/gift-content')
+      ) {
+        // Удаляем из кеша
+        delete requestCache[key];
+        
+        // Увеличиваем счетчик в зависимости от типа запроса
+        if (url.includes('/api/gifts/')) {
+          giftInvalidated++;
+        } else if (url.includes('/api/gift-content/')) {
+          contentInvalidated++;
+        }
+        
+        totalInvalidated++;
+      }
     }
-  } else {
-    // Иначе очищаем весь кеш подарков
-    const keysToDelete = Object.keys(requestCache).filter(key => {
-      const url = getUrlFromCacheKey(key);
-      return url.includes('/api/gifts') || url.includes('/api/gift-content');
-    });
-    
-    keysToDelete.forEach(key => delete requestCache[key]);
-    console.log('🗑️ Gift cache invalidated');
-    
-    // Принудительно очищаем localStorage для всех подарков
+  });
+  
+  // Выводим статистику
+  console.log(`🧹 Инвалидация кеша завершена: всего удалено ${totalInvalidated} записей (подарки: ${giftInvalidated}, контент: ${contentInvalidated})`);
+  
+  // Также очищаем кеш в localStorage
+  if (typeof window !== 'undefined') {
     try {
-      const savedCache = localStorage.getItem('api_request_cache');
+      // Очищаем локальный кеш для конкретного подарка или всех подарков
+      const savedCache = localStorage.getItem('gift_api_cache');
       if (savedCache) {
         const parsed = JSON.parse(savedCache);
-        let changed = false;
+        let modified = false;
         
+        // Проходим по всем ключам в localStorage
         Object.keys(parsed).forEach(key => {
-          const url = getUrlFromCacheKey(key);
-          if (url.includes('/api/gifts') || url.includes('/api/gift-content')) {
-            delete parsed[key];
-            changed = true;
+          if (giftId) {
+            // Если указан ID, удаляем только связанные с ним записи
+            if (key.includes(`/api/gifts/${giftId}`) || key.includes(`/api/gift-content/${giftId}`)) {
+              delete parsed[key];
+              modified = true;
+            }
+          } else {
+            // Если ID не указан, удаляем все записи, связанные с подарками
+            if (key.includes('/api/gifts') || key.includes('/api/gift-content')) {
+              delete parsed[key];
+              modified = true;
+            }
           }
         });
         
-        if (changed) {
-          localStorage.setItem('api_request_cache', JSON.stringify(parsed));
-          console.log('🗑️ LocalStorage cache cleared for all gifts');
+        // Если были изменения, сохраняем обновленный кеш
+        if (modified) {
+          localStorage.setItem('gift_api_cache', JSON.stringify(parsed));
+          console.log('🗑️ Локальный кеш в localStorage обновлен');
         }
       }
-    } catch (e) {
-      console.error('Error clearing localStorage cache:', e);
+    } catch (error) {
+      console.error('Ошибка при очистке localStorage кеша:', error);
     }
   }
   
-  saveCacheToStorage();
+  // Принудительно обновляем кеш при следующем запросе
+  if (typeof window !== 'undefined') {
+    // Добавляем случайный параметр к URL при следующих запросах
+    const timestamp = Date.now();
+    if (giftId) {
+      // Если есть ID, добавляем параметр только для этого подарка
+      const giftUrl = `/api/gifts/${giftId}?_t=${timestamp}`;
+      const contentUrl = `/api/gift-content/${giftId}?_t=${timestamp}`;
+      
+      // Выполняем предварительную загрузку данных
+      setTimeout(() => {
+        console.log(`🔄 Предзагрузка данных подарка ${giftId}...`);
+        fetch(giftUrl, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }).catch(() => {});
+        
+        fetch(contentUrl, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }).catch(() => {});
+      }, 100);
+    } else {
+      // Если ID не указан, добавляем параметр для всех подарков
+      const giftsUrl = `/api/gifts?_t=${timestamp}`;
+      
+      // Выполняем предварительную загрузку списка подарков
+      setTimeout(() => {
+        console.log('🔄 Предзагрузка списка подарков...');
+        fetch(giftsUrl, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }).catch(() => {});
+      }, 100);
+    }
+  }
 } 
