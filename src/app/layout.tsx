@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-// Эта функция генерирует inline скрипт, который будет встроен в HTML документ
+// Эта функция генерирует inline скрипт, который будет встроен в HTML документ в head
 // и выполнится до того, как страница начнет рендериться
 function generateInlineScript() {
   return `
