@@ -152,22 +152,31 @@ export const processText = (text: string) => {
                (i === 0 || /\s/.test(text.charAt(i - 1))) && 
                i + 1 < text.length &&
                text.charAt(i + 1) !== '*') {
-        addCurrentText();
-        i++; // Пропускаем открывающую *
+        // Проверяем, что это не маркер списка (не "* " в начале строки)
+        const isListMarker = i === 0 && i + 1 < text.length && text.charAt(i + 1) === ' ';
         
-        const startPos = i;
-        while (i < text.length && text.charAt(i) !== '*') {
-          i++;
-        }
-        
-        if (i < text.length) {
-          const italicText = text.substring(startPos, i);
-          segments.push(<em key={segments.length}>{formatText(italicText)}</em>);
-          i++; // Пропускаем закрывающую *
+        if (!isListMarker) {
+          addCurrentText();
+          i++; // Пропускаем открывающую *
+          
+          const startPos = i;
+          while (i < text.length && text.charAt(i) !== '*') {
+            i++;
+          }
+          
+          if (i < text.length) {
+            const italicText = text.substring(startPos, i);
+            segments.push(<em key={segments.length}>{formatText(italicText)}</em>);
+            i++; // Пропускаем закрывающую *
+          } else {
+            // Если не найдено закрывающей *, откатываемся
+            currentText += '*';
+            i = startPos;
+          }
         } else {
-          // Если не найдено закрывающей *, откатываемся
-          currentText += '*';
-          i = startPos;
+          // Это маркер списка, обрабатываем как обычный текст
+          currentText += text.charAt(i);
+          i++;
         }
       }
       // Зачеркнутый текст ~~strikethrough~~
@@ -229,7 +238,7 @@ export const processText = (text: string) => {
     const trimmedLine = line.trim();
     
     // Проверяем, является ли строка элементом маркированного списка
-    if (trimmedLine.startsWith('-') || trimmedLine.startsWith('*')) {
+    if ( trimmedLine.startsWith('* ')) {
       // Если у нас есть активный нумерованный список, добавляем его в результат
       addNumberedList();
       
@@ -293,8 +302,8 @@ export function BaseBlock({
       <div className="space-y-2">
         <div className="text-label-md font-nyghtserif italic text-adaptive tracking-wider">
           от <span>{declinedName}</span>
-          {nickname && (
-            <span className="text-text-soft-400"> (@{nickname})</span>
+          {nickname && nickname.startsWith('@') && (
+            <span className="text-text-soft-400"> ({nickname})</span>
           )}
         </div>
       </div>

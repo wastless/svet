@@ -7,11 +7,13 @@ import Link from "next/link";
 import * as Button from "~/components/ui/button";
 import type { MemoryPhoto, Gift } from "@/utils/types/gift";
 import { Spinner } from "~/components/ui/spinner";
+import { useAuth } from "~/components/providers/auth-provider";
 
 export default function GalleryPage() {
   const { currentDate } = useDate();
   const [photos, setPhotos] = useState<MemoryPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
   
   // Загружаем данные о подарках и их фотографиях
   useEffect(() => {
@@ -100,13 +102,14 @@ export default function GalleryPage() {
                   
                   return (
                     <div key={photo.id} className="mb-8 sm:mb-0">
-                      {revealed ? (
+                      {revealed || isAuthenticated ? (
                         <Link href={`/gift/${photo.giftId}`} className="cursor-pointer block">
                           <PolaroidPhoto
                             memoryPhoto={photo}
                             isRevealed={revealed}
                             openDate={ensureDate(photo.gift?.openDate)}
                             size="small"
+                            isAdmin={isAuthenticated}
                           />
                         </Link>
                       ) : (
@@ -116,6 +119,7 @@ export default function GalleryPage() {
                             isRevealed={revealed}
                             openDate={ensureDate(photo.gift?.openDate)}
                             size="small"
+                            isAdmin={isAuthenticated}
                           />
                         </div>
                       )}

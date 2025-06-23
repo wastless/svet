@@ -9,6 +9,7 @@ interface PolaroidPhotoProps {
   openDate: Date; // дата открытия подарка
   className?: string;
   size?: 'small' | 'medium' | 'large'; // размер полароида
+  isAdmin?: boolean; // флаг для админа
 }
 
 export function PolaroidPhoto({
@@ -17,6 +18,7 @@ export function PolaroidPhoto({
   openDate,
   className = "",
   size = 'large',
+  isAdmin = false,
 }: PolaroidPhotoProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [rotation, setRotation] = useState(0); // Start with 0 rotation for SSR
@@ -106,6 +108,9 @@ export function PolaroidPhoto({
   const glossTranslateX = isHovered ? -mousePosition.x * 25 : 0;
   const glossTranslateY = isHovered ? -mousePosition.y * 25 : 0;
 
+  // Определяем, показывать ли фото (для админа или если подарок открыт)
+  const showPhoto = isRevealed || isAdmin;
+
   return (
     <div 
       className={`perspective-[1000px] transition-transform duration-300 polaroid-3d ${className}`}
@@ -144,10 +149,10 @@ export function PolaroidPhoto({
           />
           {/* Основное изображение */}
           <img
-            src={isRevealed ? memoryPhoto.photoUrl : '/placeholder.png'}
+            src={showPhoto ? memoryPhoto.photoUrl : '/placeholder.png'}
             alt="Memory photo"
             className={`duration-800 relative z-[3] h-full w-full object-cover transition-all ${
-              !isRevealed
+              !showPhoto
                 ? "blur-[20px] grayscale"
                 : "animate-[reveal_1.5s_ease-out]"
             }`}
@@ -155,7 +160,7 @@ export function PolaroidPhoto({
           />
 
           {/* Текстура шума (только для закрытого состояния) */}
-          {!isRevealed && (
+          {!showPhoto && (
             <div
               className="absolute inset-0 z-[4] h-full w-full bg-cover bg-center opacity-50"
               style={{
@@ -166,7 +171,7 @@ export function PolaroidPhoto({
           )}
 
           {/* Текстура пластика (только для закрытого состояния) */}
-          {!isRevealed && (
+          {!showPhoto && (
             <div
               className="absolute inset-0 z-[5] h-full w-full bg-cover bg-center"
               style={{
@@ -177,7 +182,7 @@ export function PolaroidPhoto({
           )}
 
           {/* Знак вопроса (только для закрытого состояния) */}
-          {!isRevealed && (
+          {!showPhoto && (
             <div 
               className="absolute left-1/2 top-1/2 z-[6] -translate-x-1/2 -translate-y-1/2 transform"
               style={{
@@ -217,8 +222,8 @@ export function PolaroidPhoto({
               transition: 'none',
             }}
           >
-            {isRevealed 
-              ? (memoryPhoto.gift?.nickname ? `@${memoryPhoto.gift.nickname}` : '')
+            {showPhoto 
+              ? (memoryPhoto.gift?.nickname ? `${memoryPhoto.gift.nickname}` : '')
               : 'Mister X'
             }
           </span>
@@ -230,7 +235,7 @@ export function PolaroidPhoto({
               transition: 'none',
             }}
           >
-            {isRevealed 
+            {showPhoto 
               ? formatDate(memoryPhoto.photoDate || null) 
               : `${formatDate(openDate)}`
             }
