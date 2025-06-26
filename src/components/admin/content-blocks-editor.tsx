@@ -5,7 +5,7 @@ import type { GiftContent, GiftBlock } from "@/utils/types/gift";
 import { BlockEditor } from "./block-editor";
 import * as Label from "~/components/ui/label";
 import * as Textarea from "~/components/ui/textarea";
-import { RiText, RiImageLine, RiGalleryLine, RiMultiImageLine, RiCircleLine, RiVideoLine, RiMusic2Line, RiMicLine, RiQuillPenLine, RiSeparator, RiPieChart2Line } from "@remixicon/react";
+import { RiText, RiImageLine, RiGalleryLine, RiMultiImageLine, RiCircleLine, RiVideoLine, RiMusic2Line, RiMicLine, RiQuillPenLine, RiSeparator, RiPieChart2Line, RiLayoutColumnLine } from "@remixicon/react";
 import { BlockIcon, EmptyBlocksIcon, RemoveBlockIcon } from "~/components/ui/icons";
 import { RiArrowDownSLine, RiArrowUpSLine, RiEyeOffLine, RiEyeLine, RiSaveLine, RiArrowUpLine, RiArrowDownLine, RiArrowUpDoubleLine, RiArrowDownDoubleLine, RiListUnordered, RiCloseCircleLine } from "@remixicon/react";
 import * as Input from "~/components/ui/input";
@@ -136,7 +136,7 @@ export function ContentBlocksEditor({
           url: "",
           layout: "image-center",
           size: "medium",
-          orientation: "horizontal",
+          orientation: "horizontal"
         };
         break;
       case "two-images":
@@ -144,11 +144,15 @@ export function ContentBlocksEditor({
           type: "two-images",
           images: [{ url: "" }, { url: "" }],
           size: "medium",
-          orientation: "horizontal",
+          orientation: "horizontal"
         };
         break;
       case "gallery":
-        newBlock = { type: "gallery", images: [{ url: "" }], columns: 2 };
+        newBlock = { 
+          type: "gallery", 
+          images: [{ url: "" }], 
+          columns: 2
+        };
         break;
       case "video-circle":
         newBlock = {
@@ -157,7 +161,7 @@ export function ContentBlocksEditor({
           size: "medium",
           autoplay: false,
           muted: true,
-          loop: false,
+          loop: false
         };
         break;
       case "video":
@@ -167,11 +171,14 @@ export function ContentBlocksEditor({
           size: "medium",
           autoplay: false,
           muted: true,
-          loop: false,
+          loop: false
         };
         break;
       case "audio-message":
-        newBlock = { type: "audio-message", url: "" };
+        newBlock = { 
+          type: "audio-message", 
+          url: ""
+        };
         break;
       case "music":
         newBlock = {
@@ -180,7 +187,7 @@ export function ContentBlocksEditor({
           url: "",
           coverUrl: "",
           artist: "",
-          trackName: "",
+          trackName: ""
         };
         break;
       case "musicGallery":
@@ -189,7 +196,6 @@ export function ContentBlocksEditor({
           id: `musicGallery_${Date.now()}`,
           title: "",
           text: "",
-          textSize: "medium",
           tracks: [{
             id: `track_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             url: "",
@@ -209,6 +215,17 @@ export function ContentBlocksEditor({
           count: 1,
           items: [{ number: "0", text: "Текст под цифрой" }],
           alignment: "center"
+        };
+        break;
+      case "text-columns":
+        newBlock = { 
+          type: "text-columns", 
+          count: 2,
+          items: [
+            { title: "Заголовок 1", text: "Текст первой колонки" },
+            { title: "Заголовок 2", text: "Текст второй колонки" }
+          ],
+          alignment: "left"
         };
         break;
       default:
@@ -383,6 +400,11 @@ export function ContentBlocksEditor({
       name: "Инфографика",
       icon: <RiPieChart2Line />,
     },
+    {
+      type: "text-columns",
+      name: "Колонки",
+      icon: <RiLayoutColumnLine />,
+    },
   ] as const;
 
   return (
@@ -497,19 +519,110 @@ export function ContentBlocksEditor({
                 <h3 className="font-styrene text-paragraph-sm font-medium uppercase mb-3">
                   Добавить первый блок
                 </h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {blockTypes.map((blockType) => (
-                    <button
-                      key={blockType.type}
-                      onClick={() => handleAddBlock(blockType.type)}
-                      className="flex items-center rounded-lg border border-gray-200 bg-white p-2 text-left transition-colors hover:bg-gray-100"
-                    >
-                      <span className="mr-3 mt-1">{blockType.icon}</span>
-                      <h4 className="font-styrene text-paragraph-sm font-medium uppercase text-adaptive">
-                        {blockType.name}
-                      </h4>
-                    </button>
-                  ))}
+                <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("text")}
+                  >
+                    <RiText className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Текст</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("quote")}
+                  >
+                    <RiQuillPenLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Цитата</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("image")}
+                  >
+                    <RiImageLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Картинка</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("two-images")}
+                  >
+                    <RiMultiImageLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Две картинки</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("gallery")}
+                  >
+                    <RiGalleryLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Галерея</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("video-circle")}
+                  >
+                    <RiCircleLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Видеокруг</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("video")}
+                  >
+                    <RiVideoLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Видео</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("audio-message")}
+                  >
+                    <RiMicLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Аудио</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("music")}
+                  >
+                    <RiMusic2Line className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Музыка</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("musicGallery")}
+                  >
+                    <RiMusic2Line className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Плейлист</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("divider")}
+                  >
+                    <RiSeparator className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Разделитель</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("infographic")}
+                  >
+                    <RiPieChart2Line className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Инфографика</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("text-columns")}
+                  >
+                    <RiLayoutColumnLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Колонки</span>
+                  </Button.Root>
                 </div>
               </div>
             </div>

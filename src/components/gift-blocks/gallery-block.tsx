@@ -35,7 +35,7 @@ export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
     if (!block.title) return null;
     return (
       <div className="text-center text-adaptive">
-        <h3 className="font-nyghtserif text-label-sm md:text-label-md italic">{block.title}</h3>
+        <h3 className="font-nyghtserif text-label-sm md:text-label-md italic">({block.title})</h3>
       </div>
     );
   };
@@ -44,14 +44,9 @@ export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
   const TextComponent = () => {
     if (!block.text) return null;
 
-    const textSizeClass =
-      block.textSize === "medium"
-        ? "text-paragraph-lg md:text-paragraph-xl"
-        : "text-paragraph-md md:text-paragraph-lg";
-
     return (
       <div className="text-center text-adaptive">
-        <p className={`${textSizeClass} font-euclid`}>{block.text}</p>
+        <p className="text-paragraph-lg md:text-paragraph-xl font-euclid">{block.text}</p>
       </div>
     );
   };
@@ -75,7 +70,7 @@ export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
   );
 
   return (
-    <div className={`space-y-8 ${className}`}>
+    <div className={`space-y-6 ${className}`}>
       <div className="flex flex-col gap-1">
         {/* Заголовок */}
         <TitleComponent />

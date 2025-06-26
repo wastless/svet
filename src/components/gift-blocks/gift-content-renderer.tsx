@@ -14,6 +14,7 @@ import { MusicGalleryBlock } from "./music-gallery-block";
 import { GalleryBlock } from "./gallery-block";
 import { DividerBlock } from "./divider-block";
 import { InfoGraphicBlock } from "./infographic-block";
+import { TextColumnsBlock } from "./text-columns-block";
 
 interface GiftContentRendererProps {
   content: GiftContent;
@@ -30,7 +31,7 @@ export function GiftContentRenderer({
 }: GiftContentRendererProps) {
   const renderBlock = (block: GiftBlock, index: number) => {
     const blockKey = `block-${index}`;
-    const blockClassName = "mb-12"; // отступ между блоками
+    const blockClassName = "my-0"; // отступ между блоками
 
     switch (block.type) {
       case "text":
@@ -129,6 +130,14 @@ export function GiftContentRenderer({
             className={blockClassName}
           />
         );
+      case "text-columns":
+        return (
+          <TextColumnsBlock 
+            key={blockKey}
+            block={block}
+            className={blockClassName}
+          />
+        );
       default:
         return null;
     }
@@ -148,7 +157,7 @@ export function GiftContentRenderer({
           name={senderName}
           nickname={nickname}
           text={baseText}
-          className="mb-16"
+          className="mb-12"
         />
       )}
 

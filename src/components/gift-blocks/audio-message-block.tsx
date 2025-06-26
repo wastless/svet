@@ -119,11 +119,7 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <div className={`font-euclid ${
-              block.textSize === "medium" 
-                ? "text-paragraph-lg md:text-paragraph-xl"
-                : "text-paragraph-md md:text-paragraph-lg" 
-            }`}>
+            <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
               {processText(block.text)}
             </div>
           </div>
@@ -132,7 +128,7 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
 
       {/* Голосовое сообщение */}
       <div className="flex justify-center">
-        <div className="rounded-2xl p-2 max-w-lg w-full">
+        <div className="rounded-2xl p-4 max-w-lg w-full">
           <div className="flex items-center gap-3">
             {/* Кнопка воспроизведения */}
             <button

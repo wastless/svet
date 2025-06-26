@@ -74,12 +74,8 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {/* Текст */}
         {block.text && (
           <div className="text-center text-adaptive">
-            <div className={`font-euclid ${
-              block.textSize === "medium" 
-              ? "text-paragraph-lg md:text-paragraph-xl"
-              : "text-paragraph-md md:text-paragraph-lg" 
-            }`}>
-              {processText(block.text)}
+            <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
+              {block.text}
             </div>
           </div>
         )}

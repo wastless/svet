@@ -13,4 +13,5 @@ export { MusicBlock } from './music-block';
 export { MusicGalleryBlock } from './music-gallery-block';
 export { GalleryBlock } from './gallery-block';
 export { DividerBlock } from './divider-block';
-export { InfoGraphicBlock } from './infographic-block'; 
+export { InfoGraphicBlock } from './infographic-block';
+export { TextColumnsBlock } from './text-columns-block'; 
