@@ -276,7 +276,7 @@ chmod +x ~/update-ssl.sh
 
 
 
-# Найдите и остановите все запущенные контейнеры
+# Найдите и остановите все запущенные контейнер
 docker ps -a
 docker stop $(docker ps -q)
 docker rm $(docker ps -aq)
