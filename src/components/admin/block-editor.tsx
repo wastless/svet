@@ -2290,6 +2290,486 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
     );
   };
 
+  const renderTwoVideosEditor = () => {
+    // Если videos массив не существует или пустой, инициализируем его с двумя элементами
+    const videos = (localBlock as any).videos || [
+      { url: "", title: "", text: "", caption: "", layout: "text-top", autoplay: false, muted: true, loop: false },
+      { url: "", title: "", text: "", caption: "", layout: "text-top", autoplay: false, muted: true, loop: false },
+    ];
+
+    // Обновляем только массив videos
+    const handleVideosChange = (updatedVideos: any[]) => {
+      handleChange({ videos: updatedVideos });
+    };
+
+    // Обновляем конкретное поле в конкретном видео
+    const handleVideoFieldChange = (
+      index: number,
+      field: string,
+      value: any,
+    ) => {
+      const newVideos = [...videos];
+      newVideos[index] = { ...newVideos[index], [field]: value };
+      handleVideosChange(newVideos);
+    };
+
+    // Загрузка видео
+    const handleVideoFileUpload = async (file: File, index: number) => {
+      if (!giftId) {
+        alert(
+          "Сначала сохраните подарок с основными данными, затем вы сможете загружать файлы",
+        );
+        return;
+      }
+
+      // Добавляем индекс в массив загружаемых
+      setUploadingImageIndexes((prev) => [...prev, index]);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("giftId", giftId);
+        formData.append("fileType", "video");
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const { url } = await response.json();
+          handleVideoFieldChange(index, "url", url);
+        } else {
+          alert("Ошибка загрузки видео");
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки:", error);
+        alert("Ошибка загрузки видео");
+      } finally {
+        // Удаляем индекс из массива загружаемых
+        setUploadingImageIndexes((prev) =>
+          prev.filter((i) => i !== index),
+        );
+      }
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Глобальные настройки для обоих видео */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label.Root className="mb-2 block text-paragraph-sm">
+              Размер
+            </Label.Root>
+            <Select.Root
+              value={(localBlock as any).size || "medium"}
+              onValueChange={(value) => handleChange({ size: value as any })}
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="Выберите размер" />
+              </Select.Trigger>
+              <Select.Content>
+                {[
+                  { label: "Маленький", value: "small" },
+                  { label: "Средний", value: "medium" },
+                  { label: "Большой", value: "large" },
+                ].map(({ label, value }) => (
+                  <Select.Item key={value} value={value}>
+                    {label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </div>
+
+          <div>
+            <Label.Root className="mb-2 block text-paragraph-sm">
+              Ориентация
+            </Label.Root>
+            <Select.Root
+              value={(localBlock as any).orientation || "horizontal"}
+              onValueChange={(value) =>
+                handleChange({ orientation: value as any })
+              }
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="Выберите ориентацию" />
+              </Select.Trigger>
+              <Select.Content>
+                {[
+                  { label: "Горизонтальная", value: "horizontal" },
+                  { label: "Вертикальная", value: "vertical" },
+                ].map(({ label, value }) => (
+                  <Select.Item key={value} value={value}>
+                    {label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </div>
+        </div>
+
+        {/* Первое видео */}
+        <div className="rounded-md border border-gray-200 p-4">
+          <h3 className="mb-4 font-styrene text-lg font-medium">
+            Видео 1
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              {videos[0]?.url && (
+                <div className="mb-4">
+                  <video
+                    src={videos[0].url}
+                    controls
+                    className="h-40 rounded-lg border border-gray-300 object-cover"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleVideoFileUpload(file, 0);
+                  }}
+                  className="block w-full font-styrene text-paragraph-sm font-medium uppercase text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:font-styrene file:text-paragraph-sm file:font-medium file:uppercase"
+                  disabled={uploadingImageIndexes.includes(0)}
+                />
+                {uploadingImageIndexes.includes(0) && (
+                  <div className="text-blue-500 mt-1 text-xs">
+                    Загрузка видео...
+                  </div>
+                )}
+                <Input.Root>
+                  <Input.Wrapper>
+                    <Input.Input
+                      type="url"
+                      value={videos[0]?.url || ""}
+                      onChange={(e) =>
+                        handleVideoFieldChange(0, "url", e.target.value)
+                      }
+                      placeholder="Или введите URL видео..."
+                    />
+                    {videos[0]?.url && (
+                      <button
+                        type="button"
+                        onClick={() => handleVideoFieldChange(0, "url", "")}
+                        className="p-1"
+                      >
+                        <Input.Icon as={RiCloseLine} />
+                      </button>
+                    )}
+                  </Input.Wrapper>
+                </Input.Root>
+              </div>
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Заголовок
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={videos[0]?.title || ""}
+                    onChange={(e) =>
+                      handleVideoFieldChange(0, "title", e.target.value)
+                    }
+                    placeholder="Заголовок видео"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Текст
+              </Label.Root>
+              <Textarea.Root
+                value={videos[0]?.text || ""}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  handleVideoFieldChange(0, "text", e.target.value)
+                }
+                placeholder="Описание видео"
+              />
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Подпись
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={videos[0]?.caption || ""}
+                    onChange={(e) =>
+                      handleVideoFieldChange(0, "caption", e.target.value)
+                    }
+                    placeholder="Подпись под видео"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Расположение текста
+              </Label.Root>
+              <Select.Root
+                value={videos[0]?.layout || "text-top"}
+                onValueChange={(value) =>
+                  handleVideoFieldChange(0, "layout", value)
+                }
+              >
+                <Select.Trigger>
+                  <Select.Value placeholder="Выберите расположение" />
+                </Select.Trigger>
+                <Select.Content>
+                  {[
+                    { label: "Текст сверху", value: "text-top" },
+                    { label: "Текст снизу", value: "text-bottom" },
+                  ].map(({ label, value }) => (
+                    <Select.Item key={value} value={value}>
+                      {label}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </div>
+
+            {/* Дополнительные настройки видео */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox.Root
+                  id="video1-autoplay"
+                  checked={videos[0]?.autoplay || false}
+                  onCheckedChange={(checked) => handleVideoFieldChange(0, "autoplay", checked)}
+                />
+                <Label.Root
+                  className="font-styrene text-paragraph-sm font-medium text-text-strong-950"
+                  htmlFor="video1-autoplay"
+                >
+                  Автовоспроизведение
+                </Label.Root>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox.Root
+                  id="video1-muted"
+                  checked={videos[0]?.muted !== false}
+                  onCheckedChange={(checked) => handleVideoFieldChange(0, "muted", checked)}
+                />
+                <Label.Root
+                  className="font-styrene text-paragraph-sm font-medium text-text-strong-950"
+                  htmlFor="video1-muted"
+                >
+                  Без звука
+                </Label.Root>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox.Root
+                  id="video1-loop"
+                  checked={videos[0]?.loop || false}
+                  onCheckedChange={(checked) => handleVideoFieldChange(0, "loop", checked)}
+                />
+                <Label.Root
+                  className="font-styrene text-paragraph-sm font-medium text-text-strong-950"
+                  htmlFor="video1-loop"
+                >
+                  Зацикленное воспроизведение
+                </Label.Root>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Второе видео */}
+        <div className="rounded-md border border-gray-200 p-4">
+          <h3 className="mb-4 font-styrene text-lg font-medium">
+            Видео 2
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              {videos[1]?.url && (
+                <div className="mb-4">
+                  <video
+                    src={videos[1].url}
+                    controls
+                    className="h-40 rounded-lg border border-gray-300 object-cover"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleVideoFileUpload(file, 1);
+                  }}
+                  className="block w-full font-styrene text-paragraph-sm font-medium uppercase text-gray-500 file:mr-4 file:rounded-md file:border-0 file:px-4 file:py-2 file:font-styrene file:text-paragraph-sm file:font-medium file:uppercase"
+                  disabled={uploadingImageIndexes.includes(1)}
+                />
+                {uploadingImageIndexes.includes(1) && (
+                  <div className="text-blue-500 mt-1 text-xs">
+                    Загрузка видео...
+                  </div>
+                )}
+                <Input.Root>
+                  <Input.Wrapper>
+                    <Input.Input
+                      type="url"
+                      value={videos[1]?.url || ""}
+                      onChange={(e) =>
+                        handleVideoFieldChange(1, "url", e.target.value)
+                      }
+                      placeholder="Или введите URL видео..."
+                    />
+                    {videos[1]?.url && (
+                      <button
+                        type="button"
+                        onClick={() => handleVideoFieldChange(1, "url", "")}
+                        className="p-1"
+                      >
+                        <Input.Icon as={RiCloseLine} />
+                      </button>
+                    )}
+                  </Input.Wrapper>
+                </Input.Root>
+              </div>
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Заголовок
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={videos[1]?.title || ""}
+                    onChange={(e) =>
+                      handleVideoFieldChange(1, "title", e.target.value)
+                    }
+                    placeholder="Заголовок видео"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Текст
+              </Label.Root>
+              <Textarea.Root
+                value={videos[1]?.text || ""}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  handleVideoFieldChange(1, "text", e.target.value)
+                }
+                placeholder="Описание видео"
+              />
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Подпись
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={videos[1]?.caption || ""}
+                    onChange={(e) =>
+                      handleVideoFieldChange(1, "caption", e.target.value)
+                    }
+                    placeholder="Подпись под видео"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Расположение текста
+              </Label.Root>
+              <Select.Root
+                value={videos[1]?.layout || "text-top"}
+                onValueChange={(value) =>
+                  handleVideoFieldChange(1, "layout", value)
+                }
+              >
+                <Select.Trigger>
+                  <Select.Value placeholder="Выберите расположение" />
+                </Select.Trigger>
+                <Select.Content>
+                  {[
+                    { label: "Текст сверху", value: "text-top" },
+                    { label: "Текст снизу", value: "text-bottom" },
+                  ].map(({ label, value }) => (
+                    <Select.Item key={value} value={value}>
+                      {label}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </div>
+
+            {/* Дополнительные настройки видео */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Checkbox.Root
+                  id="video2-autoplay"
+                  checked={videos[1]?.autoplay || false}
+                  onCheckedChange={(checked) => handleVideoFieldChange(1, "autoplay", checked)}
+                />
+                <Label.Root
+                  className="font-styrene text-paragraph-sm font-medium text-text-strong-950"
+                  htmlFor="video2-autoplay"
+                >
+                  Автовоспроизведение
+                </Label.Root>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox.Root
+                  id="video2-muted"
+                  checked={videos[1]?.muted !== false}
+                  onCheckedChange={(checked) => handleVideoFieldChange(1, "muted", checked)}
+                />
+                <Label.Root
+                  className="font-styrene text-paragraph-sm font-medium text-text-strong-950"
+                  htmlFor="video2-muted"
+                >
+                  Без звука
+                </Label.Root>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox.Root
+                  id="video2-loop"
+                  checked={videos[1]?.loop || false}
+                  onCheckedChange={(checked) => handleVideoFieldChange(1, "loop", checked)}
+                />
+                <Label.Root
+                  className="font-styrene text-paragraph-sm font-medium text-text-strong-950"
+                  htmlFor="video2-loop"
+                >
+                  Зацикленное воспроизведение
+                </Label.Root>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Упрощенный рендер для других типов блоков
   const renderGenericEditor = () => (
     <div className="space-y-4">
@@ -2354,6 +2834,8 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
       return renderMusicGalleryEditor();
     case "two-images":
       return renderTwoImagesEditor();
+    case "two-videos":
+      return renderTwoVideosEditor();
     case "gallery":
       return renderGalleryEditor();
     case "video-circle":

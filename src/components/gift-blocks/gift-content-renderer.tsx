@@ -8,6 +8,7 @@ import { ImageBlock } from "./image-block";
 import { TwoImagesBlock } from "./two-images-block";
 import { VideoCircleBlock } from "./video-circle-block";
 import { VideoBlock } from "./video-block";
+import { TwoVideosBlock } from "./two-videos-block";
 import { AudioMessageBlock } from "./audio-message-block";
 import { MusicBlock } from "./music-block";
 import { MusicGalleryBlock } from "./music-gallery-block";
@@ -61,6 +62,14 @@ export function GiftContentRenderer({
       case "two-images":
         return (
           <TwoImagesBlock 
+            key={blockKey}
+            block={block}
+            className={blockClassName}
+          />
+        );
+      case "two-videos":
+        return (
+          <TwoVideosBlock 
             key={blockKey}
             block={block}
             className={blockClassName}

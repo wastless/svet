@@ -147,6 +147,27 @@ export function ContentBlocksEditor({
           orientation: "horizontal"
         };
         break;
+      case "two-videos":
+        newBlock = {
+          type: "two-videos",
+          videos: [
+            { 
+              url: "", 
+              autoplay: false, 
+              muted: true, 
+              loop: false 
+            }, 
+            { 
+              url: "", 
+              autoplay: false, 
+              muted: true, 
+              loop: false 
+            }
+          ],
+          size: "medium",
+          orientation: "horizontal"
+        };
+        break;
       case "gallery":
         newBlock = { 
           type: "gallery", 
@@ -365,6 +386,11 @@ export function ContentBlocksEditor({
       icon: <RiMultiImageLine />,
     },
     {
+      type: "two-videos",
+      name: "Два видео",
+      icon: <RiVideoLine />,
+    },
+    {
       type: "gallery",
       name: "Галерея",
       icon: <RiGalleryLine />,
@@ -550,6 +576,14 @@ export function ContentBlocksEditor({
                   >
                     <RiMultiImageLine className="mb-2 h-6 w-6" />
                     <span className="text-xs">Две картинки</span>
+                  </Button.Root>
+                  
+                  <Button.Root
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-md hover:bg-gray-50"
+                    onClick={() => handleAddBlock("two-videos")}
+                  >
+                    <RiVideoLine className="mb-2 h-6 w-6" />
+                    <span className="text-xs">Два видео</span>
                   </Button.Root>
                   
                   <Button.Root

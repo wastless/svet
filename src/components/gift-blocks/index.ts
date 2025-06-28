@@ -8,6 +8,7 @@ export { ImageBlock } from './image-block';
 export { TwoImagesBlock } from './two-images-block';
 export { VideoCircleBlock } from './video-circle-block';
 export { VideoBlock } from './video-block';
+export { TwoVideosBlock } from './two-videos-block';
 export { AudioMessageBlock } from './audio-message-block';
 export { MusicBlock } from './music-block';
 export { MusicGalleryBlock } from './music-gallery-block';

@@ -7,6 +7,7 @@ import { DateProvider } from "@/utils/hooks/useDateContext";
 import { DateTestControl } from "~/components/ui/date-test-control";
 import { SmoothScrollScript } from "~/components/ui/smooth-scroll";
 import { ReactQueryProvider } from "@/utils/providers/ReactQueryProvider";
+import { InkCursor } from "~/components/ui/ink-cursor";
 
 export const metadata: Metadata = {
   title: "Lesya Svet",
@@ -134,6 +135,7 @@ export default function RootLayout({
                 {children}
               </div>
               <DateTestControl />
+              <InkCursor />
             </DateProvider>
           </Providers>
         </ReactQueryProvider>

@@ -139,6 +139,23 @@ export interface VideoBlock {
   loop?: boolean; // зацикливание видео
 }
 
+// Блок с двумя видео
+export interface TwoVideosBlock {
+  type: "two-videos";
+  videos: {
+    url: string; // видео
+    title?: string; // заголовок для каждого видео
+    text?: string; // описание для каждого видео
+    caption?: string; // подпись под видео
+    layout?: "text-top" | "text-bottom"; // расположение текста для каждого видео
+    autoplay?: boolean; // автовоспроизведение
+    muted?: boolean; // отключить звук по умолчанию
+    loop?: boolean; // зацикливание видео
+  }[];
+  size?: "small" | "medium" | "large"; // размер видео
+  orientation?: "horizontal" | "vertical"; // ориентация видео
+}
+
 // Блок с голосовым сообщением
 export interface AudioMessageBlock {
   type: "audio-message";
@@ -177,7 +194,7 @@ export type MusicGalleryBlock = {
 };
 
 // Объединенный тип блоков
-export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | AudioMessageBlock | MusicBlock | MusicGalleryBlock | GalleryBlock | DividerBlock | InfoGraphicBlock | TextColumnsBlock;
+export type GiftBlock = TextBlock | QuoteBlock | ImageBlock | TwoImagesBlock | VideoCircleBlock | VideoBlock | TwoVideosBlock | AudioMessageBlock | MusicBlock | MusicGalleryBlock | GalleryBlock | DividerBlock | InfoGraphicBlock | TextColumnsBlock;
 
 // Основная структура контента подарка
 export interface GiftContent {
