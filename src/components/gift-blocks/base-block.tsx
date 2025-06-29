@@ -274,7 +274,7 @@ export const processText = (text: string) => {
           </React.Fragment>
         );
       } else if (i < lines.length - 1) {
-        // Пустая строка - просто добавляем перенос
+        // Пустая строка - всегда добавляем перенос
         result.push(<br key={`br-${result.length}`} />);
       }
     }

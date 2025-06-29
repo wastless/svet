@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import type { VideoBlock as VideoBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
@@ -16,13 +16,34 @@ interface VideoBlockProps {
 
 export function VideoBlock({ block, className = "" }: VideoBlockProps) {
   const [isReady, setIsReady] = useState(false);
+  const [videoRatio, setVideoRatio] = useState<number | null>(null);
+  const playerRef = useRef<any>(null);
 
-  const getVideoClasses = (size?: string, orientation?: string) => {
+  // Обработчик события готовности видео
+  const handleReady = (player: any) => {
+    setIsReady(true);
+    
+    // Получаем реальные размеры видео
+    if (player && player.getInternalPlayer()) {
+      const videoElement = player.getInternalPlayer();
+      if (videoElement.videoWidth && videoElement.videoHeight) {
+        const ratio = videoElement.videoWidth / videoElement.videoHeight;
+        setVideoRatio(ratio);
+      }
+    }
+  };
+
+  // Определяем ориентацию на основе соотношения сторон видео
+  const videoOrientation = videoRatio 
+    ? (videoRatio < 1 ? "vertical" : "horizontal") 
+    : (block.orientation || "horizontal");
+
+  const getVideoClasses = (size?: string) => {
     let sizeClasses = "";
 
-    // Размер
-    if (orientation === "vertical") {
-      // Для вертикальных видео
+    // Определяем размер контейнера на основе параметра size и ориентации
+    if (videoOrientation === "vertical") {
+      // Для вертикальных видео используем меньшую ширину
       switch (size) {
         case "small":
           sizeClasses = "w-full md:w-1/4 mx-auto";
@@ -56,9 +77,6 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
     return `${sizeClasses} rounded-2xl overflow-hidden bg-black`;
   };
 
-  // Определяем ориентацию с значением по умолчанию
-  const videoOrientation = block.orientation || "horizontal";
-
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex flex-col gap-1">
@@ -75,7 +93,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {block.text && (
           <div className="text-center text-adaptive">
             <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
-              {block.text}
+              {processText(block.text)}
             </div>
           </div>
         )}
@@ -84,7 +102,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
       <div className="flex flex-col gap-0">
         {/* Видео с стандартными контролами */}
         <div className="w-full">
-          <div className={getVideoClasses(block.size, videoOrientation) + " relative"}>
+          <div className={getVideoClasses(block.size) + " relative"}>
             {!isReady && (
               <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-gray-200">
                 <Spinner />
@@ -93,22 +111,23 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
 
             {block.url && block.url.trim() !== "" ? (
               <ReactPlayer
+                ref={playerRef}
                 url={block.url}
                 width="100%"
                 height="100%"
-                controls={true} // Включаем стандартные контролы
+                controls={true}
                 playing={block.autoplay || false}
-                muted={block.muted !== false} // По умолчанию звук включен
+                muted={block.muted !== false}
                 loop={block.loop || false}
-                onReady={() => setIsReady(true)}
+                onReady={(player) => handleReady(player)}
                 config={{
                   file: {
                     attributes: {
-                      controlsList: "nodownload", // Убираем кнопку скачивания
-                      disablePictureInPicture: false, // Разрешаем picture-in-picture
+                      controlsList: "nodownload",
+                      disablePictureInPicture: false,
                       style: {
-                        borderRadius: "1rem", // Скругленные углы
-                        objectFit: videoOrientation === "vertical" ? "contain" : "cover", // Заполняем всю область или сохраняем пропорции
+                        borderRadius: "1rem",
+                        objectFit: "contain", // Всегда используем contain для сохранения пропорций
                         width: "100%",
                         height: "100%",
                       },
@@ -119,15 +138,10 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
                   borderRadius: "1rem",
                   width: "100%",
                   height: "100%",
-                  aspectRatio: videoOrientation === "vertical" ? "9/16" : "16/9",
                 }}
               />
             ) : (
-              <div className="flex items-center justify-center" style={{
-                aspectRatio: videoOrientation === "vertical" ? "9/16" : "16/9",
-                width: "100%",
-                height: "100%",
-              }}>
+              <div className="flex items-center justify-center h-64">
                 <div className="text-gray-500">Видео отсутствует</div>
               </div>
             )}
