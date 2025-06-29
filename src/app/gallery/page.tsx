@@ -13,7 +13,8 @@ export default function GalleryPage() {
   const { currentDate } = useDate();
   const [photos, setPhotos] = useState<MemoryPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = user?.username === "admin";
   
   // Загружаем данные о подарках и их фотографиях
   useEffect(() => {
@@ -102,14 +103,14 @@ export default function GalleryPage() {
                   
                   return (
                     <div key={photo.id} className="mb-8 sm:mb-0">
-                      {revealed || isAuthenticated ? (
+                      {revealed || isAdmin ? (
                         <Link href={`/gift/${photo.giftId}`} className="cursor-pointer block">
                           <PolaroidPhoto
                             memoryPhoto={photo}
                             isRevealed={revealed}
                             openDate={ensureDate(photo.gift?.openDate)}
                             size="small"
-                            isAdmin={isAuthenticated}
+                            isAdmin={isAdmin}
                           />
                         </Link>
                       ) : (
@@ -119,7 +120,7 @@ export default function GalleryPage() {
                             isRevealed={revealed}
                             openDate={ensureDate(photo.gift?.openDate)}
                             size="small"
-                            isAdmin={isAuthenticated}
+                            isAdmin={isAdmin}
                           />
                         </div>
                       )}

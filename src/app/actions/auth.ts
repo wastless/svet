@@ -7,7 +7,7 @@ import { AuthError } from "next-auth";
 import { signInSchema } from "~/schemas";
 
 export async function signout() {
-  await signOut({ redirect: false });
+  await signOut({ redirectTo: '/' });
 }
 
 export async function authenticate(formData: FormData) {

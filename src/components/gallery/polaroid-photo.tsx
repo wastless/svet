@@ -108,7 +108,7 @@ export function PolaroidPhoto({
   const glossTranslateX = isHovered ? -mousePosition.x * 25 : 0;
   const glossTranslateY = isHovered ? -mousePosition.y * 25 : 0;
 
-  // Определяем, показывать ли фото (для админа или если подарок открыт)
+  // Определяем, показывать ли фото (только для админа или если подарок открыт по дате)
   const showPhoto = isRevealed || isAdmin;
 
   return (

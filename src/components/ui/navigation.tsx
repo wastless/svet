@@ -48,9 +48,8 @@ export const Navigation = () => {
     // Очищаем весь кеш API
     invalidateAllCache();
     
-    await signOut({ redirect: false });
-    // Перенаправляем на главную страницу с принудительной перезагрузкой
-    window.location.href = "/";
+    // Выходим из аккаунта с перенаправлением на главную страницу
+    await signOut({ redirect: true, callbackUrl: '/' });
   };
 
   // Не рендерим навигацию, если она не должна быть видимой
