@@ -57,7 +57,7 @@ export function TextBlock({ block, className = "" }: TextBlockProps) {
     
     return lines.map((line, index) => (
       <React.Fragment key={index}>
-        {line.trim() ? processText(line) : null}
+        {processText(line)}
         {index < lines.length - 1 && <br />}
       </React.Fragment>
     ));

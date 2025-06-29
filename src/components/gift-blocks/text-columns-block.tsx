@@ -2,6 +2,7 @@
 
 import type { TextColumnsBlock as TextColumnsBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import React from "react";
 
 interface TextColumnsBlockProps {
   block: TextColumnsBlockType;
@@ -9,6 +10,19 @@ interface TextColumnsBlockProps {
 }
 
 export function TextColumnsBlock({ block, className = "" }: TextColumnsBlockProps) {
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   // Получаем класс выравнивания
   const getAlignmentClass = (alignment?: string) => {
     switch (alignment) {
@@ -47,11 +61,11 @@ export function TextColumnsBlock({ block, className = "" }: TextColumnsBlockProp
           <div key={index} className="flex flex-col">
             {item.title && (
               <div className="text-label-sm md:text-label-md font-nyghtserif mb-2 italic md:italic text-white">
-                ({item.title})
+                ({renderTextWithLineBreaks(item.title)})
               </div>
             )}
             <div className="md:text-paragraph-xl text-paragraph-lg font-euclid text-white">
-              {processText(item.text)}
+              {renderTextWithLineBreaks(item.text)}
             </div>
           </div>
         ))}

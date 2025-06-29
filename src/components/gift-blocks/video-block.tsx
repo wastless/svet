@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import type { VideoBlock as VideoBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
 import { Spinner } from "~/components/ui/spinner";
+import React from "react";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -76,6 +77,19 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
 
     return `${sizeClasses} rounded-2xl overflow-hidden bg-black`;
   };
+  
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -84,7 +98,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {block.title && (
           <div className="text-center text-adaptive">
             <div className="font-nyghtserif text-label-sm md:text-label-md italic">
-              ({processText(block.title)})
+              ({renderTextWithLineBreaks(block.title)})
             </div>
           </div>
         )}
@@ -93,7 +107,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {block.text && (
           <div className="text-center text-adaptive">
             <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
-              {processText(block.text)}
+              {renderTextWithLineBreaks(block.text)}
             </div>
           </div>
         )}
@@ -152,7 +166,7 @@ export function VideoBlock({ block, className = "" }: VideoBlockProps) {
         {block.caption && (
           <div className="text-center mt-4">
             <div className="font-euclid text-paragraph-md text-text-soft-400">
-              {processText(block.caption)}
+              {renderTextWithLineBreaks(block.caption)}
             </div>
           </div>
         )}

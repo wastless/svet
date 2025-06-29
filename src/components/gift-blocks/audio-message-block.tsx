@@ -17,6 +17,19 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
   const [duration, setDuration] = useState(block.duration || 0);
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<any>(null);
+  
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -111,7 +124,7 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
         {block.title && (
           <div className="text-center text-adaptive">
             <div className="font-nyghtserif text-label-sm md:text-label-md italic">
-              ({processText(block.title)})
+              ({renderTextWithLineBreaks(block.title)})
             </div>
           </div>
         )}
@@ -120,7 +133,7 @@ export function AudioMessageBlock({ block, className = "" }: AudioMessageBlockPr
         {block.text && (
           <div className="text-center text-adaptive">
             <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
-              {processText(block.text)}
+              {renderTextWithLineBreaks(block.text)}
             </div>
           </div>
         )}

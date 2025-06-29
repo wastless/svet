@@ -15,6 +15,19 @@ export function MusicGalleryBlock({ block, className = "" }: MusicGalleryBlockPr
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null);
   // Refs для хранения аудио элементов
   const audioRefs = useRef<{ [id: string]: HTMLAudioElement | null }>({});
+  
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   // Преобразование трека галереи в формат MusicBlock
   const convertTrackToMusicBlock = (track: typeof block.tracks[0]) => {
@@ -63,7 +76,7 @@ export function MusicGalleryBlock({ block, className = "" }: MusicGalleryBlockPr
           {block.title && (
             <div className="text-center text-adaptive">
               <div className="font-nyghtserif text-label-sm md:text-label-md italic">
-                ({processText(block.title)})
+                ({renderTextWithLineBreaks(block.title)})
               </div>
             </div>
           )}
@@ -71,7 +84,7 @@ export function MusicGalleryBlock({ block, className = "" }: MusicGalleryBlockPr
           {block.text && (
             <div className="text-center text-adaptive">
               <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
-                {processText(block.text)}
+                {renderTextWithLineBreaks(block.text)}
               </div>
             </div>
           )}

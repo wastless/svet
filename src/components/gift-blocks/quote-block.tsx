@@ -2,6 +2,7 @@
 
 import type { QuoteBlock as QuoteBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import React from "react";
 
 interface QuoteBlockProps {
   block: QuoteBlockType;
@@ -20,6 +21,19 @@ export function QuoteBlock({ block, className = "" }: QuoteBlockProps) {
   };
 
   const quoteStyles = getQuoteStyles(block.style);
+  
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   return (
     <div className={`relative ${className}`}>
@@ -30,7 +44,7 @@ export function QuoteBlock({ block, className = "" }: QuoteBlockProps) {
       <div className="pl-6">
         {/* Текст цитаты */}
         <blockquote className={`text-adaptive ${quoteStyles}`}>
-          {processText(block.content)}
+          {renderTextWithLineBreaks(block.content)}
         </blockquote>
       </div>
     </div>

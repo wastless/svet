@@ -31,6 +31,19 @@ export function MusicBlock({ block, className = "", audioRef }: MusicBlockProps)
   const [isMuted, setIsMuted] = useState(false);
   const internalAudioRef = useRef<HTMLAudioElement>(null);
 
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   // Если предоставлен внешний audioRef, используем его для передачи текущего аудио элемента
   useEffect(() => {
     if (audioRef && internalAudioRef.current) {
@@ -237,7 +250,7 @@ export function MusicBlock({ block, className = "", audioRef }: MusicBlockProps)
           {block.title && (
             <div className="text-center text-adaptive">
               <div className="font-nyghtserif text-label-sm md:text-label-md italic">
-                ({processText(block.title)})
+                ({renderTextWithLineBreaks(block.title)})
               </div>
             </div>
           )}
@@ -246,7 +259,7 @@ export function MusicBlock({ block, className = "", audioRef }: MusicBlockProps)
           {block.text && (
             <div className="text-center text-adaptive">
               <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
-                {processText(block.text)}
+                {renderTextWithLineBreaks(block.text)}
               </div>
             </div>
           )}

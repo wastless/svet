@@ -274,7 +274,7 @@ export const processText = (text: string) => {
           </React.Fragment>
         );
       } else if (i < lines.length - 1) {
-        // Пустая строка - всегда добавляем перенос
+        // Пустая строка - просто добавляем перенос
         result.push(<br key={`br-${result.length}`} />);
       }
     }
@@ -296,6 +296,19 @@ export function BaseBlock({
   // Склоняем имя автора
   const declinedName = declineName(name);
   
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+  
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Заголовок с именем отправителя */}
@@ -311,7 +324,7 @@ export function BaseBlock({
       {/* Основной текст поздравления - отображаем только если он есть */}
       {text && (
         <div className="text-paragraph-lg text-adaptive font-euclid md:text-paragraph-xl">
-          {processText(text)}
+          {renderTextWithLineBreaks(text)}
         </div>
       )}
     </div>

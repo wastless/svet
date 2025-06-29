@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { TwoVideosBlock as TwoVideosBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
 import { Spinner } from "~/components/ui/spinner";
+import React from "react";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -13,6 +14,19 @@ interface TwoVideosBlockProps {
   block: TwoVideosBlockType;
   className?: string;
 }
+
+// Обрабатываем переносы строк в тексте
+const renderTextWithLineBreaks = (text: string) => {
+  // Разбиваем текст на строки по символу переноса
+  const lines = text.split('\n');
+  
+  return lines.map((line, index) => (
+    <React.Fragment key={index}>
+      {processText(line)}
+      {index < lines.length - 1 && <br />}
+    </React.Fragment>
+  ));
+};
 
 // Мемоизированный компонент одного видео с текстом
 const VideoItemComponent = memo(({ 
@@ -27,32 +41,34 @@ const VideoItemComponent = memo(({
   orientation?: string;
 }) => {
   const [isReady, setIsReady] = useState(false);
+  const [videoRatio, setVideoRatio] = useState<number | null>(null);
+  const playerRef = useRef<any>(null);
   
   const videoLayout = video.layout || "text-top"; // по умолчанию текст сверху для каждого видео
-  const videoOrientation = orientation || "horizontal";
   
-  const handleVideoReady = useCallback(() => {
+  const handleVideoReady = useCallback((player: any) => {
     setIsReady(true);
-  }, []);
-
-  const getVideoClasses = useCallback((size?: string, orientation?: string) => {
-    let aspectClasses = "";
-
-    // Ориентация
-    switch (orientation) {
-      case "vertical":
-        aspectClasses = "aspect-[9/16]";
-        break;
-      case "horizontal":
-        aspectClasses = "aspect-[16/9]";
-        break;
-      default:
-        aspectClasses = "aspect-[16/9]";
-        break;
+    
+    // Получаем реальные размеры видео
+    if (player && player.getInternalPlayer()) {
+      const videoElement = player.getInternalPlayer();
+      if (videoElement.videoWidth && videoElement.videoHeight) {
+        const ratio = videoElement.videoWidth / videoElement.videoHeight;
+        setVideoRatio(ratio);
+      }
     }
-
-    return `w-full ${aspectClasses} rounded-2xl overflow-hidden bg-black`;
   }, []);
+
+  // Определяем ориентацию на основе соотношения сторон видео
+  const videoOrientation = videoRatio 
+    ? (videoRatio < 1 ? "vertical" : "horizontal") 
+    : (orientation || "horizontal");
+
+  const getVideoClasses = useCallback(() => {
+    // Для вертикальных видео добавляем дополнительный класс для ограничения ширины
+    const orientationClass = videoOrientation === "vertical" ? "max-w-[100%] mx-auto" : "";
+    return `w-full ${orientationClass} rounded-2xl overflow-hidden bg-black`;
+  }, [videoOrientation]);
 
   // Компонент заголовка для отдельного видео
   const TitleComponent = useCallback(({ title }: { title?: string }) => {
@@ -60,7 +76,7 @@ const VideoItemComponent = memo(({
     return (
       <div className="text-adaptive">
         <div className="text-label-sm md:text-label-md font-nyghtserif italic">
-          ({processText(title)})
+          ({renderTextWithLineBreaks(title)})
         </div>
       </div>
     );
@@ -72,7 +88,7 @@ const VideoItemComponent = memo(({
     return (
       <div className="text-adaptive">
         <div className="md:text-paragraph-xl text-paragraph-lg font-euclid">
-          {processText(text)}
+          {renderTextWithLineBreaks(text)}
         </div>
       </div>
     );
@@ -83,7 +99,7 @@ const VideoItemComponent = memo(({
     if (!title && !text) return null;
     
     if (layout === "text-bottom") {
-      // Порядок: заголовок -> текст
+      // Порядок: заголовок > текст
       return (
         <div className="space-y-6 md:space-y-12">
           <TitleComponent title={title} />
@@ -109,7 +125,7 @@ const VideoItemComponent = memo(({
     return (
       <div>
         {/* Видео */}
-        <div className={getVideoClasses(size, videoOrientation) + " relative"}>
+        <div className={getVideoClasses() + " relative"}>
           {!isReady && (
             <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-gray-200">
               <Spinner />
@@ -118,6 +134,7 @@ const VideoItemComponent = memo(({
           
           {video.url && video.url.trim() !== "" ? (
             <ReactPlayer
+              ref={playerRef}
               url={video.url}
               width="100%"
               height="100%"
@@ -133,7 +150,7 @@ const VideoItemComponent = memo(({
                     disablePictureInPicture: false,
                     style: {
                       borderRadius: "1rem",
-                      objectFit: videoOrientation === "vertical" ? "contain" : "cover",
+                      objectFit: "contain", // Всегда используем contain для сохранения пропорций
                       width: "100%",
                       height: "100%",
                     },
@@ -144,15 +161,10 @@ const VideoItemComponent = memo(({
                 borderRadius: "1rem",
                 width: "100%",
                 height: "100%",
-                aspectRatio: videoOrientation === "vertical" ? "9/16" : "16/9",
               }}
             />
           ) : (
-            <div className="flex items-center justify-center" style={{
-              aspectRatio: videoOrientation === "vertical" ? "9/16" : "16/9",
-              width: "100%",
-              height: "100%",
-            }}>
+            <div className="flex items-center justify-center h-64">
               <div className="text-gray-500">Видео отсутствует</div>
             </div>
           )}
@@ -162,7 +174,7 @@ const VideoItemComponent = memo(({
         {video.caption && (
           <div className="text-center mt-3">
             <div className="text-paragraph-sm font-euclid text-text-soft-400">
-              {processText(video.caption)}
+              {renderTextWithLineBreaks(video.caption)}
             </div>
           </div>
         )}
@@ -189,7 +201,7 @@ const VideoItemComponent = memo(({
       )}
       
       {/* Видео */}
-      <div className={getVideoClasses(size, videoOrientation) + " relative"}>
+      <div className={getVideoClasses() + " relative"}>
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-gray-200">
             <Spinner />
@@ -198,6 +210,7 @@ const VideoItemComponent = memo(({
         
         {video.url && video.url.trim() !== "" ? (
           <ReactPlayer
+            ref={playerRef}
             url={video.url}
             width="100%"
             height="100%"
@@ -213,7 +226,7 @@ const VideoItemComponent = memo(({
                   disablePictureInPicture: false,
                   style: {
                     borderRadius: "1rem",
-                    objectFit: videoOrientation === "vertical" ? "contain" : "cover",
+                    objectFit: "contain", // Всегда используем contain для сохранения пропорций
                     width: "100%",
                     height: "100%",
                   },
@@ -224,15 +237,10 @@ const VideoItemComponent = memo(({
               borderRadius: "1rem",
               width: "100%",
               height: "100%",
-              aspectRatio: videoOrientation === "vertical" ? "9/16" : "16/9",
             }}
           />
         ) : (
-          <div className="flex items-center justify-center" style={{
-            aspectRatio: videoOrientation === "vertical" ? "9/16" : "16/9",
-            width: "100%",
-            height: "100%",
-          }}>
+          <div className="flex items-center justify-center h-64">
             <div className="text-gray-500">Видео отсутствует</div>
           </div>
         )}
@@ -242,7 +250,7 @@ const VideoItemComponent = memo(({
       {video.caption && (
         <div className="text-center mt-3">
           <div className="text-paragraph-sm font-euclid text-text-soft-400">
-            {processText(video.caption)}
+            {renderTextWithLineBreaks(video.caption)}
           </div>
         </div>
       )}

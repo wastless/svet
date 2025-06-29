@@ -2,6 +2,7 @@
 
 import type { TwoImagesBlock as TwoImagesBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import React from "react";
 
 interface TwoImagesBlockProps {
   block: TwoImagesBlockType;
@@ -9,6 +10,19 @@ interface TwoImagesBlockProps {
 }
 
 export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   const getContainerClasses = (size?: string, orientation?: string) => {
     let sizeClasses = "";
 
@@ -54,7 +68,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     return (
       <div className="text-adaptive">
         <div className="text-label-sm md:text-label-md font-nyghtserif italic">
-          ({processText(title)})
+          ({renderTextWithLineBreaks(title)})
         </div>
       </div>
     );
@@ -66,7 +80,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     return (
       <div className="text-adaptive">
         <div className="md:text-paragraph-xl text-paragraph-lg font-euclid">
-          {processText(text)}
+          {renderTextWithLineBreaks(text)}
         </div>
       </div>
     );
@@ -112,7 +126,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
           {image.caption && (
             <div className="text-center">
               <div className="text-paragraph-sm font-euclid text-text-soft-400">
-                {processText(image.caption)}
+                {renderTextWithLineBreaks(image.caption)}
               </div>
             </div>
           )}
@@ -141,7 +155,7 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
         {image.caption && (
           <div className="text-center">
             <div className="text-paragraph-sm font-euclid text-text-soft-400">
-              {processText(image.caption)}
+              {renderTextWithLineBreaks(image.caption)}
             </div>
           </div>
         )}

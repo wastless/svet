@@ -2,6 +2,7 @@
 
 import type { InfoGraphicBlock as InfoGraphicBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import React from "react";
 
 interface InfoGraphicBlockProps {
   block: InfoGraphicBlockType;
@@ -9,6 +10,19 @@ interface InfoGraphicBlockProps {
 }
 
 export function InfoGraphicBlock({ block, className = "" }: InfoGraphicBlockProps) {
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   // Получаем класс выравнивания
   const getAlignmentClass = (alignment?: string) => {
     switch (alignment) {
@@ -49,7 +63,7 @@ export function InfoGraphicBlock({ block, className = "" }: InfoGraphicBlockProp
               {item.number}
             </div>
             <div className="md:text-paragraph-xl text-paragraph-lg font-euclid text-white">
-              {processText(item.text)}
+              {renderTextWithLineBreaks(item.text)}
             </div>
           </div>
         ))}

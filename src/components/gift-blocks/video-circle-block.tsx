@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import type { VideoCircleBlock as VideoCircleBlockType } from "@/utils/types/gift";
 import { VolumeOnIcon, VolumeOffIcon } from "~/components/ui/icons";
 import { processText } from "./base-block";
+import React from "react";
 
 // Динамический импорт react-player для избежания проблем с SSR
 const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
@@ -22,6 +23,19 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const playerRef = useRef<any>(null);
+  
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -78,7 +92,7 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
         {block.title && (
           <div className="text-center text-adaptive">
             <div className="font-nyghtserif text-label-sm md:text-label-md italic">
-              ({processText(block.title)})
+              ({renderTextWithLineBreaks(block.title)})
             </div>
           </div>
         )}
@@ -87,7 +101,7 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
         {block.text && (
           <div className="text-center text-adaptive">
             <div className="font-euclid text-paragraph-lg md:text-paragraph-xl">
-              {processText(block.text)}
+              {renderTextWithLineBreaks(block.text)}
             </div>
           </div>
         )}
@@ -190,7 +204,7 @@ export function VideoCircleBlock({ block, className = "" }: VideoCircleBlockProp
       {block.caption && (
         <div className="text-center">
           <div className="font-euclid text-paragraph-md text-text-soft-400">
-            {processText(block.caption)}
+            {renderTextWithLineBreaks(block.caption)}
           </div>
         </div>
       )}

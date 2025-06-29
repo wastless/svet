@@ -2,6 +2,7 @@
 
 import type { ImageBlock as ImageBlockType } from "@/utils/types/gift";
 import { processText } from "./base-block";
+import React from "react";
 
 interface ImageBlockProps {
   block: ImageBlockType;
@@ -10,6 +11,19 @@ interface ImageBlockProps {
 
 export function ImageBlock({ block, className = "" }: ImageBlockProps) {
   const layout = block.layout || "image-center"; // по умолчанию фото снизу
+
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   const getImageClasses = (size?: string, orientation?: string, isHorizontalLayout?: boolean) => {
     let sizeClasses = "";
@@ -135,7 +149,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     return (
       <div className={`text-adaptive ${centered ? 'text-center' : ''}`}>
         <div className="text-label-sm md:text-label-md font-nyghtserif italic">
-          ({processText(block.title)})
+          ({renderTextWithLineBreaks(block.title)})
         </div>
       </div>
     );
@@ -147,7 +161,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
     return (
       <div className={`text-adaptive ${centered ? 'text-center' : ''}`}>
         <div className="text-paragraph-lg md:text-paragraph-xl font-euclid">
-          {processText(block.text)}
+          {renderTextWithLineBreaks(block.text)}
         </div>
       </div>
     );
@@ -187,7 +201,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
         {block.caption && (
           <div className="text-center mt-4">
             <div className="text-paragraph-md font-euclid text-text-soft-400">
-              {processText(block.caption)}
+              {renderTextWithLineBreaks(block.caption)}
             </div>
           </div>
         )}
@@ -287,7 +301,7 @@ export function ImageBlock({ block, className = "" }: ImageBlockProps) {
           {block.caption && (
             <div className="text-center mt-4">
               <div className="text-paragraph-md font-euclid text-text-soft-400">
-                {processText(block.caption)}
+                {renderTextWithLineBreaks(block.caption)}
               </div>
             </div>
           )}

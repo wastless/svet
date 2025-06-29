@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import type { GalleryBlock as GalleryBlockType } from "@/utils/types/gift";
+import { processText } from "./base-block";
 
 interface GalleryBlockProps {
   block: GalleryBlockType;
@@ -9,6 +10,19 @@ interface GalleryBlockProps {
 }
 
 export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
+  // Обрабатываем переносы строк в тексте
+  const renderTextWithLineBreaks = (text: string) => {
+    // Разбиваем текст на строки по символу переноса
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => (
+      <React.Fragment key={index}>
+        {processText(line)}
+        {index < lines.length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
   // Определяем количество колонок на основе количества изображений
   const getColumnsClass = () => {
     const imageCount = block.images.length;
@@ -35,7 +49,7 @@ export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
     if (!block.title) return null;
     return (
       <div className="text-center text-adaptive">
-        <h3 className="font-nyghtserif text-label-sm md:text-label-md italic">({block.title})</h3>
+        <h3 className="font-nyghtserif text-label-sm md:text-label-md italic">({renderTextWithLineBreaks(block.title)})</h3>
       </div>
     );
   };
@@ -46,7 +60,7 @@ export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
 
     return (
       <div className="text-center text-adaptive">
-        <p className="text-paragraph-lg md:text-paragraph-xl font-euclid">{block.text}</p>
+        <p className="text-paragraph-lg md:text-paragraph-xl font-euclid">{renderTextWithLineBreaks(block.text)}</p>
       </div>
     );
   };
@@ -62,7 +76,7 @@ export function GalleryBlock({ block, className = "" }: GalleryBlockProps) {
       {image.caption && (
         <div className="text-center">
           <p className="font-euclid text-paragraph-sm text-text-soft-400">
-            {image.caption}
+            {renderTextWithLineBreaks(image.caption)}
           </p>
         </div>
       )}
