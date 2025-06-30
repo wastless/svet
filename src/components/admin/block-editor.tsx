@@ -38,6 +38,15 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
       });
       setTextColumnsInitialized(true);
     }
+    
+    // Добавляем инициализацию для блоков типа "infographic"
+    if (block.type === "infographic" && !Array.isArray((localBlock as any).items)) {
+      handleChange({ 
+        items: [{ number: "0", text: "Текст под цифрой" }],
+        count: (localBlock as any).count || 1,
+        alignment: "center"
+      });
+    }
   }, [block.type]);
 
   const handleChange = (updates: Partial<any>) => {
@@ -2017,6 +2026,11 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
   );
 
   const renderInfoGraphicEditor = () => {
+    // Проверяем, что items является массивом
+    if (!Array.isArray((localBlock as any).items)) {
+      return <div className="p-4 text-center">Инициализация блока...</div>;
+    }
+    
     // Обеспечиваем, что у нас есть правильное количество элементов в массиве
     const ensureItemsCount = (count: number) => {
       const currentItems = [...((localBlock as any).items || [])];
