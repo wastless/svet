@@ -1,7 +1,6 @@
 import type { WordOfDay } from '../types/words';
 
 export const DAILY_WORDS: readonly WordOfDay[] = [
-  'Charming',      // 1
   'Brilliant',     // 2
   'Radiant',       // 3
   'Elegant',       // 4
