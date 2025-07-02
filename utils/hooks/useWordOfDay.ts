@@ -25,10 +25,10 @@ export function useWordOfDay({ startDate, cycleLength, currentDate }: WordConfig
     
     // Вычисляем количество дней с начальной даты
     const diffTime = now.getTime() - start.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     
     // Если текущая дата раньше начальной, возвращаем первое слово
-    if (diffDays < 0) {
+    if (diffDays <= 0) {
       return DAILY_WORDS[0];
     }
     

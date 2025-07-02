@@ -34,7 +34,6 @@ if (typeof window !== 'undefined') {
     if (savedRatios) {
       const parsedRatios = JSON.parse(savedRatios);
       Object.assign(imageRatioCache, parsedRatios);
-      console.log('Loaded image ratios from localStorage:', Object.keys(parsedRatios).length);
     }
   } catch (err) {
     console.error('Error loading image ratios from localStorage:', err);
@@ -814,9 +813,10 @@ export function GLImage({
         width={500} 
         height={500} 
         unoptimized
-        onLoadingComplete={(img) => {
+        onLoad={(event) => {
           // Когда Next.js Image загружено, обновляем пропорции
           // Это дополнительная подстраховка, чтобы избежать скачков
+          const img = event.target as HTMLImageElement;
           if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
             const ratio = img.naturalHeight / img.naturalWidth;
             // Обновляем кеш и состояние, если они отличаются

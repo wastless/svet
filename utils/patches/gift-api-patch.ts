@@ -58,7 +58,6 @@ export function applyGiftApiPatch() {
         url.includes('/api/gifts') || 
         url.includes('/api/gift-content')
     )) {
-      console.log('🎁 Intercepting gift API request:', url);
       
       // Проверяем наличие данных в кеше
       if (apiCache[url]) {
@@ -67,7 +66,6 @@ export function applyGiftApiPatch() {
         
         // Проверяем, не устарел ли кеш
         if (Date.now() - timestamp < ttl) {
-          console.log('🟢 Returning cached gift data');
           return new Response(JSON.stringify(data), {
             status: 200,
             statusText: "OK",
@@ -76,12 +74,10 @@ export function applyGiftApiPatch() {
             }),
           });
         } else {
-          console.log('🟠 Cache expired, fetching fresh data');
         }
       }
       
       // Делаем реальный запрос
-      console.log('🔵 Making real gift API request');
       const response = await originalFetch(input, init);
       
       // Если запрос успешен, кешируем результат
@@ -99,9 +95,8 @@ export function applyGiftApiPatch() {
           // Сохраняем в localStorage
           saveCacheToStorage();
           
-          console.log('💾 Gift data cached');
         } catch (e) {
-          console.error('Error caching gift data:', e);
+          console.error(e);
         }
       }
       
@@ -114,8 +109,7 @@ export function applyGiftApiPatch() {
   
   // Помечаем, что патч был применен
   (globalThis.fetch as any).__giftPatched = true;
-  
-  console.log('✅ Gift API patch applied');
+
   
   // Регистрируем обработчик события beforeunload для сохранения кеша перед закрытием страницы
   if (typeof window !== 'undefined') {
@@ -194,8 +188,6 @@ function loadCacheFromStorage() {
           }
         }
       }
-      
-      console.log(`🔄 Loaded ${Object.keys(apiCache).length} gift cache entries from storage`);
     }
   } catch (e) {
     console.error('Error loading gift cache from localStorage:', e);
@@ -213,11 +205,11 @@ export function invalidateGiftCache(giftId?: string) {
     );
     
     keysToDelete.forEach(key => delete apiCache[key]);
-    console.log(`🗑️ Invalidated cache for gift ${giftId}`);
+    console.log(`Invalidated cache for gift ${giftId}`);
   } else {
     // Иначе очищаем весь кеш
     Object.keys(apiCache).forEach(key => delete apiCache[key]);
-    console.log('🗑️ Entire gift cache invalidated');
+    console.log('Entire gift cache invalidated');
   }
   
   // Сохраняем изменения в localStorage

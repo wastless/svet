@@ -274,21 +274,6 @@ export default function CipherPage() {
               noValidate
             >
               <div className="flex flex-col gap-5 sm:gap-6 w-full">
-                <div className="flex flex-col gap-2">
-                  <Label.Root htmlFor="key" className="text-center">key</Label.Root>
-                  <Input.Root>
-                    <Input.Wrapper>
-                      <Input.Input
-                        id="key"
-                        name="key"
-                        type="text"
-                        placeholder="Enter key"
-                        value={key}
-                        onChange={(e) => handleInputChange('key', e.target.value)}
-                      />
-                    </Input.Wrapper>
-                  </Input.Root>
-                </div>
 
                 <div className="flex flex-col gap-2">
                   <Label.Root htmlFor="encryptedText" className="text-center">

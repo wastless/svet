@@ -51,7 +51,23 @@ export function DateProvider({ children }: { children: ReactNode }) {
 
   // Функция для создания ключа даты (год-месяц-день)
   const formatDateKey = (date: Date) => {
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    // Преобразуем дату в часовой пояс Челябинска (UTC+5)
+    const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); // Приводим к UTC
+    const yekaterinburgDate = new Date(utcDate.getTime() + 5 * 60 * 60000); // Добавляем 5 часов для UTC+5
+    
+    return `${yekaterinburgDate.getFullYear()}-${yekaterinburgDate.getMonth()}-${yekaterinburgDate.getDate()}`;
+  };
+
+  // Функция для проверки, является ли текущее время полночью в Челябинске (UTC+5)
+  const isYekaterinburgMidnight = (date: Date) => {
+    // Преобразуем дату в часовой пояс Челябинска (UTC+5)
+    const utcDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000); // Приводим к UTC
+    const yekaterinburgDate = new Date(utcDate.getTime() + 5 * 60 * 60000); // Добавляем 5 часов для UTC+5
+    
+    // Проверяем, является ли время 00:00:00 в Челябинске
+    return yekaterinburgDate.getHours() === 0 && 
+           yekaterinburgDate.getMinutes() === 0 && 
+           yekaterinburgDate.getSeconds() === 0;
   };
 
   // Синхронизация giftsDate с currentDate в тестовом режиме
@@ -71,10 +87,12 @@ export function DateProvider({ children }: { children: ReactNode }) {
       const now = new Date();
       setCurrentDate(now);
       
-      // Проверяем, изменился ли день
+      // Проверяем, изменился ли день по часовому поясу Челябинска
       const currentDateKey = formatDateKey(now);
-      if (lastDayRef.current !== currentDateKey) {
-        console.log('День изменился, обновляем дату для подарков');
+      
+      // Проверяем, наступила ли полночь в Челябинске или изменился день
+      if (lastDayRef.current !== currentDateKey || isYekaterinburgMidnight(now)) {
+        console.log('День изменился или наступила полночь в Челябинске, обновляем дату для подарков');
         setGiftsDate(now);
         lastDayRef.current = currentDateKey;
       }

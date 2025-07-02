@@ -98,7 +98,6 @@ export const DiceTransition = ({ onComplete, giftId }: DiceTransitionProps) => {
         const contentRes = await fetch(`/api/gift-content/${giftId}`);
         
         if (giftRes.ok && contentRes.ok) {
-          console.log("Gift data and content preloaded successfully");
           setIsDataPreloaded(true);
         }
       } catch (error) {

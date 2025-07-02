@@ -109,36 +109,45 @@ export default function HomePage() {
       // Таймлайн для последовательной анимации
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
       
-      // Анимация заголовка
-      tl.fromTo(
-        titleRef.current,
-        { y: 50, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1 }
-      );
+      // Проверяем существование элементов перед анимацией
+      if (titleRef.current) {
+        // Анимация заголовка
+        tl.fromTo(
+          titleRef.current,
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1 }
+        );
+      }
       
-      // Анимация слова дня
-      tl.fromTo(
-        subtitleRef.current,
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8 },
-        "-=0.5" // Запускаем немного раньше завершения предыдущей анимации
-      );
+      if (subtitleRef.current) {
+        // Анимация слова дня
+        tl.fromTo(
+          subtitleRef.current,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8 },
+          "-=0.5" // Запускаем немного раньше завершения предыдущей анимации
+        );
+      }
       
-      // Анимация счетчика
-      tl.fromTo(
-        countdownRef.current,
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8 },
-        "-=0.3"
-      );
+      if (countdownRef.current) {
+        // Анимация счетчика
+        tl.fromTo(
+          countdownRef.current,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8 },
+          "-=0.3"
+        );
+      }
       
-      // Анимация кнопки
-      tl.fromTo(
-        buttonRef.current,
-        { y: 20, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.6 },
-        "-=0.2"
-      );
+      if (buttonRef.current) {
+        // Анимация кнопки
+        tl.fromTo(
+          buttonRef.current,
+          { y: 20, opacity: 0, scale: 0.9 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.6 },
+          "-=0.2"
+        );
+      }
     }
   }, [shouldShowIntro, isIntroLoading, contentVisible]);
 
@@ -157,25 +166,42 @@ export default function HomePage() {
     }
     
     // Анимация исчезновения контента (перемещение вверх)
-    const contentElements = [titleRef.current, subtitleRef.current, countdownRef.current, buttonRef.current];
+    const contentElements: HTMLElement[] = [];
     
-    gsap.to(contentElements, {
-      y: -100,
-      opacity: 0,
-      duration: 0.6, // Ускоряем анимацию исчезновения
-      stagger: 0.05, // Уменьшаем задержку между элементами
-      ease: "power3.in",
-      onComplete: () => {
-        setContentVisible(false);
-        // Переходим на страницу подарка с параметром from=home
-        if (availableGiftId) {
-          router.push(`/gift/${availableGiftId}?from=home`);
-        } else {
-          // Если нет доступных подарков, перенаправляем на страницу со всеми подарками
-          router.push('/gift');
+    // Проверяем существование элементов перед добавлением их в массив для анимации
+    if (titleRef.current) contentElements.push(titleRef.current);
+    if (subtitleRef.current) contentElements.push(subtitleRef.current);
+    if (countdownRef.current) contentElements.push(countdownRef.current);
+    if (buttonRef.current) contentElements.push(buttonRef.current);
+    
+    // Проверяем, есть ли элементы для анимации
+    if (contentElements.length > 0) {
+      gsap.to(contentElements, {
+        y: -100,
+        opacity: 0,
+        duration: 0.6, // Ускоряем анимацию исчезновения
+        stagger: 0.05, // Уменьшаем задержку между элементами
+        ease: "power3.in",
+        onComplete: () => {
+          setContentVisible(false);
+          // Переходим на страницу подарка с параметром from=home
+          if (availableGiftId) {
+            router.push(`/gift/${availableGiftId}?from=home`);
+          } else {
+            // Если нет доступных подарков, перенаправляем на страницу со всеми подарками
+            router.push('/gift');
+          }
         }
+      });
+    } else {
+      // Если нет элементов для анимации, просто выполняем переход
+      setContentVisible(false);
+      if (availableGiftId) {
+        router.push(`/gift/${availableGiftId}?from=home`);
+      } else {
+        router.push('/gift');
       }
-    });
+    }
   };
 
   return (

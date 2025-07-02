@@ -117,9 +117,7 @@ export function applyUnifiedFetchPatch() {
     if (!shouldCacheUrl(url, method)) {
       return originalFetch(input, init);
     }
-    
-    // Логируем запрос
-    console.log(`🔍[${id}] Intercepting API request: ${method} ${url}`);
+
     
     // Проверяем наличие данных в кеше
     if (requestCache[cacheKey]) {
@@ -128,7 +126,6 @@ export function applyUnifiedFetchPatch() {
       
       // Проверяем, не устарел ли кеш
       if (Date.now() - entry.timestamp < ttl) {
-        console.log(`🟢[${id}] Returning cached data for:`, url);
         
         // Возвращаем кешированный ответ
         return new Response(JSON.stringify(entry.data), {
@@ -137,13 +134,13 @@ export function applyUnifiedFetchPatch() {
           headers: new Headers(entry.headers),
         });
       } else {
-        console.log(`🟠[${id}] Cache expired for:`, url);
+        console.log(`[${id}] Cache expired for:`, url);
       }
     }
     
     // Проверяем, есть ли уже выполняющийся запрос к этому URL
     if (pendingRequests[cacheKey]) {
-      console.log(`🟣[${id}] Reusing pending request for:`, url);
+      console.log(`[${id}] Reusing pending request for:`, url);
       
       try {
         // Ожидаем выполнения запроса
@@ -153,7 +150,7 @@ export function applyUnifiedFetchPatch() {
         if (requestCache[cacheKey]) {
           const entry = requestCache[cacheKey];
           
-          console.log(`🟣[${id}] Using cached result from pending request for:`, url);
+          console.log(`[${id}] Using cached result from pending request for:`, url);
           
           // Клонируем ответ, так как Response можно использовать только один раз
           return new Response(JSON.stringify(entry.data), {
@@ -163,15 +160,15 @@ export function applyUnifiedFetchPatch() {
           });
         }
       } catch (e) {
-        console.error(`⚠️[${id}] Error waiting for pending request:`, e);
+        console.error(`[${id}] Error waiting for pending request:`, e);
       }
       
       // Если что-то пошло не так и данных в кеше нет, выполняем запрос заново
-      console.log(`⚠️[${id}] Cache missing after pending request, retrying:`, url);
+      console.log(`[${id}] Cache missing after pending request, retrying:`, url);
     }
     
     // Создаем новый запрос и сохраняем его промис
-    console.log(`🔵[${id}] Making real request to:`, url);
+    console.log(`[${id}] Making real request to:`, url);
     
     try {
       // Создаем промис запроса
@@ -204,9 +201,9 @@ export function applyUnifiedFetchPatch() {
           // Сохраняем в localStorage
           saveCacheToStorage();
           
-          console.log(`💾[${id}] Data cached for:`, url);
+          console.log(`[${id}] Data cached for:`, url);
         } catch (e) {
-          console.error(`⚠️[${id}] Error caching response:`, e);
+          console.error(e);
         }
       }
       
@@ -219,8 +216,6 @@ export function applyUnifiedFetchPatch() {
   
   // Помечаем, что патч был применен
   (globalThis.fetch as any).__patchedUnified = true;
-  
-  console.log('✅ Unified fetch patch applied');
   
   // Регистрируем обработчик события beforeunload для сохранения кеша перед закрытием страницы
   if (typeof window !== 'undefined') {
@@ -261,9 +256,8 @@ function saveCacheToStorage() {
     }
     
     localStorage.setItem('api_request_cache', JSON.stringify(cacheToSave));
-    console.log(`💾 Saved ${Object.keys(cacheToSave).length} entries to localStorage`);
   } catch (e) {
-    console.error('Error saving cache to localStorage:', e);
+    console.error(e);
   }
 }
 
@@ -300,11 +294,9 @@ function loadCacheFromStorage() {
           }
         }
       }
-      
-      console.log(`🔄 Loaded ${Object.keys(requestCache).length} entries from localStorage`);
     }
   } catch (e) {
-    console.error('Error loading cache from localStorage:', e);
+    console.error(e);
   }
 }
 
@@ -316,7 +308,6 @@ function loadCacheFromStorage() {
 export function invalidateAllCache() {
   Object.keys(requestCache).forEach(key => delete requestCache[key]);
   localStorage.removeItem('api_request_cache');
-  console.log('🗑️ Entire cache invalidated');
 }
 
 /**
@@ -324,8 +315,6 @@ export function invalidateAllCache() {
  */
 export function invalidateSessionCache() {
   if (typeof window === 'undefined') return;
-  
-  console.log('🔄 Invalidating session cache');
   
   // Удаляем все записи с URL, содержащим /api/auth/session
   Object.keys(requestCache).forEach(key => {
@@ -360,7 +349,6 @@ export function invalidateSessionCache() {
  * Очищает кеш для подарков
  */
 export function invalidateGiftCache(giftId?: string) {
-  console.log(`🧹 Инвалидация кеша подарков${giftId ? ` для ID: ${giftId}` : ' (все подарки)'}`);
   
   // Получаем все ключи кеша
   const keys = Object.keys(requestCache);
@@ -392,7 +380,6 @@ export function invalidateGiftCache(giftId?: string) {
         }
         
         totalInvalidated++;
-        console.log(`🗑️ Удален из кеша: ${url}`);
       }
     } else {
       // Если ID не указан, удаляем все ключи, связанные с подарками
@@ -414,9 +401,6 @@ export function invalidateGiftCache(giftId?: string) {
       }
     }
   });
-  
-  // Выводим статистику
-  console.log(`🧹 Инвалидация кеша завершена: всего удалено ${totalInvalidated} записей (подарки: ${giftInvalidated}, контент: ${contentInvalidated})`);
   
   // Также очищаем кеш в localStorage
   if (typeof window !== 'undefined') {
@@ -447,11 +431,10 @@ export function invalidateGiftCache(giftId?: string) {
         // Если были изменения, сохраняем обновленный кеш
         if (modified) {
           localStorage.setItem('gift_api_cache', JSON.stringify(parsed));
-          console.log('🗑️ Локальный кеш в localStorage обновлен');
         }
       }
     } catch (error) {
-      console.error('Ошибка при очистке localStorage кеша:', error);
+      console.error(error);
     }
   }
   
@@ -466,7 +449,6 @@ export function invalidateGiftCache(giftId?: string) {
       
       // Выполняем предварительную загрузку данных
       setTimeout(() => {
-        console.log(`🔄 Предзагрузка данных подарка ${giftId}...`);
         fetch(giftUrl, {
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -489,7 +471,6 @@ export function invalidateGiftCache(giftId?: string) {
       
       // Выполняем предварительную загрузку списка подарков
       setTimeout(() => {
-        console.log('🔄 Предзагрузка списка подарков...');
         fetch(giftsUrl, {
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',

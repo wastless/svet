@@ -19,11 +19,9 @@ export function applySessionFetchPatch() {
     
     // Если это запрос к сессии
     if (url.includes('/api/auth/session')) {
-      console.log('🔄 Intercepting session request:', url);
       
       // Если уже есть выполняющийся запрос, возвращаем его результат
       if (pendingSessionRequest) {
-        console.log('🟠 Reusing pending session request');
         const response = await pendingSessionRequest;
         
         // Клонируем ответ, так как Response можно использовать только один раз
@@ -36,7 +34,6 @@ export function applySessionFetchPatch() {
       
       // Если есть кешированные данные, возвращаем их
       if (lastSessionData) {
-        console.log('🟢 Returning cached session data');
         return new Response(JSON.stringify(lastSessionData), {
           status: 200,
           statusText: "OK",
@@ -46,9 +43,6 @@ export function applySessionFetchPatch() {
         });
       }
       
-      // Иначе делаем настоящий запрос и сохраняем промис
-      console.log('🔵 Making real session request');
-      
       // Создаем промис для запроса
       pendingSessionRequest = originalFetch(input, init).then(async (response) => {
         // Сохраняем результат запроса
@@ -56,7 +50,6 @@ export function applySessionFetchPatch() {
           const clonedResponse = response.clone();
           const data = await clonedResponse.json();
           lastSessionData = data;
-          console.log('💾 Session data cached');
         } catch (e) {
           console.error('Error parsing session response:', e);
         }
@@ -85,8 +78,6 @@ export function applySessionFetchPatch() {
   
   // Помечаем, что патч был применен
   (globalThis.fetch as any).__patched = true;
-  
-  console.log('✅ Session fetch patch applied');
 }
 
 /**
@@ -95,5 +86,4 @@ export function applySessionFetchPatch() {
 export function invalidateSessionCache() {
   pendingSessionRequest = null;
   lastSessionData = null;
-  console.log('🗑️ Session cache invalidated');
 } 
