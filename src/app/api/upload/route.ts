@@ -4,8 +4,17 @@ import { uploadFileToYandexStorage } from "@/utils/lib/yandexStorage";
 import path from "path";
 import { env } from "../../../env.js";
 
+// Настройка для обработки больших файлов
+export const config = {
+  api: {
+    bodyParser: false, // Отключаем встроенный парсер тела запроса
+    responseLimit: false, // Отключаем лимит размера ответа
+  },
+};
+
 export async function POST(request: NextRequest) {
   try {
+    // Увеличиваем таймаут для обработки больших файлов
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const giftId = formData.get("giftId") as string;

@@ -16,6 +16,13 @@ const config = {
     // Временно отключаем проверку линтера для сборки
     ignoreDuringBuilds: true,
   },
+  // Настройки для обработки больших файлов
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+    responseLimit: '50mb',
+  },
   images: {
     remotePatterns: [
       {
