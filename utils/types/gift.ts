@@ -98,6 +98,9 @@ export interface TwoImagesBlock {
   }[];
   size?: "small" | "medium" | "large"; // размер фото
   orientation?: "horizontal" | "vertical"; // ориентация фото
+  description?: string; // общее описание для блока
+  descriptionTitle?: string; // заголовок общего описания
+  descriptionPosition?: "top" | "bottom"; // расположение общего описания (сверху или снизу)
 }
 
 // Блок с галереей изображений

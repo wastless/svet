@@ -107,6 +107,31 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
     );
   };
 
+  // Компонент общего описания блока
+  const DescriptionComponent = () => {
+    if (!block.description && !block.descriptionTitle) return null;
+    
+    return (
+      <div className="space-y-4 md:space-y-8 mb-2 md:mb-2">
+        {block.descriptionTitle && (
+          <div className="text-adaptive">
+            <h3 className="text-heading-sm md:text-heading-md font-styrene">
+              {renderTextWithLineBreaks(block.descriptionTitle)}
+            </h3>
+          </div>
+        )}
+        
+        {block.description && (
+          <div className="text-adaptive">
+            <div className="md:text-paragraph-xl text-center text-paragraph-lg font-euclid">
+              {renderTextWithLineBreaks(block.description)}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Компонент одной фотографии с текстом
   const ImageItemComponent = ({ image, index }: { image: any; index: number }) => {
     const imageLayout = image.layout || "text-top"; // по умолчанию текст сверху для каждого изображения
@@ -175,7 +200,14 @@ export function TwoImagesBlock({ block, className = "" }: TwoImagesBlockProps) {
   return (
     <div className={`${className}`}>
       <div className={getContainerClasses(block.size, block.orientation)}>
+        {/* Описание сверху, если указано */}
+        {(!block.descriptionPosition || block.descriptionPosition === "top") && <DescriptionComponent />}
+        
+        {/* Блок с фотографиями */}
         <ImagesComponent />
+        
+        {/* Описание снизу, если указано */}
+        {block.descriptionPosition === "bottom" && <DescriptionComponent />}
       </div>
     </div>
   );

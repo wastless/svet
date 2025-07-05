@@ -949,6 +949,72 @@ export function BlockEditor({ block, onChange, giftId }: BlockEditorProps) {
 
     return (
       <div className="space-y-8">
+        {/* Общее описание для блока */}
+        <div className="rounded-md border border-gray-200 p-4">
+          <h3 className="mb-4 font-styrene text-lg font-medium">
+            Общее описание
+          </h3>
+          
+          <div className="space-y-4">
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Заголовок описания
+              </Label.Root>
+              <Input.Root>
+                <Input.Wrapper>
+                  <Input.Input
+                    type="text"
+                    value={(localBlock as any).descriptionTitle || ""}
+                    onChange={(e) =>
+                      handleChange({ descriptionTitle: e.target.value })
+                    }
+                    placeholder="Заголовок общего описания"
+                  />
+                </Input.Wrapper>
+              </Input.Root>
+            </div>
+            
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Текст описания
+              </Label.Root>
+              <Textarea.Root
+                value={(localBlock as any).description || ""}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  handleChange({ description: e.target.value })
+                }
+                placeholder="Общее описание блока"
+              />
+            </div>
+            
+            <div>
+              <Label.Root className="mb-2 block text-paragraph-sm">
+                Расположение описания
+              </Label.Root>
+              <Select.Root
+                value={(localBlock as any).descriptionPosition || "top"}
+                onValueChange={(value) =>
+                  handleChange({ descriptionPosition: value as any })
+                }
+              >
+                <Select.Trigger>
+                  <Select.Value placeholder="Выберите расположение" />
+                </Select.Trigger>
+                <Select.Content>
+                  {[
+                    { label: "Сверху", value: "top" },
+                    { label: "Снизу", value: "bottom" },
+                  ].map(({ label, value }) => (
+                    <Select.Item key={value} value={value}>
+                      {label}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            </div>
+          </div>
+        </div>
+        
         {/* Глобальные настройки для обоих изображений */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
